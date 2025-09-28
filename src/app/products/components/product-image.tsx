@@ -9,13 +9,11 @@ interface ProductImageLensProps {
   width?: number;
   height?: number;
   zoom?: number;
-  className?: string;
 }
 
 export default function ProductImageLens({
   src,
   alt,
-  className,
   width = 500,
   height = 500,
   zoom = 2,
@@ -35,7 +33,7 @@ export default function ProductImageLens({
 
   return (
     <div
-      className={`relative w-full h-[500px] flex justify-center items-center ${className}`}
+      className={`relative w-full h-[500px] flex justify-center items-center`}
       ref={containerRef}
     >
       {/* تصویر اصلی */}
@@ -44,7 +42,7 @@ export default function ProductImageLens({
         alt={alt}
         width={width}
         height={height}
-        className="max-h-full max-w-full object-contain"
+        className="max-h-full max-w-full object-contain rounded-xl"
         onMouseEnter={() => setLensVisible(true)}
         onMouseLeave={() => setLensVisible(false)}
         onMouseMove={handleMouseMove}
