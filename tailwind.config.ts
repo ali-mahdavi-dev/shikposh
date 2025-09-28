@@ -1,3 +1,5 @@
+const { fontFamily } = require("tailwindcss/defaultTheme");
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -11,6 +13,9 @@ module.exports = {
         primary: "#409af5",
         secondary: "#7ed957",
         tertiary: "#c699f1",
+      },
+      fontFamily: {
+        vazir: ["Vazir", "sans-serif"],
       },
     },
   },

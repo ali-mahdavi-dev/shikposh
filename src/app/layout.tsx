@@ -3,10 +3,38 @@ import React from "react";
 import type { Metadata } from "next";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { Content } from "antd/lib/layout/layout";
-import HeaderCom from "@/components/layout/app-header";
-import FooterCom from "@/components/layout/app-footer";
-import "./globals.css";
 import { ConfigProvider } from "antd";
+import Header from "@/components/layout/header";
+import Footer from "@/components/layout/footer";
+import localFont from "next/font/local";
+import "./globals.css";
+
+const theme = {
+  token: {
+    colorPrimary: "#ec4899", // Pink primary color
+    colorSuccess: "#10b981", // Green
+    colorWarning: "#f59e0b", // Yellow
+    colorError: "#ef4444", // Red
+    borderRadius: 12,
+    fontFamily:
+      'Vazirmatn, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  },
+  components: {
+    Button: {
+      borderRadius: 12,
+      controlHeight: 40,
+    },
+    Card: {
+      borderRadius: 16,
+    },
+    Input: {
+      borderRadius: 12,
+    },
+    Select: {
+      borderRadius: 12,
+    },
+  },
+};
 
 export const metadata: Metadata = {
   title: "Projects",
@@ -20,19 +48,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="fa">
       <body>
         <React.StrictMode>
           <AntdRegistry>
-            <ConfigProvider
-              theme={{
-                token: {
-                  colorPrimary: "#5da9f5",
-                },
-              }}
-            >
+            <ConfigProvider theme={theme} direction="rtl">
               {/* Header */}
-              <HeaderCom />
+              <Header />
               {/* Content */}
               <Content>
                 <div
@@ -45,7 +67,7 @@ export default function RootLayout({
                   <main className="">{children}</main>
                 </div>
               </Content>
-              <FooterCom />
+              <Footer />
             </ConfigProvider>
           </AntdRegistry>
         </React.StrictMode>
