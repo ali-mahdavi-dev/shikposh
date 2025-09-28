@@ -12,7 +12,7 @@ export default function ProfileCard() {
           <div className="p-[2px] rounded-full bg-gradient-to-r from-blue-500 to-green-400">
             <Avatar
               style={{ width: "132px", height: "132px" }}
-              src="/alilaloii.jpg"
+              src="/images/alilaloii.jpg"
             />
           </div>
           <Title className="ml-3" level={3}>

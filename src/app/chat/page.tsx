@@ -18,7 +18,7 @@ export default function page() {
             <div className="ml-1 size-3 rounded-full bg-green-300"></div>
             <div className="flex items-center">
               <div className="p-[0.5px] ml-1 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600">
-                <Avatar className="w-24 " src="/alilaloii.jpg" />
+                <Avatar className="w-24 " src="/images/alilaloii.jpg" />
               </div>
               <Title className="ml-1" level={5}>
                 Ali Ahmagh

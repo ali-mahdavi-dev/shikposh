@@ -1,11 +1,12 @@
-import { CalendarOutlined, CaretRightOutlined } from "@ant-design/icons";
-import { Avatar, Card, Collapse, CollapseProps, Tabs, TabsProps } from "antd";
+import { CalendarOutlined } from "@ant-design/icons";
+import { Avatar, Card, Tabs, TabsProps } from "antd";
 import Title from "antd/es/typography/Title";
 import React from "react";
 import ProfileCard from "./components/profile-card";
 import ChatFixed from "./components/chat";
 import Meta from "antd/es/card/Meta";
 import Image from "next/image";
+import Link from "next/link";
 
 const items: TabsProps["items"] = [
   {
@@ -13,74 +14,82 @@ const items: TabsProps["items"] = [
     label: "همه",
     children: (
       <div className="p-5 flex flex-wrap justify-center">
-        <Card
-          className="max-w-72 min-w-64 !m-4"
-          hoverable
-          cover={
-            <div className="overflow-hidden w-full ease-in">
-              <Image
-                width={260}
-                height={200}
-                className="transition-transform duration-300 hover:scale-110"
-                alt="example"
-                src="/girl.png"
-              />
-            </div>
-          }
-        >
-          <Meta title="Europe Street beat" description="www.instagram.com" />
-        </Card>
-        <Card
-          className="max-w-72 min-w-64 !m-4"
-          hoverable
-          cover={
-            <div className="overflow-hidden w-full ease-in">
-              <Image
-                width={260}
-                height={200}
-                className="transition-transform duration-300 hover:scale-110"
-                alt="example"
-                src="/girl.png"
-              />
-            </div>
-          }
-        >
-          <Meta title="Europe Street beat" description="www.instagram.com" />
-        </Card>
-        <Card
-          className="max-w-72 min-w-64 !m-4"
-          hoverable
-          cover={
-            <div className="overflow-hidden w-full ease-in">
-              <Image
-                width={260}
-                height={200}
-                className="transition-transform duration-300 hover:scale-110"
-                alt="example"
-                src="/girl.png"
-              />
-            </div>
-          }
-        >
-          <Meta title="Europe Street beat" description="www.instagram.com" />
-        </Card>
-        <Card
-          className="max-w-72 min-w-64 !m-4"
-          hoverable
-          cover={
-            <div className="overflow-hidden w-full ease-in">
-              <Image
-                width={260}
-                height={200}
-                className="transition-transform duration-300 hover:scale-110"
-                alt="example"
-                src="/girl.png"
-              />
-            </div>
-          }
-        >
-          <Meta title="Europe Street beat" description="www.instagram.com" />
-        </Card>
+        <Link href={"/products/aaaa"}>
+          <Card
+            className="max-w-72 min-w-64 !m-4"
+            hoverable
+            cover={
+              <div className="overflow-hidden w-full ease-in">
+                <Image
+                  width={260}
+                  height={200}
+                  className="transition-transform duration-300 hover:scale-110"
+                  alt="example"
+                  src="/images/girl.png"
+                />
+              </div>
+            }
+          >
+            <Meta title="Europe Street beat" description="www.instagram.com" />
+          </Card>
+        </Link>
+        <Link href={"/products/bbb"}>
+          <Card
+            className="max-w-72 min-w-64 !m-4"
+            hoverable
+            cover={
+              <div className="overflow-hidden w-full ease-in">
+                <Image
+                  width={260}
+                  height={200}
+                  className="transition-transform duration-300 hover:scale-110"
+                  alt="example"
+                  src="/images/girl.png"
+                />
+              </div>
+            }
+          >
+            <Meta title="Europe Street beat" description="www.instagram.com" />
+          </Card>
+        </Link>
+        <Link href={"/products/ccc"}>
+          <Card
+            className="max-w-72 min-w-64 !m-4"
+            hoverable
+            cover={
+              <div className="overflow-hidden w-full ease-in">
+                <Image
+                  width={260}
+                  height={200}
+                  className="transition-transform duration-300 hover:scale-110"
+                  alt="example"
+                  src="/images/girl.png"
+                />
+              </div>
+            }
+          >
+            <Meta title="Europe Street beat" description="www.instagram.com" />
+          </Card>
+        </Link>
+        <Link href={"/products/ddd"}>
+          <Card
+            className="max-w-72 min-w-64 !m-4"
+            hoverable
+            cover={
+              <div className="overflow-hidden w-full ease-in">
+                <Image
+                  width={260}
+                  height={200}
+                  className="transition-transform duration-300 hover:scale-110"
+                  alt="example"
+                  src="/images/girl.png"
+                />
+              </div>
+            }
+          >
+            <Meta title="Europe Street beat" description="www.instagram.com" />
+          </Card>
+        </Link>
       </div>
     ),
   },
@@ -116,7 +125,7 @@ export default function page() {
       <div className="w-full flex justify-center">
         <Card className="w-6/12 !mt-14">
           <div className="flex items-center">
-            <Avatar className="!w-16 !h-16" src="/alilaloii.jpg" />
+            <Avatar className="!w-16 !h-16" src="/images/alilaloii.jpg" />
             <div className="ml-2 flex flex-col justify-start">
               <Title level={5}>Ali Ahmagh</Title>
               <div>

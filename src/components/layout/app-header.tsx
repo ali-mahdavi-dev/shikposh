@@ -61,7 +61,10 @@ function HeaderCom() {
 
               <Divider type="vertical" />
 
-              <Link href="/notification" className="flex justify-end items-center">
+              <Link
+                href="/notification"
+                className="flex justify-end items-center"
+              >
                 <Button
                   style={{
                     height: "36px",
@@ -70,10 +73,7 @@ function HeaderCom() {
                   color="cyan"
                   variant="solid"
                 >
-                  <Avatar
-                  className="!-ml-2"
-                    src="/alilaloii.jpg"
-                  />
+                  <Avatar className="!-ml-2" src="/images/alilaloii.jpg" />
                   <span className="whitespace-nowrap">Ben Dev</span>
                 </Button>
               </Link>

@@ -1,5 +1,5 @@
 "use client";
-import { CaretRightOutlined, CaretUpOutlined } from "@ant-design/icons";
+import { CaretUpOutlined } from "@ant-design/icons";
 import { Avatar, Collapse, CollapseProps } from "antd";
 import Title from "antd/es/typography/Title";
 import React from "react";
@@ -15,7 +15,7 @@ const items: CollapseProps["items"] = [
           <div className="ml-1 size-3 rounded-full bg-green-300"></div>
           <div className="flex items-center">
             <div className="p-[0.5px] ml-1 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600">
-              <Avatar className="w-24 " src="/alilaloii.jpg" />
+              <Avatar className="w-24 " src="/images/alilaloii.jpg" />
             </div>
             <Title className="ml-1" level={5}>
               Ali Ahmagh
@@ -26,7 +26,7 @@ const items: CollapseProps["items"] = [
           <div className="ml-1 size-3 rounded-full bg-green-300"></div>
           <div className="flex items-center">
             <div className="p-[0.5px] ml-1 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600">
-              <Avatar className="w-24 " src="/alilaloii.jpg" />
+              <Avatar className="w-24 " src="/images/alilaloii.jpg" />
             </div>
             <Title className="ml-1" level={5}>
               Ali Ahmagh
@@ -37,7 +37,7 @@ const items: CollapseProps["items"] = [
           <div className="ml-1 size-3 rounded-full bg-green-300"></div>
           <div className="flex items-center">
             <div className="p-[0.5px] ml-1 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600">
-              <Avatar className="w-24 " src="/alilaloii.jpg" />
+              <Avatar className="w-24 " src="/images/alilaloii.jpg" />
             </div>
             <Title className="ml-1" level={5}>
               Ali Ahmagh
@@ -48,7 +48,7 @@ const items: CollapseProps["items"] = [
           <div className="ml-1 size-3 rounded-full bg-green-300"></div>
           <div className="flex items-center">
             <div className="p-[0.5px] ml-1 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600">
-              <Avatar className="w-24 " src="/alilaloii.jpg" />
+              <Avatar className="w-24 " src="/images/alilaloii.jpg" />
             </div>
             <Title className="ml-1" level={5}>
               Ali Ahmagh
@@ -59,7 +59,7 @@ const items: CollapseProps["items"] = [
           <div className="ml-1 size-3 rounded-full bg-green-300"></div>
           <div className="flex items-center">
             <div className="p-[0.5px] ml-1 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600">
-              <Avatar className="w-24 " src="/alilaloii.jpg" />
+              <Avatar className="w-24 " src="/images/alilaloii.jpg" />
             </div>
             <Title className="ml-1" level={5}>
               Ali Ahmagh
@@ -70,7 +70,7 @@ const items: CollapseProps["items"] = [
           <div className="ml-1 size-3 rounded-full bg-green-300"></div>
           <div className="flex items-center">
             <div className="p-[0.5px] ml-1 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600">
-              <Avatar className="w-24 " src="/alilaloii.jpg" />
+              <Avatar className="w-24 " src="/images/alilaloii.jpg" />
             </div>
             <Title className="ml-1" level={5}>
               Ali Ahmagh
@@ -81,7 +81,7 @@ const items: CollapseProps["items"] = [
           <div className="ml-1 size-3 rounded-full bg-green-300"></div>
           <div className="flex items-center">
             <div className="p-[0.5px] ml-1 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600">
-              <Avatar className="w-24 " src="/alilaloii.jpg" />
+              <Avatar className="w-24 " src="/images/alilaloii.jpg" />
             </div>
             <Title className="ml-1" level={5}>
               Ali Ahmagh
@@ -92,7 +92,7 @@ const items: CollapseProps["items"] = [
           <div className="ml-1 size-3 rounded-full bg-green-300"></div>
           <div className="flex items-center">
             <div className="p-[0.5px] ml-1 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600">
-              <Avatar className="w-24 " src="/alilaloii.jpg" />
+              <Avatar className="w-24 " src="/images/alilaloii.jpg" />
             </div>
             <Title className="ml-1" level={5}>
               Ali Ahmagh
@@ -103,7 +103,7 @@ const items: CollapseProps["items"] = [
           <div className="ml-1 size-3 rounded-full bg-green-300"></div>
           <div className="flex items-center">
             <div className="p-[0.5px] ml-1 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600">
-              <Avatar className="w-24 " src="/alilaloii.jpg" />
+              <Avatar className="w-24 " src="/images/alilaloii.jpg" />
             </div>
             <Title className="ml-1" level={5}>
               Ali Ahmagh
@@ -117,10 +117,10 @@ const items: CollapseProps["items"] = [
 export default function ChatFixed() {
   return (
     <Collapse
-    className="bg-gray-600"
+      className="bg-gray-600"
       items={items}
       expandIcon={({ isActive }) => (
-        <CaretUpOutlined  rotate={isActive ? 180 : 0} />
+        <CaretUpOutlined rotate={isActive ? 180 : 0} />
       )}
       defaultActiveKey={["1"]}
     />
