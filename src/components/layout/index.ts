@@ -1,3 +1,2 @@
-export { default as Header } from "./site-header";
-export { default as Footer } from "./footer";
-
+export { default as Header } from './site-header';
+export { default as Footer } from './footer';

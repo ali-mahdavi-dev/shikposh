@@ -108,4 +108,9 @@ export interface Post {
   category?: string;
   likes?: number;
   comments?: number;
+  isNew?: boolean;
+  isFeatured?: boolean;
+  isTrending?: boolean;
+  badge?: string;
+  badges?: string[];
 }

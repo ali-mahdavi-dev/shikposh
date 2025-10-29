@@ -33,4 +33,3 @@ const wishlistSlice = createSlice({
 
 export const { addToWishlist, removeFromWishlist, toggleWishlist } = wishlistSlice.actions;
 export default wishlistSlice.reducer;
-

@@ -21,9 +21,9 @@ describe('CommentBox', () => {
     render(
       <QueryClientProvider client={queryClient}>
         <CommentBox productId="1" />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
-    
+
     // The component might show loading state initially
     // This is a basic example - adjust based on your component behavior
     expect(screen).toBeDefined();
@@ -33,7 +33,7 @@ describe('CommentBox', () => {
     render(
       <QueryClientProvider client={queryClient}>
         <CommentBox productId="1" />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     // Wait for reviews to load and check if they're rendered
@@ -42,4 +42,3 @@ describe('CommentBox', () => {
     expect(reviewsSection).toBeInTheDocument();
   });
 });
-

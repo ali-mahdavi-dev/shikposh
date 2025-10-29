@@ -1,5 +1,5 @@
-import Link from "next/link";
-import { Result, Button } from "antd";
+import Link from 'next/link';
+import { Result, Button } from 'antd';
 
 export default function Custom404() {
   return (

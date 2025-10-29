@@ -45,3 +45,6 @@ next-env.d.ts
 *.mp4
 *.avi
 public/images/Friends*.mkv
+
+*storybook.log
+storybook-static

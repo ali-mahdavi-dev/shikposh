@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { Image } from "antd";
-import { LeftOutlined, RightOutlined, ZoomInOutlined } from "@ant-design/icons";
-import { motion, AnimatePresence } from "framer-motion";
-import { ProductImageGalleryProps } from "../types";
+import React, { useState } from 'react';
+import { Image } from 'antd';
+import { LeftOutlined, RightOutlined, ZoomInOutlined } from '@ant-design/icons';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ProductImageGalleryProps } from '../types';
 
 const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, productName }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
@@ -25,14 +25,14 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
   };
 
   return (
-    <div className="relative w-full h-96 rounded-2xl overflow-hidden shadow-lg bg-gray-100 flex items-center justify-center">
+    <div className="relative flex h-96 w-full items-center justify-center overflow-hidden rounded-2xl bg-gray-100 shadow-lg">
       {/* Main Image */}
       <AnimatePresence initial={false}>
         <motion.img
           key={currentImageIndex}
           src={images[currentImageIndex]}
           alt={`${productName} - ${currentImageIndex + 1}`}
-          className="w-full h-full object-cover absolute top-0 left-0"
+          className="absolute top-0 left-0 h-full w-full object-cover"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -42,7 +42,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
 
       {/* Navigation Arrows */}
       <motion.button
-        className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/50 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-white/70 transition-colors z-10"
+        className="absolute top-1/2 right-2 z-10 -translate-y-1/2 rounded-full bg-white/50 p-2 shadow-md backdrop-blur-sm transition-colors hover:bg-white/70"
         onClick={goToNext}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
@@ -50,7 +50,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
         <LeftOutlined className="text-lg text-gray-700" />
       </motion.button>
       <motion.button
-        className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/50 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-white/70 transition-colors z-10"
+        className="absolute top-1/2 left-2 z-10 -translate-y-1/2 rounded-full bg-white/50 p-2 shadow-md backdrop-blur-sm transition-colors hover:bg-white/70"
         onClick={goToPrevious}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
@@ -60,7 +60,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
 
       {/* Zoom Button */}
       <motion.button
-        className="absolute bottom-2 right-2 bg-white/50 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-white/70 transition-colors z-10"
+        className="absolute right-2 bottom-2 z-10 rounded-full bg-white/50 p-2 shadow-md backdrop-blur-sm transition-colors hover:bg-white/70"
         onClick={handleZoomClick}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
@@ -69,21 +69,19 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
       </motion.button>
 
       {/* Image Counter */}
-      <div className="absolute top-2 left-2 bg-black/40 text-white text-xs px-3 py-1 rounded-full z-10">
+      <div className="absolute top-2 left-2 z-10 rounded-full bg-black/40 px-3 py-1 text-xs text-white">
         {currentImageIndex + 1} / {images.length}
       </div>
 
       {/* Thumbnails */}
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+      <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-2">
         {images.map((image, index) => (
           <motion.img
             key={index}
             src={image}
             alt={`${productName} thumbnail ${index + 1}`}
-            className={`w-16 h-16 object-cover rounded-lg cursor-pointer border-2 ${
-              index === currentImageIndex
-                ? "border-pink-500 shadow-md"
-                : "border-transparent"
+            className={`h-16 w-16 cursor-pointer rounded-lg border-2 object-cover ${
+              index === currentImageIndex ? 'border-pink-500 shadow-md' : 'border-transparent'
             } transition-all duration-200`}
             onClick={() => handleThumbnailClick(index)}
             whileHover={{ scale: 1.05 }}
@@ -93,7 +91,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
       </div>
 
       {/* Ant Design Image.PreviewGroup for full-screen zoom */}
-      <div style={{ display: "none" }}>
+      <div style={{ display: 'none' }}>
         <Image.PreviewGroup
           preview={{
             visible: isViewerVisible,
@@ -102,11 +100,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
           }}
         >
           {images.map((image, index) => (
-            <Image
-              key={index}
-              src={image}
-              alt={`${productName} - Image ${index + 1}`}
-            />
+            <Image key={index} src={image} alt={`${productName} - Image ${index + 1}`} />
           ))}
         </Image.PreviewGroup>
       </div>

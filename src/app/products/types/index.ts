@@ -1,4 +1,5 @@
-import { Product, ProductSize, RelatedProduct } from "@/types";
+import { Product, ProductSize, RelatedProduct } from '@/types';
+import { ProductSummary } from '@/features/products/domain/entities/product.entity';
 
 // Component props types
 export interface ProductDetailProps {
@@ -11,7 +12,7 @@ export interface ProductImageGalleryProps {
 }
 
 export interface ColorSelectorProps {
-  colors: Record<string, ProductSize>;
+  colors: Record<string, { name: string }>;
   selectedColor: string;
   onColorChange: (color: string) => void;
 }
@@ -30,7 +31,7 @@ export interface QuantitySelectorProps {
 }
 
 export interface RelatedProductsProps {
-  products: RelatedProduct[];
+  products: ProductSummary[];
 }
 
 export interface SellerPageProps {
@@ -64,6 +65,6 @@ export interface ProductFilters {
   maxPrice?: number;
   rating?: number;
   inStock?: boolean;
-  sortBy?: "price" | "rating" | "newest" | "popular";
-  sortOrder?: "asc" | "desc";
+  sortBy?: 'price' | 'rating' | 'newest' | 'popular';
+  sortOrder?: 'asc' | 'desc';
 }

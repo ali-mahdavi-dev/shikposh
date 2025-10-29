@@ -51,7 +51,7 @@ export const useReviews = (productId: string) => {
 
 export const useCreateReview = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (review: ReviewFormData & { productId: string }) => {
       const newReview = {
@@ -72,7 +72,7 @@ export const useCreateReview = () => {
 
 export const useUpdateReviewHelpful = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ reviewId, type }: { reviewId: number; type: 'helpful' | 'notHelpful' }) =>
       api.updateReviewHelpful(reviewId, type),
@@ -90,3 +90,64 @@ export const useChatUsers = () => {
   });
 };
 
+// Posts
+export const usePosts = () => {
+  return useQuery({
+    queryKey: ['posts'],
+    queryFn: api.getPosts,
+  });
+};
+
+export const usePost = (id: string) => {
+  return useQuery({
+    queryKey: ['posts', id],
+    queryFn: () => api.getPost(id),
+    enabled: !!id,
+  });
+};
+
+export const useFeaturedPosts = () => {
+  return useQuery({
+    queryKey: ['posts', 'featured'],
+    queryFn: api.getFeaturedPosts,
+  });
+};
+
+export const usePostsByCategory = (category: string) => {
+  return useQuery({
+    queryKey: ['posts', 'category', category],
+    queryFn: () => api.getPostsByCategory(category),
+  });
+};
+
+// Playlists
+export const usePlaylists = () => {
+  return useQuery({
+    queryKey: ['playlists'],
+    queryFn: api.getPlaylists,
+  });
+};
+
+export const usePlaylist = (id: string) => {
+  return useQuery({
+    queryKey: ['playlists', id],
+    queryFn: () => api.getPlaylist(id),
+    enabled: !!id,
+  });
+};
+
+// Sellers
+export const useSellers = () => {
+  return useQuery({
+    queryKey: ['sellers'],
+    queryFn: api.getSellers,
+  });
+};
+
+export const useSeller = (id: string) => {
+  return useQuery({
+    queryKey: ['sellers', id],
+    queryFn: () => api.getSeller(id),
+    enabled: !!id,
+  });
+};

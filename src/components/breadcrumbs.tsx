@@ -1,33 +1,31 @@
-"use client";
+'use client';
 
-import { Breadcrumb } from "antd";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { HomeOutlined } from "@ant-design/icons";
+import { Breadcrumb } from 'antd';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { HomeOutlined } from '@ant-design/icons';
 
 export default function Breadcrumbs() {
   const pathname = usePathname();
 
   // Split path and filter out empty segments
-  const pathSegments = pathname.split("/").filter(Boolean);
+  const pathSegments = pathname.split('/').filter(Boolean);
 
   // Build breadcrumb items
   const breadcrumbItems = [
     {
       title: (
-        <Link href="/" className="flex items-center gap-1 text-primary">
+        <Link href="/" className="text-primary flex items-center gap-1">
           <HomeOutlined className="ml-1" />
           <span>Home</span>
         </Link>
       ),
     },
     ...pathSegments.map((segment, index) => {
-      const href = "/" + pathSegments.slice(0, index + 1).join("/");
+      const href = '/' + pathSegments.slice(0, index + 1).join('/');
       const isLast = index === pathSegments.length - 1;
 
-      const label = segment
-        .replace(/-/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase()); // capitalize
+      const label = segment.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()); // capitalize
 
       return {
         title: isLast ? (

@@ -5,6 +5,7 @@ This document summarizes the setup of React Query, MSW, Redux Toolkit, Jest, Rea
 ## ✅ Completed Setup
 
 ### 1. Dependencies Installed
+
 - ✅ @tanstack/react-query (v5.90.5)
 - ✅ @tanstack/react-query-devtools
 - ✅ @reduxjs/toolkit (v2.9.2)
@@ -20,47 +21,56 @@ This document summarizes the setup of React Query, MSW, Redux Toolkit, Jest, Rea
 ### 2. Infrastructure Files Created
 
 #### API Layer
+
 - ✅ `src/lib/api.ts` - API client functions for all endpoints
 - ✅ `src/hooks/use-api.ts` - React Query hooks for data fetching
 
 #### MSW Setup
+
 - ✅ `src/mocks/handlers.ts` - MSW request handlers
 - ✅ `src/mocks/server.ts` - MSW server for Node.js (tests)
 - ✅ `src/mocks/browser.ts` - MSW worker for browser
 - ✅ `src/mocks/index.ts` - MSW initialization
 
 #### Redux Toolkit
+
 - ✅ `src/stores/store.ts` - Redux store configuration
 - ✅ `src/stores/slices/cartSlice.ts` - Cart management slice
 - ✅ `src/stores/slices/wishlistSlice.ts` - Wishlist management slice
 - ✅ `src/stores/hooks.ts` - Typed Redux hooks
 
 #### Providers
+
 - ✅ `src/providers/react-query-provider.tsx` - React Query provider
 - ✅ `src/providers/redux-provider.tsx` - Redux provider
 - ✅ Updated `src/app/layout.tsx` to include both providers
 
 #### Testing
+
 - ✅ `jest.config.ts` - Jest configuration
 - ✅ `jest.setup.ts` - Jest setup with MSW integration
 - ✅ Example test: `src/components/__tests__/comment-box.test.tsx`
 
 #### Storybook
+
 - ✅ `.storybook/main.ts` - Storybook configuration
 - ✅ `.storybook/preview.ts` - Storybook preview with providers
 - ✅ Example story: `src/components/comment-box.stories.tsx`
 
 #### Data
+
 - ✅ `db.json` - json-server database with mock data
 
 ### 3. Refactored Components
 
 #### CommentBox Component
+
 - ✅ Refactored to use `useReviews`, `useCreateReview`, `useUpdateReviewHelpful`
 - ✅ Added loading and error states
 - ✅ Dynamic rating calculation from API data
 
 #### Chat Component
+
 - ✅ Refactored to use `useChatUsers`
 - ✅ Added loading and error states
 
@@ -92,6 +102,7 @@ The following components still use static data and should be refactored:
 - `src/app/products/[slug]/page.tsx` - Product detail page
 
 These should use:
+
 - `useFeaturedProducts()` or `useProducts()`
 - `useCategories()`
 - `useProduct(id)` for product detail
@@ -99,6 +110,7 @@ These should use:
 ### 4. Add Redux Integration
 
 Add Redux actions to components:
+
 - Use `useAppDispatch()` and `useAppSelector()` from `@/stores/hooks`
 - Add cart functionality using `addToCart` action
 - Add wishlist functionality using `toggleWishlist` action
@@ -120,13 +132,13 @@ import { useProducts, useProduct } from '@/hooks/use-api';
 
 function ProductsList() {
   const { data: products, isLoading, error } = useProducts();
-  
+
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error loading products</div>;
-  
+
   return (
     <div>
-      {products?.map(product => (
+      {products?.map((product) => (
         <div key={product.id}>{product.name}</div>
       ))}
     </div>
@@ -142,19 +154,21 @@ import { addToCart } from '@/stores/slices/cartSlice';
 
 function ProductCard({ product }) {
   const dispatch = useAppDispatch();
-  const cartItems = useAppSelector(state => state.cart.items);
-  
+  const cartItems = useAppSelector((state) => state.cart.items);
+
   const handleAddToCart = () => {
-    dispatch(addToCart({
-      productId: product.id,
-      color: 'red',
-      size: 'M',
-      quantity: 1,
-      price: product.price,
-      name: product.name,
-    }));
+    dispatch(
+      addToCart({
+        productId: product.id,
+        color: 'red',
+        size: 'M',
+        quantity: 1,
+        price: product.price,
+        name: product.name,
+      }),
+    );
   };
-  
+
   return <button onClick={handleAddToCart}>Add to Cart</button>;
 }
 ```
@@ -176,6 +190,7 @@ All endpoints are available through json-server:
 ## 🧪 Testing
 
 Run tests with:
+
 ```bash
 yarn test
 ```
@@ -185,4 +200,3 @@ MSW automatically mocks all API calls in tests - no need to mock fetch manually!
 ## 📖 Documentation
 
 See `SETUP.md` for detailed setup instructions.
-

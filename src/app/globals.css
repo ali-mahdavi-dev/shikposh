@@ -1,21 +1,21 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @font-face {
-  font-family: "Vazir";
-  src: url("/fonts/Vazir.woff2") format("woff2"),
-    url("/fonts/Vazir.woff") format("woff"),
-    url("/fonts/Vazir.ttf") format("truetype"),
-    url("/fonts/Vazir.eot") format("embedded-opentype");
+  font-family: 'Vazir';
+  src:
+    url('/fonts/Vazir.woff2') format('woff2'),
+    url('/fonts/Vazir.woff') format('woff'),
+    url('/fonts/Vazir.ttf') format('truetype'),
+    url('/fonts/Vazir.eot') format('embedded-opentype');
   font-weight: 400;
   font-style: normal;
 }
 
 body {
-  font-family: "Vazir", sans-serif;
+  font-family: 'Vazir', sans-serif;
   direction: rtl;
 }
-
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -131,8 +131,13 @@ body {
 
   body {
     @apply bg-background text-foreground;
-    font-family: "Vazirmatn", -apple-system, BlinkMacSystemFont, "Segoe UI",
-      Roboto, sans-serif;
+    font-family:
+      'Vazirmatn',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      sans-serif;
     direction: rtl;
   }
 
@@ -170,11 +175,14 @@ body {
 /* Custom Ant Design overrides */
 .ant-card {
   border: none !important;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
 }
 
 .ant-card:hover {
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1),
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 0.1),
     0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
 }
 
@@ -367,8 +375,12 @@ body {
 /* بهتر */
 *:not(.ant-tooltip),
 *:not(.ant-tooltip *) {
-  transition: color 0.2s ease, background-color 0.2s ease,
-    border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 .slick-slide > div {
@@ -378,7 +390,7 @@ body {
   left: 0 !important;
 }
 
-[role="tab"] {
+[role='tab'] {
   text-align: center;
   padding: 0 10px;
   margin-left: 1px;

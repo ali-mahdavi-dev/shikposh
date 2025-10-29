@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { Select } from "antd";
-import React from "react";
+import { Select } from 'antd';
+import React from 'react';
 
 interface AccessPostProps {
   defaultValue?: string;
@@ -12,16 +12,16 @@ interface AccessPostProps {
 }
 
 const defaultOptions = [
-  { value: "public", label: "عمومی" },
-  { value: "private", label: "خصوصی" },
-  { value: "friends", label: "دوستان" },
+  { value: 'public', label: 'عمومی' },
+  { value: 'private', label: 'خصوصی' },
+  { value: 'friends', label: 'دوستان' },
 ];
 
 const AccessPost: React.FC<AccessPostProps> = ({
-  defaultValue = "public",
+  defaultValue = 'public',
   options = defaultOptions,
   onChange,
-  placeholder = "انتخاب دسترسی",
+  placeholder = 'انتخاب دسترسی',
   style = { width: 120 },
 }) => {
   const handleChange = (value: string | string[]) => {

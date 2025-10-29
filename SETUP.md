@@ -4,7 +4,7 @@ This project uses React Query, MSW, Redux Toolkit, Jest, React Testing Library, 
 
 ## Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - Yarn
 
 ## Installation
@@ -18,11 +18,13 @@ yarn install
 ### Development Mode
 
 1. Start json-server (in one terminal):
+
 ```bash
 yarn json-server
 ```
 
 2. Start Next.js dev server (in another terminal):
+
 ```bash
 yarn dev
 ```
@@ -33,16 +35,19 @@ The json-server API will be available at `http://localhost:3001`
 ## Testing
 
 ### Run Tests
+
 ```bash
 yarn test
 ```
 
 ### Watch Mode
+
 ```bash
 yarn test:watch
 ```
 
 ### Coverage
+
 ```bash
 yarn test:coverage
 ```
@@ -50,11 +55,13 @@ yarn test:coverage
 ## Storybook
 
 To initialize Storybook (if not already initialized):
+
 ```bash
 npx storybook@latest init
 ```
 
 Then run:
+
 ```bash
 yarn storybook
 ```
@@ -78,12 +85,14 @@ MSW is configured to intercept API calls in development and tests. The handlers 
 ## Redux Toolkit
 
 The store is configured in `src/stores/store.ts` with slices for:
+
 - Cart management (`cartSlice`)
 - Wishlist management (`wishlistSlice`)
 
 ## React Query
 
 React Query hooks are available in `src/hooks/use-api.ts`:
+
 - `useProducts()` - Get all products
 - `useProduct(id)` - Get single product
 - `useFeaturedProducts()` - Get featured products
@@ -97,6 +106,7 @@ React Query hooks are available in `src/hooks/use-api.ts`:
 ## Environment Variables
 
 Create a `.env.local` file:
+
 ```
 NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
@@ -114,4 +124,3 @@ src/
 ├── stores/           # Redux store and slices
 └── types/            # TypeScript types
 ```
-

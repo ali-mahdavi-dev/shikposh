@@ -1,36 +1,211 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# شیک‌پوشان - فروشگاه آنلاین مد و پوشاک
 
-## Getting Started
+یک فروشگاه آنلاین مدرن و زیبا برای فروش محصولات مد و پوشاک با استفاده از Next.js 15، TypeScript، و معماری Feature-Based.
 
-First, run the development server:
+## ✨ ویژگی‌ها
+
+- 🛍️ **فروشگاه کامل**: نمایش محصولات، دسته‌بندی‌ها، و جزئیات
+- 🎨 **طراحی مدرن**: رابط کاربری زیبا و واکنش‌گرا
+- 🔍 **جستجوی پیشرفته**: جستجو در محصولات و فیلتر کردن
+- 💬 **سیستم چت**: ارتباط مستقیم با فروشندگان
+- ⭐ **نظام امتیازدهی**: نظرات و امتیازات کاربران
+- 🛒 **سبد خرید**: مدیریت محصولات انتخابی
+- 📱 **واکنش‌گرا**: سازگار با تمام دستگاه‌ها
+
+## 🏗️ معماری
+
+این پروژه از **معماری Feature-Based** استفاده می‌کند که شامل:
+
+- **Domain Layer**: موجودیت‌ها، قراردادها، و منطق کسب‌وکار
+- **Infrastructure Layer**: پیاده‌سازی دسترسی به داده و سرویس‌های خارجی
+- **Application Layer**: هوک‌های React Query و مدیریت state
+- **Presentation Layer**: کامپوننت‌های React و صفحات
+
+برای جزئیات بیشتر، [معماری پروژه](./ARCHITECTURE.md) را مطالعه کنید.
+
+## 🚀 شروع سریع
+
+### پیش‌نیازها
+
+- Node.js 18+
+- npm یا yarn
+
+### نصب
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# کلون کردن پروژه
+git clone <repository-url>
+cd shikpush
+
+# نصب وابستگی‌ها
+npm install
+
+# شروع سرورهای توسعه (JSON Server + Next.js)
+npm run dev:full
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### دستورات موجود
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# شروع کامل (JSON Server + Next.js)
+npm run dev:full
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# فقط Next.js
+npm run dev
 
-## Learn More
+# فقط JSON Server
+npm run json-server
 
-To learn more about Next.js, take a look at the following resources:
+# ساخت پروژه
+npm run build
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# شروع پروژه ساخته شده
+npm start
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# تست
+npm test
 
-## Deploy on Vercel
+# لینت
+npm run lint
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# فرمت کردن کد
+npm run format
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🌐 آدرس‌ها
+
+- **وب‌سایت**: http://localhost:3000
+- **API Server**: http://localhost:3001
+- **API Documentation**: http://localhost:3001
+
+## 📁 ساختار پروژه
+
+```
+src/
+├── features/                 # ویژگی‌های اصلی
+│   ├── products/            # مدیریت محصولات
+│   └── chat/               # سیستم چت
+├── shared/                  # کدهای مشترک
+│   ├── errors/             # مدیریت خطا
+│   └── utils/              # ابزارهای کمکی
+├── components/             # کامپوننت‌های عمومی
+├── app/                    # صفحات Next.js
+└── lib/                    # تنظیمات
+```
+
+## 🛠️ تکنولوژی‌ها
+
+### Frontend
+
+- **Next.js 15** - فریمورک React
+- **TypeScript** - تایپ‌ایمنی
+- **Tailwind CSS** - استایل‌دهی
+- **Ant Design** - کامپوننت‌های UI
+- **Framer Motion** - انیمیشن‌ها
+- **React Query** - مدیریت state و cache
+
+### Backend (Mock)
+
+- **JSON Server** - API شبیه‌ساز
+- **REST API** - رابط برنامه‌نویسی
+
+### ابزارهای توسعه
+
+- **ESLint** - بررسی کد
+- **Prettier** - فرمت کردن کد
+- **Jest** - تست‌نویسی
+- **Storybook** - مستندسازی کامپوننت‌ها
+
+## 📊 API Endpoints
+
+### محصولات
+
+- `GET /products` - لیست تمام محصولات
+- `GET /products/:id` - جزئیات محصول
+- `GET /products?isFeatured=true` - محصولات ویژه
+- `GET /products?category=dresses` - محصولات دسته‌بندی
+
+### دسته‌بندی‌ها
+
+- `GET /categories` - لیست دسته‌بندی‌ها
+
+### نظرات
+
+- `GET /reviews?productId=:id` - نظرات محصول
+- `POST /reviews` - ایجاد نظر جدید
+- `PATCH /reviews/:id` - به‌روزرسانی نظر
+
+### چت
+
+- `GET /chatUsers` - کاربران چت
+- `GET /messages` - پیام‌ها
+- `POST /messages` - ارسال پیام
+
+## 🎨 کامپوننت‌ها
+
+### کامپوننت‌های UI
+
+- `Button` - دکمه‌های مختلف
+- `Card` - کارت‌های نمایش
+- `Modal` - پنجره‌های مودال
+- `Loading` - نمایش بارگذاری
+- `Badge` - نشان‌های مختلف
+
+### کامپوننت‌های کسب‌وکار
+
+- `ProductCard` - کارت محصول
+- `ProductGrid` - شبکه محصولات
+- `CategoryCard` - کارت دسته‌بندی
+- `ReviewBox` - باکس نظرات
+- `ChatInterface` - رابط چت
+
+## 🔧 تنظیمات
+
+### متغیرهای محیطی
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+### پیکربندی JSON Server
+
+فایل `json-server.config.js` شامل تنظیمات CORS و route های سفارشی است.
+
+## 🧪 تست‌نویسی
+
+```bash
+# اجرای تست‌ها
+npm test
+
+# تست با watch mode
+npm run test:watch
+
+# گزارش پوشش تست
+npm run test:coverage
+```
+
+## 📝 مستندسازی
+
+- [معماری پروژه](./ARCHITECTURE.md)
+- [راهنمای کامپوننت‌ها](./COMPONENT_ARCHITECTURE.md)
+- [راهنمای تنظیمات](./SETUP.md)
+
+## 🤝 مشارکت
+
+1. Fork کنید
+2. شاخه جدید ایجاد کنید (`git checkout -b feature/amazing-feature`)
+3. تغییرات را commit کنید (`git commit -m 'Add amazing feature'`)
+4. به شاخه push کنید (`git push origin feature/amazing-feature`)
+5. Pull Request ایجاد کنید
+
+## 📄 مجوز
+
+این پروژه تحت مجوز MIT منتشر شده است.
+
+## 📞 پشتیبانی
+
+برای سوالات و پشتیبانی، لطفاً issue ایجاد کنید یا با تیم توسعه تماس بگیرید.
+
+---
+
+**ساخته شده با ❤️ برای جامعه توسعه‌دهندگان ایرانی**

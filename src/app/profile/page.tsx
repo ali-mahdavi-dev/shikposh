@@ -1,12 +1,7 @@
-"use client";
-import React, { useState } from "react";
-import {
-  Button,
-  Tabs,
-  TabsProps,
-  Typography,
-  Badge,
-} from "antd";
+'use client';
+import React, { useState } from 'react';
+import { Button, Tabs, TabsProps, Typography, Badge, Spin } from 'antd';
+import { ContentLoading } from '@/shared/components/loading';
 import {
   BellOutlined,
   CalendarOutlined,
@@ -16,105 +11,23 @@ import {
   CheckOutlined,
   PlayCircleOutlined,
   UnorderedListOutlined,
-} from "@ant-design/icons";
-import { motion } from "framer-motion";
-import Image from "next/image";
-import Link from "next/link";
-import { Post } from "@/types";
+} from '@ant-design/icons';
+import { motion } from 'framer-motion';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Post } from '@/types';
+import { BaseBadge } from '@/components/ui';
+import { usePosts, usePlaylists } from '@/hooks/use-api';
 
 const { Title, Text, Paragraph } = Typography;
-
-// Mock posts data
-const mockPosts: Post[] = [
-  {
-    id: "1",
-    title: "کلکسیون جدید بهاری 1403 - معرفی لباس‌های مجلسی",
-    thumbnail: "/images/carousel-homepage-one.jpg",
-    views: 15230,
-    publishedAt: "2024-02-15",
-    category: "مد و فشن",
-    likes: 342,
-    comments: 89,
-  },
-  {
-    id: "2",
-    title: "راهنمای انتخاب سایز مناسب - نکات مهم خرید آنلاین",
-    thumbnail: "/images/daman.jpeg",
-    views: 9876,
-    publishedAt: "2024-02-10",
-    category: "راهنما",
-    likes: 256,
-    comments: 45,
-  },
-  {
-    id: "3",
-    title: "ترندهای مد فصل بهار - رنگ‌های محبوب 1403",
-    thumbnail: "/images/Women-Formal.avif",
-    views: 23456,
-    publishedAt: "2024-02-05",
-    category: "ترند",
-    likes: 567,
-    comments: 123,
-  },
-  {
-    id: "4",
-    title: "نحوه نگهداری و شستشوی لباس‌های حریر",
-    thumbnail: "/images/harir.jpeg",
-    views: 6543,
-    publishedAt: "2024-01-28",
-    category: "راهنما",
-    likes: 189,
-    comments: 34,
-  },
-  {
-    id: "5",
-    title: "مجموعه دامن‌های پلیسه - استایل‌های مختلف",
-    thumbnail: "/images/daman.jpeg",
-    views: 18765,
-    publishedAt: "2024-01-20",
-    category: "محصولات",
-    likes: 432,
-    comments: 78,
-  },
-  {
-    id: "6",
-    title: "لباس مجلسی برای مهمانی شب - انتخاب بهترین استایل",
-    thumbnail: "/images/carousel-homepage-one.jpg",
-    views: 22134,
-    publishedAt: "2024-01-15",
-    category: "استایل",
-    likes: 678,
-    comments: 145,
-  },
-  {
-    id: "7",
-    title: "راهنمای انتخاب شلوار کتان مناسب",
-    thumbnail: "/images/shalva-katan.jpeg",
-    views: 11234,
-    publishedAt: "2024-01-10",
-    category: "راهنما",
-    likes: 234,
-    comments: 56,
-  },
-  {
-    id: "8",
-    title: "اکسسوری‌های برتر فصل - کیف و کفش‌های شیک",
-    thumbnail: "/images/handbag.jpg",
-    views: 15678,
-    publishedAt: "2024-01-05",
-    category: "اکسسوری",
-    likes: 389,
-    comments: 67,
-  },
-];
 
 // Format number (e.g., 15230 -> "15.2K")
 const formatNumber = (num: number): string => {
   if (num >= 1000000) {
-    return (num / 1000000).toFixed(1) + "M";
+    return (num / 1000000).toFixed(1) + 'M';
   }
   if (num >= 1000) {
-    return (num / 1000).toFixed(1) + "K";
+    return (num / 1000).toFixed(1) + 'K';
   }
   return num.toString();
 };
@@ -125,14 +38,16 @@ const formatDate = (dateString: string): string => {
   const now = new Date();
   const diffTime = Math.abs(now.getTime() - date.getTime());
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  
-  if (diffDays === 0) return "امروز";
-  if (diffDays === 1) return "دیروز";
+
+  if (diffDays === 0) return 'امروز';
+  if (diffDays === 1) return 'دیروز';
   if (diffDays < 7) return `${diffDays} روز پیش`;
   if (diffDays < 30) return `${Math.floor(diffDays / 7)} هفته پیش`;
   if (diffDays < 365) return `${Math.floor(diffDays / 30)} ماه پیش`;
   return `${Math.floor(diffDays / 365)} سال پیش`;
 };
+
+// Use BaseBadge component for consistency
 
 // Post Card Component
 const PostCard: React.FC<{ post: Post }> = ({ post }) => {
@@ -144,35 +59,45 @@ const PostCard: React.FC<{ post: Post }> = ({ post }) => {
       transition={{ duration: 0.2 }}
       className="cursor-pointer"
     >
-      <Link href={`/profile/${post.id}`} className="block h-full">
-        <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 h-full flex flex-col">
+      <Link href={`/products/${post.id}`} className="block h-full">
+        <div className="flex h-full flex-col overflow-hidden rounded-xl bg-white shadow-md transition-all duration-300 hover:shadow-xl">
           {/* Thumbnail */}
-          <div className="relative w-full aspect-video overflow-hidden bg-gray-100 flex-shrink-0">
-                <Image
+          <div className="relative aspect-video w-full flex-shrink-0 overflow-hidden bg-gray-100">
+            <Image
               src={post.thumbnail}
               alt={post.title}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
               className="object-cover transition-transform duration-300 hover:scale-110"
             />
-            {/* Category badge */}
-            <div className="absolute bottom-2 left-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
+
+            {/* Post Badges - Top Left */}
+            {post.badges && post.badges.length > 0 && (
+              <div className="absolute top-2 left-2 z-10 flex flex-col gap-1.5">
+                {post.badges.map((badge, index) => (
+                  <BaseBadge key={index} text={badge} />
+                ))}
+              </div>
+            )}
+
+            {/* Category badge - Bottom Left */}
+            <div className="absolute bottom-2 left-2 rounded bg-black/80 px-2 py-1 text-xs text-white backdrop-blur-sm">
               {post.category}
             </div>
           </div>
 
           {/* Content */}
-          <div className="p-3 sm:p-4 flex-1 flex flex-col">
+          <div className="flex flex-1 flex-col p-3 sm:p-4">
             <Title
               level={5}
-              className="!mb-2 line-clamp-2 !text-gray-800 hover:text-pink-600 transition-colors"
-              style={{ fontSize: "14px", fontWeight: 600, minHeight: "44px" }}
+              className="!mb-2 line-clamp-2 !text-gray-800 transition-colors hover:text-pink-600"
+              style={{ fontSize: '14px', fontWeight: 600, minHeight: '44px' }}
             >
               {post.title}
             </Title>
 
             {/* Stats */}
-            <div className="flex items-center flex-wrap gap-3 text-xs text-gray-500 mt-2">
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-500">
               <span className="flex items-center gap-1 whitespace-nowrap">
                 <EyeOutlined />
                 {formatNumber(post.views)} بازدید
@@ -185,7 +110,7 @@ const PostCard: React.FC<{ post: Post }> = ({ post }) => {
 
             {/* Engagement */}
             {post.likes && post.comments && (
-              <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
+              <div className="mt-3 flex items-center gap-4 border-t border-gray-100 pt-3">
                 <span className="flex items-center gap-1 text-xs text-gray-600">
                   <LikeOutlined className="text-pink-500" />
                   {formatNumber(post.likes)}
@@ -203,38 +128,15 @@ const PostCard: React.FC<{ post: Post }> = ({ post }) => {
   );
 };
 
-// Mock Playlist data
+// Playlist interface
 interface Playlist {
   id: string;
   title: string;
   thumbnail: string;
   itemCount: number;
   views: number;
+  description?: string;
 }
-
-const mockPlaylists: Playlist[] = [
-  {
-    id: "1",
-    title: "مجموعه لباس‌های مجلسی",
-    thumbnail: "/images/carousel-homepage-one.jpg",
-    itemCount: 12,
-    views: 45678,
-  },
-  {
-    id: "2",
-    title: "راهنمای خرید و انتخاب",
-    thumbnail: "/images/daman.jpeg",
-    itemCount: 8,
-    views: 23456,
-  },
-  {
-    id: "3",
-    title: "ترندهای فصل بهار",
-    thumbnail: "/images/Women-Formal.avif",
-    itemCount: 15,
-    views: 67890,
-  },
-];
 
 // Playlist Card Component
 const PlaylistCard: React.FC<{ playlist: Playlist }> = ({ playlist }) => {
@@ -247,9 +149,9 @@ const PlaylistCard: React.FC<{ playlist: Playlist }> = ({ playlist }) => {
       className="cursor-pointer"
     >
       <Link href={`/profile/playlist/${playlist.id}`} className="block h-full">
-        <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 h-full flex flex-col">
+        <div className="flex h-full flex-col overflow-hidden rounded-xl bg-white shadow-md transition-all duration-300 hover:shadow-xl">
           {/* Thumbnail */}
-          <div className="relative w-full aspect-video overflow-hidden bg-gray-100 flex-shrink-0">
+          <div className="relative aspect-video w-full flex-shrink-0 overflow-hidden bg-gray-100">
             <Image
               src={playlist.thumbnail}
               alt={playlist.title}
@@ -258,30 +160,30 @@ const PlaylistCard: React.FC<{ playlist: Playlist }> = ({ playlist }) => {
               className="object-cover transition-transform duration-300 hover:scale-110"
             />
             {/* Playlist Icon Overlay */}
-            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-              <div className="bg-white/90 rounded-full p-3">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+              <div className="rounded-full bg-white/90 p-3">
                 <UnorderedListOutlined className="text-2xl text-pink-600" />
               </div>
             </div>
             {/* Item Count Badge */}
-            <div className="absolute bottom-2 left-2 bg-black/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+            <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded bg-black/80 px-2 py-1 text-xs text-white">
               <PlayCircleOutlined />
               {playlist.itemCount} پست
             </div>
           </div>
 
           {/* Content */}
-          <div className="p-3 sm:p-4 flex-1 flex flex-col">
+          <div className="flex flex-1 flex-col p-3 sm:p-4">
             <Title
               level={5}
-              className="!mb-2 line-clamp-2 !text-gray-800 hover:text-pink-600 transition-colors"
-              style={{ fontSize: "14px", fontWeight: 600, minHeight: "44px" }}
+              className="!mb-2 line-clamp-2 !text-gray-800 transition-colors hover:text-pink-600"
+              style={{ fontSize: '14px', fontWeight: 600, minHeight: '44px' }}
             >
               {playlist.title}
             </Title>
 
             {/* Stats */}
-            <div className="flex items-center gap-3 text-xs text-gray-500 mt-2">
+            <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
               <span className="flex items-center gap-1 whitespace-nowrap">
                 <EyeOutlined />
                 {formatNumber(playlist.views)} بازدید
@@ -295,40 +197,48 @@ const PlaylistCard: React.FC<{ playlist: Playlist }> = ({ playlist }) => {
 };
 
 export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState<string>("home");
+  const [activeTab, setActiveTab] = useState<string>('home');
   const [subscribed, setSubscribed] = useState<boolean>(false);
-  
-  // Mock banner image - در واقعیت از API می‌آید
-  const bannerImage = "/images/carousel-homepage-one.jpg";
-  
-  // Featured post for home tab - جدیدترین یا محبوب‌ترین پست
-  const featuredPost = mockPosts[0];
 
-  const tabsItems: TabsProps["items"] = [
+  // Fetch data from API
+  const { data: posts = [], isLoading: postsLoading, error: postsError } = usePosts();
+  const {
+    data: playlists = [],
+    isLoading: playlistsLoading,
+    error: playlistsError,
+  } = usePlaylists();
+
+  // Mock banner image - در واقعیت از API می‌آید
+  const bannerImage = '/images/carousel-homepage-one.jpg';
+
+  // Featured post for home tab - جدیدترین یا محبوب‌ترین پست
+  const featuredPost = posts[0];
+
+  const tabsItems: TabsProps['items'] = [
     {
-      key: "home",
+      key: 'home',
       label: (
-        <span className="px-4 py-2 flex items-center gap-2">
+        <span className="flex items-center gap-2 px-4 py-2">
           <span>صفحه اصلی</span>
         </span>
       ),
     },
     {
-      key: "playlists",
+      key: 'playlists',
       label: (
-        <span className="px-4 py-2 flex items-center gap-2">
+        <span className="flex items-center gap-2 px-4 py-2">
           <UnorderedListOutlined />
           <span>فهرست‌ها</span>
-          <Badge count={mockPlaylists.length} showZero />
+          <Badge count={playlists.length} showZero />
         </span>
       ),
     },
     {
-      key: "posts",
+      key: 'posts',
       label: (
-        <span className="px-4 py-2 flex items-center gap-2">
+        <span className="flex items-center gap-2 px-4 py-2">
           <span>پست‌ها</span>
-          <Badge count={mockPosts.length} showZero />
+          <Badge count={posts.length} showZero />
         </span>
       ),
     },
@@ -337,42 +247,35 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Banner Section - YouTube Style */}
-      <div className="relative w-full h-48 sm:h-56 md:h-64 lg:h-72 bg-gradient-to-r from-pink-500 via-purple-500 to-pink-600 overflow-hidden">
+      <div className="relative h-48 w-full overflow-hidden bg-gradient-to-r from-pink-500 via-purple-500 to-pink-600 sm:h-56 md:h-64 lg:h-72">
         {bannerImage ? (
-          <div className="relative w-full h-full">
-            <Image
-              src={bannerImage}
-              alt="Profile Banner"
-              fill
-              className="object-cover"
-              priority
-            />
+          <div className="relative h-full w-full">
+            <Image src={bannerImage} alt="Profile Banner" fill className="object-cover" priority />
           </div>
         ) : (
-          <div className="relative w-full h-full">
+          <div className="relative h-full w-full">
             <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-purple-500 to-pink-600"></div>
           </div>
         )}
       </div>
 
       {/* Profile Header - YouTube Style */}
-      <div className="bg-white border-b border-gray-200 -mt-16 sm:-mt-20 md:-mt-24 lg:-mt-28 relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6 lg:gap-8">
-            
+      <div className="relative z-10 -mt-16 border-b border-gray-200 bg-white sm:-mt-20 md:-mt-24 lg:-mt-28">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 md:py-8 lg:px-8">
+          <div className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:gap-8">
             {/* Avatar - Right Side (RTL) */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
-              className="flex-shrink-0 w-full lg:w-auto flex justify-center lg:justify-start pt-16 sm:pt-20 md:pt-24 lg:pt-28"
+              className="flex w-full flex-shrink-0 justify-center pt-16 sm:pt-20 md:pt-24 lg:w-auto lg:justify-start lg:pt-28"
             >
               <div className="relative">
-                <div className="relative w-28 h-28 sm:w-32 sm:h-32 lg:w-36 lg:h-36">
-                  <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full p-[3px]">
-                    <div className="bg-white rounded-full w-full h-full p-1 relative">
-                      <div className="absolute inset-1 rounded-full overflow-hidden">
-                <Image
+                <div className="relative h-28 w-28 sm:h-32 sm:w-32 lg:h-36 lg:w-36">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 p-[3px]">
+                    <div className="relative h-full w-full rounded-full bg-white p-1">
+                      <div className="absolute inset-1 overflow-hidden rounded-full">
+                        <Image
                           src="/images/alilaloii.jpg"
                           alt="Ali Ahmagh"
                           fill
@@ -387,19 +290,19 @@ export default function ProfilePage() {
             </motion.div>
 
             {/* Profile Info - Left Side (RTL) */}
-            <div className="flex-1 min-w-0 w-full lg:w-auto pt-16 sm:pt-20 md:pt-24 lg:pt-28">
-              <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-6 w-full">
+            <div className="w-full min-w-0 flex-1 pt-16 sm:pt-20 md:pt-24 lg:w-auto lg:pt-28">
+              <div className="flex w-full flex-col items-start gap-4 lg:flex-row lg:items-center lg:gap-6">
                 {/* Profile Text Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <Title level={2} className="!mb-0 !text-gray-800 !text-2xl lg:!text-3xl">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <Title level={2} className="!mb-0 !text-2xl !text-gray-800 lg:!text-3xl">
                       Ali Ahmagh
                     </Title>
                     {subscribed && (
                       <Badge
                         status="success"
                         text={
-                          <span className="text-xs text-green-600 flex items-center gap-1">
+                          <span className="flex items-center gap-1 text-xs text-green-600">
                             <CheckOutlined /> تأیید شده
                           </span>
                         }
@@ -407,43 +310,45 @@ export default function ProfilePage() {
                     )}
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-4 mb-3">
-                    <Text className="text-gray-600 text-sm lg:text-base">
-                      <strong className="text-gray-800 font-semibold">1.2K</strong> دنبال‌کننده
+                  <div className="mb-3 flex flex-wrap items-center gap-4">
+                    <Text className="text-sm text-gray-600 lg:text-base">
+                      <strong className="font-semibold text-gray-800">1.2K</strong> دنبال‌کننده
                     </Text>
-                    <Text className="text-gray-600 text-sm lg:text-base">
-                      <strong className="text-gray-800 font-semibold">{mockPosts.length}</strong> پست
+                    <Text className="text-sm text-gray-600 lg:text-base">
+                      <strong className="font-semibold text-gray-800">{posts.length}</strong> پست
                     </Text>
-                    <Text className="text-gray-600 text-sm lg:text-base">
-                      <strong className="text-gray-800 font-semibold">
-                        {formatNumber(
-                          mockPosts.reduce((acc, p) => acc + p.views, 0)
-                        )}
-                      </strong>{" "}
+                    <Text className="text-sm text-gray-600 lg:text-base">
+                      <strong className="font-semibold text-gray-800">
+                        {formatNumber(posts.reduce((acc: number, p: Post) => acc + p.views, 0))}
+                      </strong>{' '}
                       بازدید کل
                     </Text>
                   </div>
 
                   <Paragraph
-                    className="!mb-0 text-gray-600 text-sm lg:text-base !leading-6"
-                    ellipsis={{ rows: 2, expandable: true, symbol: "بیشتر" }}
+                    className="!mb-0 text-sm !leading-6 text-gray-600 lg:text-base"
+                    ellipsis={{ rows: 2, expandable: true, symbol: 'بیشتر' }}
                   >
-                    خوش آمدید به پروفایل من! اینجا می‌تونید جدیدترین پست‌های مربوط به
-                    مد، فشن و استایل رو ببینید. با من همراه باشید تا از جدیدترین
-                    ترندها و نکات مهم در زمینه مد و پوشش با خبر بشید.
+                    خوش آمدید به پروفایل من! اینجا می‌تونید جدیدترین پست‌های مربوط به مد، فشن و
+                    استایل رو ببینید. با من همراه باشید تا از جدیدترین ترندها و نکات مهم در زمینه مد
+                    و پوشش با خبر بشید.
                   </Paragraph>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto">
+                <div className="flex w-full flex-wrap items-center gap-2 sm:gap-3 lg:w-auto">
                   <Button
-                    type={subscribed ? "default" : "primary"}
+                    type={subscribed ? 'default' : 'primary'}
                     size="large"
                     icon={subscribed ? <CheckOutlined /> : <BellOutlined />}
                     onClick={() => setSubscribed(!subscribed)}
-                    className={subscribed ? "" : "bg-gradient-to-r from-pink-500 to-purple-600 border-0 hover:from-pink-600 hover:to-purple-700"}
+                    className={
+                      subscribed
+                        ? ''
+                        : 'border-0 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700'
+                    }
                   >
-                    {subscribed ? "دنبال می‌کنم" : "دنبال کردن"}
+                    {subscribed ? 'دنبال می‌کنم' : 'دنبال کردن'}
                   </Button>
                   <Button
                     type="default"
@@ -457,21 +362,20 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-
-      </div>
+          </div>
         </div>
       </div>
 
       {/* Tabs Navigation */}
-      <div className="bg-white border-b border-gray-200 sticky top-[72px] z-40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="sticky top-[72px] z-40 border-b border-gray-200 bg-white shadow-sm">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex justify-end">
-            <div className="flex-1 max-w-full overflow-x-auto">
-        <Tabs
+            <div className="max-w-full flex-1 overflow-x-auto">
+              <Tabs
                 activeKey={activeTab}
                 onChange={setActiveTab}
                 items={tabsItems}
-                className="!border-0 custom-profile-tabs"
+                className="custom-profile-tabs !border-0"
                 moreIcon={null}
                 tabBarStyle={{ marginBottom: 0 }}
               />
@@ -481,130 +385,163 @@ export default function ProfilePage() {
       </div>
 
       {/* Content Area based on Active Tab */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-        {activeTab === "home" && (
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 md:py-8 lg:px-8">
+        {activeTab === 'home' && (
           <div className="space-y-6">
-            {/* Featured Post - Large Display */}
-            <div className="bg-white rounded-xl overflow-hidden shadow-lg">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Thumbnail */}
-                <div className="relative w-full aspect-video lg:aspect-auto lg:h-full min-h-[300px]">
-                  <Link href={`/profile/${featuredPost.id}`}>
-                    <Image
-                      src={featuredPost.thumbnail}
-                      alt={featuredPost.title}
-                      fill
-                      className="object-cover transition-transform duration-300 hover:scale-105"
-                      sizes="(max-width: 1024px) 100vw, 50vw"
-                    />
-                    {/* Category Badge */}
-                    <div className="absolute top-4 left-4 bg-black/80 text-white text-xs px-3 py-1.5 rounded">
-                      {featuredPost.category}
-                    </div>
-                  </Link>
-                </div>
+            {postsLoading ? (
+              <ContentLoading tip="در حال بارگذاری پست‌ها..." />
+            ) : postsError ? (
+              <div className="py-12 text-center">
+                <Text className="text-lg text-red-500">خطا در بارگذاری پست‌ها</Text>
+              </div>
+            ) : posts.length > 0 ? (
+              <>
+                {/* Featured Post - Large Display */}
+                <div className="overflow-hidden rounded-xl bg-white shadow-lg">
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    {/* Thumbnail */}
+                    <div className="relative aspect-video min-h-[300px] w-full lg:aspect-auto lg:h-full">
+                      <Link href={`/products/${featuredPost.id}`}>
+                        <Image
+                          src={featuredPost.thumbnail}
+                          alt={featuredPost.title}
+                          fill
+                          className="object-cover transition-transform duration-300 hover:scale-105"
+                          sizes="(max-width: 1024px) 100vw, 50vw"
+                        />
 
-                {/* Content */}
-                <div className="p-6 lg:p-8 flex flex-col justify-between">
-                  <div>
-                    <Link href={`/profile/${featuredPost.id}`}>
-                      <Title
-                        level={2}
-                        className="!mb-4 !text-2xl lg:!text-3xl !text-gray-800 hover:text-pink-600 transition-colors"
-                      >
-                        {featuredPost.title}
-                      </Title>
-                    </Link>
+                        {/* Post Badges - Top Left */}
+                        {featuredPost.badges && featuredPost.badges.length > 0 && (
+                          <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                            {featuredPost.badges.map((badge: string, index: number) => (
+                              <BaseBadge key={index} text={badge} />
+                            ))}
+                          </div>
+                        )}
 
-                    <div className="flex flex-wrap items-center gap-4 mb-4 text-sm text-gray-600">
-                      <span className="flex items-center gap-2">
-                        <EyeOutlined />
-                        {formatNumber(featuredPost.views)} بازدید
-                      </span>
-                      <span className="flex items-center gap-2">
-                        <CalendarOutlined />
-                        {formatDate(featuredPost.publishedAt)}
-                      </span>
+                        {/* Category Badge - Bottom Left (Larger for featured) */}
+                        <div className="absolute bottom-4 left-4 rounded bg-black/80 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm">
+                          {featuredPost.category}
+                        </div>
+                      </Link>
                     </div>
 
-                    {featuredPost.likes && featuredPost.comments && (
-                      <div className="flex items-center gap-4 mb-6">
-                        <span className="flex items-center gap-2 text-gray-600">
-                          <LikeOutlined className="text-pink-500 text-lg" />
-                          <strong>{formatNumber(featuredPost.likes)}</strong>
-                        </span>
-                        <span className="flex items-center gap-2 text-gray-600">
-                          <MessageOutlined className="text-purple-500 text-lg" />
-                          <strong>{formatNumber(featuredPost.comments)}</strong>
-                        </span>
+                    {/* Content */}
+                    <div className="flex flex-col justify-between p-6 lg:p-8">
+                      <div>
+                        <Link href={`/products/${featuredPost.id}`}>
+                          <Title
+                            level={2}
+                            className="!mb-4 !text-2xl !text-gray-800 transition-colors hover:text-pink-600 lg:!text-3xl"
+                          >
+                            {featuredPost.title}
+                          </Title>
+                        </Link>
+
+                        <div className="mb-4 flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                          <span className="flex items-center gap-2">
+                            <EyeOutlined />
+                            {formatNumber(featuredPost.views)} بازدید
+                          </span>
+                          <span className="flex items-center gap-2">
+                            <CalendarOutlined />
+                            {formatDate(featuredPost.publishedAt)}
+                          </span>
+                        </div>
+
+                        {featuredPost.likes && featuredPost.comments && (
+                          <div className="mb-6 flex items-center gap-4">
+                            <span className="flex items-center gap-2 text-gray-600">
+                              <LikeOutlined className="text-lg text-pink-500" />
+                              <strong>{formatNumber(featuredPost.likes)}</strong>
+                            </span>
+                            <span className="flex items-center gap-2 text-gray-600">
+                              <MessageOutlined className="text-lg text-purple-500" />
+                              <strong>{formatNumber(featuredPost.comments)}</strong>
+                            </span>
+                          </div>
+                        )}
+
+                        <Paragraph className="line-clamp-3 !text-base !leading-7 !text-gray-700">
+                          {featuredPost.description ||
+                            'این پست یکی از محبوب‌ترین پست‌های این کانال است. برای مشاهده جزئیات بیشتر روی لینک زیر کلیک کنید.'}
+                        </Paragraph>
                       </div>
-                    )}
 
-                    <Paragraph className="!text-gray-700 !text-base !leading-7 line-clamp-3">
-                      {featuredPost.description || "این پست یکی از محبوب‌ترین پست‌های این کانال است. برای مشاهده جزئیات بیشتر روی لینک زیر کلیک کنید."}
-                    </Paragraph>
-                  </div>
-
-                  <div className="mt-6">
-                    <Link href={`/profile/${featuredPost.id}`}>
-                      <Button
-                        type="primary"
-                        size="large"
-                        className="bg-gradient-to-r from-pink-500 to-purple-600 border-0 hover:from-pink-600 hover:to-purple-700"
-                      >
-                        مشاهده پست
-                      </Button>
-                    </Link>
+                      <div className="mt-6">
+                        <Link href={`/products/${featuredPost.id}`}>
+                          <Button
+                            type="primary"
+                            size="large"
+                            className="border-0 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
+                          >
+                            مشاهده پست
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Recent Posts Grid */}
-            <div>
-              <Title level={3} className="!mb-6 !text-xl">
-                پست‌های اخیر
-              </Title>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                {mockPosts.slice(1, 5).map((post) => (
-                  <PostCard key={post.id} post={post} />
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "playlists" && (
-          <div>
-            {mockPlaylists.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                {mockPlaylists.map((playlist) => (
-                  <PlaylistCard key={playlist.id} playlist={playlist} />
-                ))}
-              </div>
+                {/* Recent Posts Grid */}
+                <div>
+                  <Title level={3} className="!mb-6 !text-xl">
+                    پست‌های اخیر
+                  </Title>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+                    {posts.slice(1, 5).map((post: Post) => (
+                      <PostCard key={post.id} post={post} />
+                    ))}
+                  </div>
+                </div>
+              </>
             ) : (
-              <div className="text-center py-16">
-                <Text className="text-gray-500 text-lg">
-                  فهرستی یافت نشد
-                </Text>
+              <div className="py-16 text-center">
+                <Text className="text-lg text-gray-500">پستی یافت نشد</Text>
               </div>
             )}
           </div>
         )}
 
-        {activeTab === "posts" && (
+        {activeTab === 'playlists' && (
           <div>
-            {mockPosts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                {mockPosts.map((post) => (
+            {playlistsLoading ? (
+              <ContentLoading tip="در حال بارگذاری پلی‌لیست‌ها..." />
+            ) : playlistsError ? (
+              <div className="py-12 text-center">
+                <Text className="text-lg text-red-500">خطا در بارگذاری فهرست‌ها</Text>
+              </div>
+            ) : playlists.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+                {playlists.map((playlist: Playlist) => (
+                  <PlaylistCard key={playlist.id} playlist={playlist} />
+                ))}
+              </div>
+            ) : (
+              <div className="py-16 text-center">
+                <Text className="text-lg text-gray-500">فهرستی یافت نشد</Text>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'posts' && (
+          <div>
+            {postsLoading ? (
+              <ContentLoading tip="در حال بارگذاری پست‌ها..." />
+            ) : postsError ? (
+              <div className="py-12 text-center">
+                <Text className="text-lg text-red-500">خطا در بارگذاری پست‌ها</Text>
+              </div>
+            ) : posts.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+                {posts.map((post: Post) => (
                   <PostCard key={post.id} post={post} />
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16">
-                <Text className="text-gray-500 text-lg">
-                  پستی یافت نشد
-                </Text>
+              <div className="py-16 text-center">
+                <Text className="text-lg text-gray-500">پستی یافت نشد</Text>
               </div>
             )}
           </div>
@@ -612,7 +549,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Chat Fixed - Keep the existing chat component */}
-      <div className="fixed left-0 bottom-0 ml-4 mb-4 z-50 w-80">
+      <div className="fixed bottom-0 left-0 z-50 mb-4 ml-4 w-80">
         {/* Chat component can be added here if needed */}
       </div>
 
