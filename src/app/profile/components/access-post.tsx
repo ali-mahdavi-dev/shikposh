@@ -1,24 +1,48 @@
 "use client";
-import { SmileOutlined } from "@ant-design/icons";
+
 import { Select } from "antd";
 import React from "react";
 
-export default function AccessPost() {
+interface AccessPostProps {
+  defaultValue?: string;
+  options?: { value: string; label: string }[];
+  onChange?: (value: string | string[]) => void;
+  placeholder?: string;
+  style?: React.CSSProperties;
+}
+
+const defaultOptions = [
+  { value: "public", label: "عمومی" },
+  { value: "private", label: "خصوصی" },
+  { value: "friends", label: "دوستان" },
+];
+
+const AccessPost: React.FC<AccessPostProps> = ({
+  defaultValue = "public",
+  options = defaultOptions,
+  onChange,
+  placeholder = "انتخاب دسترسی",
+  style = { width: 120 },
+}) => {
   const handleChange = (value: string | string[]) => {
-    console.log(`selected ${value}`);
+    if (onChange) {
+      onChange(value);
+    } else {
+      console.log(`selected ${value}`);
+    }
   };
+
   return (
     <div>
       <Select
-        defaultValue="lucy"
-        style={{ width: 120 }}
+        defaultValue={defaultValue}
+        style={style}
         onChange={handleChange}
-        options={[
-          { value: "jack", label: "Jack" },
-          { value: "lucy", label: "Lucy" },
-          { value: "Yiminghe", label: "yiminghe" },
-        ]}
+        options={options}
+        placeholder={placeholder}
       />
     </div>
   );
-}
+};
+
+export default AccessPost;

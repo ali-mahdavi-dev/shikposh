@@ -61,22 +61,32 @@ export interface Product {
   rating: number;
   reviewCount: number;
   description: string;
-  features: string[];
-  colors: Record<string, ProductColor>;
+  features?: string[];
+  colors: Record<string, { name: string; stock?: number; discount?: number }>;
+  variants?: Record<string, ProductSize>;
   sizes: string[];
-  specs: Record<string, string>;
+  specs?: Record<string, string>;
   category: string;
-  tags: string[];
+  tags?: string[];
+  image?: string;
+  price?: number;
+  originalPrice?: number;
+  discount?: number;
+  isNew?: boolean;
+  isFeatured?: boolean;
 }
 
-
-
-export interface ProductColor {
+export interface ProductVariant {
   name: string;
   images: string[];
   price: number;
   stock: number;
   discount?: number;
+}
+
+export interface ProductSize {
+  name: string;
+  size: Record<string, ProductVariant>;
 }
 
 export interface RelatedProduct {
@@ -87,3 +97,15 @@ export interface RelatedProduct {
   rating: number;
 }
 
+// Post related types
+export interface Post {
+  id: string;
+  title: string;
+  thumbnail: string;
+  views: number;
+  publishedAt: string;
+  description?: string;
+  category?: string;
+  likes?: number;
+  comments?: number;
+}

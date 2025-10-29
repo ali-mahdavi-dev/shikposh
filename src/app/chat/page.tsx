@@ -1,8 +1,8 @@
-import { Avatar, Collapse, CollapseProps } from "antd";
+import { Avatar } from "antd";
 import Title from "antd/es/typography/Title";
 import React from "react";
 
-export default function page() {
+export default function Page() {
   return (
     <div className="flex items-center flex-col">
       <div className="w-1/2 h-2/3 border-2 border-gray-200 rounded flex flex-col">

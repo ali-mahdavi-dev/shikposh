@@ -4,9 +4,9 @@
 @font-face {
   font-family: "Vazir";
   src: url("/fonts/Vazir.woff2") format("woff2"),
-       url("/fonts/Vazir.woff") format("woff"),
-       url("/fonts/Vazir.ttf") format("truetype"),
-       url("/fonts/Vazir.eot") format("embedded-opentype");
+    url("/fonts/Vazir.woff") format("woff"),
+    url("/fonts/Vazir.ttf") format("truetype"),
+    url("/fonts/Vazir.eot") format("embedded-opentype");
   font-weight: 400;
   font-style: normal;
 }
@@ -364,9 +364,11 @@ body {
 }
 
 /* Smooth transitions for all interactive elements */
-* {
+/* بهتر */
+*:not(.ant-tooltip),
+*:not(.ant-tooltip *) {
   transition: color 0.2s ease, background-color 0.2s ease,
-    border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease !important;
+    border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .slick-slide > div {
@@ -374,4 +376,10 @@ body {
 }
 .slick-slide {
   left: 0 !important;
+}
+
+[role="tab"] {
+  text-align: center;
+  padding: 0 10px;
+  margin-left: 1px;
 }

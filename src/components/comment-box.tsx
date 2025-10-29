@@ -1,70 +1,90 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Card,
   Rate,
   Typography,
   Button,
   Avatar,
-  Divider,
   Input,
   Form,
+  Spin,
+  Alert,
 } from "antd";
 import { UserOutlined, LikeOutlined, DislikeOutlined } from "@ant-design/icons";
 import { motion } from "framer-motion";
-import { CommentBoxProps, Review, ReviewFormData } from "@/types";
+import { CommentBoxProps, ReviewFormData } from "@/types";
+import { useReviews, useCreateReview, useUpdateReviewHelpful } from "@/hooks/use-api";
 
-const { Title, Text, Paragraph } = Typography;
+const { Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
-const CommentBox: React.FC<CommentBoxProps> = ({ productId }) => {
+const CommentBox: React.FC<CommentBoxProps> = ({ productId = "1" }) => {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [form] = Form.useForm();
+  
+  const { data: reviews = [], isLoading, error } = useReviews(productId);
+  const createReviewMutation = useCreateReview();
+  const updateHelpfulMutation = useUpdateReviewHelpful();
 
-  const reviews: Review[] = [
-    {
-      id: 1,
-      user: "مریم احمدی",
-      rating: 5,
-      date: "1403/01/15",
-      comment:
-        "پیراهن فوق‌العاده زیبا و با کیفیتی بود. جنس پارچه عالی و دوخت بسیار تمیز. قطعاً دوباره از این فروشگاه خرید خواهم کرد.",
-      helpful: 12,
-      notHelpful: 1,
-      verified: true,
-    },
-    {
-      id: 2,
-      user: "سارا کریمی",
-      rating: 4,
-      date: "1403/01/10",
-      comment:
-        "محصول خوبی است اما رنگ کمی متفاوت از تصویر بود. در کل راضی هستم.",
-      helpful: 8,
-      notHelpful: 2,
-      verified: true,
-    },
-    {
-      id: 3,
-      user: "فاطمه رضایی",
-      rating: 5,
-      date: "1403/01/05",
-      comment:
-        "عالی بود! سایز دقیقاً مطابق جدول بود و کیفیت پارچه بسیار خوب. پیشنهاد می‌کنم.",
-      helpful: 15,
-      notHelpful: 0,
-      verified: true,
-    },
-  ];
+  // Calculate average rating and rating distribution
+  const ratingStats = useMemo(() => {
+    if (!reviews.length) return { average: 0, distribution: {} };
+    
+    const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
+    const average = totalRating / reviews.length;
+    
+    const distribution: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    reviews.forEach(r => {
+      distribution[r.rating] = (distribution[r.rating] || 0) + 1;
+    });
+    
+    const distributionPercent: Record<number, number> = {};
+    Object.keys(distribution).forEach(rating => {
+      distributionPercent[Number(rating)] = (distribution[Number(rating)] / reviews.length) * 100;
+    });
+    
+    return { average, distribution: distributionPercent };
+  }, [reviews]);
 
-  const handleSubmitReview = (values: ReviewFormData) => {
-    console.log("New review:", values);
-    form.resetFields();
-    setShowReviewForm(false);
+  const handleSubmitReview = async (values: ReviewFormData) => {
+    try {
+      await createReviewMutation.mutateAsync({
+        ...values,
+        productId,
+      });
+      form.resetFields();
+      setShowReviewForm(false);
+    } catch (error) {
+      console.error("Failed to submit review:", error);
+    }
   };
 
-  const handleHelpful = (reviewId: number, type: string) => {
-    console.log(`Mark review ${reviewId} as ${type}`);
+  const handleHelpful = async (reviewId: number, type: "helpful" | "notHelpful") => {
+    try {
+      await updateHelpfulMutation.mutateAsync({ reviewId, type });
+    } catch (error) {
+      console.error("Failed to update review helpful:", error);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert
+        message="خطا در بارگذاری نظرات"
+        description="لطفاً دوباره تلاش کنید"
+        type="error"
+        showIcon
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -72,9 +92,11 @@ const CommentBox: React.FC<CommentBoxProps> = ({ productId }) => {
       <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-6 rounded-2xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="text-center">
-            <div className="text-4xl font-bold text-pink-600 mb-2">4.8</div>
-            <Rate disabled value={4.8} allowHalf className="mb-2" />
-            <Text className="text-gray-600">از 156 نظر</Text>
+            <div className="text-4xl font-bold text-pink-600 mb-2">
+              {ratingStats.average.toFixed(1)}
+            </div>
+            <Rate disabled value={ratingStats.average} allowHalf className="mb-2" />
+            <Text className="text-gray-600">از {reviews.length} نظر</Text>
           </div>
 
           <div className="space-y-2">
@@ -85,12 +107,12 @@ const CommentBox: React.FC<CommentBoxProps> = ({ productId }) => {
                   <div
                     className="bg-pink-500 h-2 rounded-full"
                     style={{
-                      width: `${star === 5 ? 75 : star === 4 ? 20 : 5}%`,
+                      width: `${ratingStats.distribution[star] || 0}%`,
                     }}
                   />
                 </div>
                 <Text className="text-sm text-gray-500 w-8">
-                  {star === 5 ? "75%" : star === 4 ? "20%" : "5%"}
+                  {ratingStats.distribution[star]?.toFixed(0) || 0}%
                 </Text>
               </div>
             ))}
@@ -150,6 +172,7 @@ const CommentBox: React.FC<CommentBoxProps> = ({ productId }) => {
                 <Button
                   type="primary"
                   htmlType="submit"
+                  loading={createReviewMutation.isPending}
                   className="bg-pink-500 border-pink-500 rounded-xl"
                 >
                   ثبت نظر
@@ -209,6 +232,7 @@ const CommentBox: React.FC<CommentBoxProps> = ({ productId }) => {
                     size="small"
                     icon={<LikeOutlined />}
                     onClick={() => handleHelpful(review.id, "helpful")}
+                    loading={updateHelpfulMutation.isPending}
                     className="text-green-600 hover:bg-green-50"
                   >
                     مفید ({review.helpful})
@@ -218,7 +242,8 @@ const CommentBox: React.FC<CommentBoxProps> = ({ productId }) => {
                     type="text"
                     size="small"
                     icon={<DislikeOutlined />}
-                    onClick={() => handleHelpful(review.id, "not-helpful")}
+                    onClick={() => handleHelpful(review.id, "notHelpful")}
+                    loading={updateHelpfulMutation.isPending}
                     className="text-red-600 hover:bg-red-50"
                   >
                     غیرمفید ({review.notHelpful})
@@ -231,16 +256,19 @@ const CommentBox: React.FC<CommentBoxProps> = ({ productId }) => {
       </div>
 
       {/* Load More Reviews */}
-      <div className="text-center">
-        <Button
-          type="default"
-          className="rounded-xl border-2 border-gray-300 hover:border-pink-300 hover:text-pink-500"
-        >
-          مشاهده نظرات بیشتر
-        </Button>
-      </div>
+      {reviews.length > 0 && (
+        <div className="text-center">
+          <Button
+            type="default"
+            className="rounded-xl border-2 border-gray-300 hover:border-pink-300 hover:text-pink-500"
+          >
+            مشاهده نظرات بیشتر
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
 
 export default CommentBox;
+

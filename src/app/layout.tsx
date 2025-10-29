@@ -4,9 +4,11 @@ import type { Metadata } from "next";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { Content } from "antd/lib/layout/layout";
 import { ConfigProvider } from "antd";
-import Header from "@/components/layout/header";
+import Header from "@/components/layout/site-header";
 import Footer from "@/components/layout/footer";
-import localFont from "next/font/local";
+import Breadcrumbs from "@/components/breadcrumbs";
+import { ReactQueryProvider } from "@/providers/react-query-provider";
+import { ReduxProvider } from "@/providers/redux-provider";
 import "./globals.css";
 
 const theme = {
@@ -51,25 +53,31 @@ export default function RootLayout({
     <html lang="fa">
       <body>
         <React.StrictMode>
-          <AntdRegistry>
-            <ConfigProvider theme={theme} direction="rtl">
-              {/* Header */}
-              <Header />
-              {/* Content */}
-              <Content>
-                <div
-                  className="min-h-lvh px-2 bg-gray-50"
-                  style={{
-                    marginTop: 46,
-                    padding: 24,
-                  }}
-                >
-                  <main className="">{children}</main>
-                </div>
-              </Content>
-              <Footer />
-            </ConfigProvider>
-          </AntdRegistry>
+          <ReduxProvider>
+            <ReactQueryProvider>
+              <AntdRegistry>
+                <ConfigProvider theme={theme} direction="rtl">
+                  {/* Header */}
+                  <Header />
+                  {/* Breadcrumbs */}
+                  <Breadcrumbs />
+                  {/* Content */}
+                  <Content>
+                    <div
+                      className="min-h-lvh px-2 bg-gray-50"
+                      style={{
+                        marginTop: 46,
+                        padding: 24,
+                      }}
+                    >
+                      <main className="">{children}</main>
+                    </div>
+                  </Content>
+                  <Footer />
+                </ConfigProvider>
+              </AntdRegistry>
+            </ReactQueryProvider>
+          </ReduxProvider>
         </React.StrictMode>
       </body>
     </html>

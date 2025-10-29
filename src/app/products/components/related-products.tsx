@@ -2,6 +2,7 @@ import React from "react";
 import { Card, Typography, Rate, Button } from "antd";
 import { ShoppingCartOutlined, EyeOutlined } from "@ant-design/icons";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { RelatedProductsProps } from "../types";
 
 const { Title, Text } = Typography;
@@ -36,11 +37,12 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ products }) => {
               style={{ padding: 0 }}
             >
               {/* Product Image */}
-              <div className="relative overflow-hidden">
-                <img
+              <div className="relative overflow-hidden h-48">
+                <Image
                   src={product.image}
                   alt={product.name}
-                  className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                  fill
+                  className="object-cover group-hover:scale-110 transition-transform duration-500"
                 />
 
                 {/* Overlay Actions */}
@@ -97,7 +99,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ products }) => {
 
                   <Button
                     type="primary"
-                    size="small"
+                    // size="small"
                     icon={<ShoppingCartOutlined />}
                     onClick={() => handleAddToCart(product.id)}
                     className="bg-gradient-to-r from-pink-500 to-purple-600 border-0 rounded-lg hover:from-pink-600 hover:to-purple-700"

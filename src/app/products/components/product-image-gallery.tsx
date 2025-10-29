@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Image } from 'antd';
-import { LeftOutlined, RightOutlined, ZoomInOutlined } from '@ant-design/icons';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ProductImageGalleryProps } from '../types';
+import React, { useState } from "react";
+import { Image } from "antd";
+import { LeftOutlined, RightOutlined, ZoomInOutlined } from "@ant-design/icons";
+import { motion, AnimatePresence } from "framer-motion";
+import { ProductImageGalleryProps } from "../types";
 
 const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, productName }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
@@ -80,7 +80,11 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
             key={index}
             src={image}
             alt={`${productName} thumbnail ${index + 1}`}
-            className={`w-16 h-16 object-cover rounded-lg cursor-pointer border-2 ${index === currentImageIndex ? 'border-pink-500 shadow-md' : 'border-transparent'} transition-all duration-200`}
+            className={`w-16 h-16 object-cover rounded-lg cursor-pointer border-2 ${
+              index === currentImageIndex
+                ? "border-pink-500 shadow-md"
+                : "border-transparent"
+            } transition-all duration-200`}
             onClick={() => handleThumbnailClick(index)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -89,7 +93,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
       </div>
 
       {/* Ant Design Image.PreviewGroup for full-screen zoom */}
-      <div style={{ display: 'none' }}>
+      <div style={{ display: "none" }}>
         <Image.PreviewGroup
           preview={{
             visible: isViewerVisible,
@@ -98,7 +102,11 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
           }}
         >
           {images.map((image, index) => (
-            <Image key={index} src={image} />
+            <Image
+              key={index}
+              src={image}
+              alt={`${productName} - Image ${index + 1}`}
+            />
           ))}
         </Image.PreviewGroup>
       </div>

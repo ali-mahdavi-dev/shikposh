@@ -1,12 +1,17 @@
-import React from 'react';
-import { Button, Typography } from 'antd';
-import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
-import { motion } from 'framer-motion';
-import { QuantitySelectorProps } from '../types';
+import React from "react";
+import { Button, Typography } from "antd";
+import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
+import { motion } from "framer-motion";
+import { QuantitySelectorProps } from "../types";
 
 const { Text } = Typography;
 
-const QuantitySelector: React.FC<QuantitySelectorProps> = ({ quantity, onQuantityChange, max = 10, min = 1 }) => {
+const QuantitySelector: React.FC<QuantitySelectorProps> = ({
+  quantity,
+  onQuantityChange,
+  max = 10,
+  min = 1,
+}) => {
   const handleDecrease = () => {
     if (quantity > min) {
       onQuantityChange(quantity - 1);

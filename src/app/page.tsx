@@ -24,7 +24,7 @@ import Image from "next/image";
 
 const { Title, Text, Paragraph } = Typography;
 
-const page: React.FC = () => {
+const Page: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   // Hero carousel data
@@ -315,109 +315,114 @@ const page: React.FC = () => {
                     className="h-full shadow-lg hover:shadow-2xl transition-all duration-300 rounded-2xl overflow-hidden border-0"
                     style={{ padding: 0 }}
                   >
-                    <div className="relative">
-                      <Image
-                        src={product.image}
-                        alt={product.name}
-                        width={200}
-                        height={200}
-                        className="w-full h-64 object-cover"
-                      />
-
-                      {/* Badges */}
-                      <div className="absolute top-3 left-3 flex flex-col gap-2">
-                        {product.isNew && (
-                          <Tag
-                            color="green"
-                            className="rounded-full px-3 py-1 text-xs font-semibold"
-                          >
-                            جدید
-                          </Tag>
-                        )}
-                        {product.discount > 0 && (
-                          <Tag
-                            color="red"
-                            className="rounded-full px-3 py-1 text-xs font-semibold"
-                          >
-                            {product.discount}% تخفیف
-                          </Tag>
-                        )}
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <motion.div
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          <Button
-                            type="primary"
-                            shape="circle"
-                            icon={<HeartOutlined />}
-                            className="bg-white/80 text-pink-500 border-0 shadow-md hover:bg-white"
+                    <Link href={`/products/${product.id}`} className="block">
+                      <div className="relative">
+                        {product.image && (
+                          <Image
+                            src={product.image}
+                            alt={product.name}
+                            width={200}
+                            height={200}
+                            className="w-full h-64 object-cover"
                           />
-                        </motion.div>
-                        <motion.div
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          <Link href={`/product/${product.id}`}>
+                        )}
+
+                        {/* Badges */}
+                        <div className="absolute top-3 left-3 flex flex-col gap-2">
+                          {product.isNew && (
+                            <Tag
+                              color="green"
+                              className="rounded-full px-3 py-1 text-xs font-semibold"
+                            >
+                              جدید
+                            </Tag>
+                          )}
+                          {product.discount && product.discount > 0 && (
+                            <Tag
+                              color="red"
+                              className="rounded-full px-3 py-1 text-xs font-semibold"
+                            >
+                              {product.discount}% تخفیف
+                            </Tag>
+                          )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <motion.div
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
                             <Button
                               type="primary"
                               shape="circle"
-                              icon={<EyeOutlined />}
-                              className="bg-white/80 text-blue-500 border-0 shadow-md hover:bg-white"
+                              icon={<HeartOutlined />}
+                              className="bg-white/80 text-pink-500 border-0 shadow-md hover:bg-white"
                             />
-                          </Link>
-                        </motion.div>
+                          </motion.div>
+                          <motion.div
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            <Link href={`/product/${product.id}`}>
+                              <Button
+                                type="primary"
+                                shape="circle"
+                                icon={<EyeOutlined />}
+                                className="bg-white/80 text-blue-500 border-0 shadow-md hover:bg-white"
+                              />
+                            </Link>
+                          </motion.div>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="p-4 space-y-3">
-                      <Link href={`/product/${product.id}`} className="block">
+                      <div className="p-4 space-y-3">
                         <Text className="text-gray-800 font-semibold text-base hover:text-pink-600 transition-colors line-clamp-2">
                           {product.name}
                         </Text>
-                      </Link>
 
-                      <div className="flex items-center gap-2">
-                        <Rate
-                          disabled
-                          value={product.rating}
-                          className="text-xs"
-                        />
-                        <Text className="text-gray-500 text-xs">
-                          ({product.reviewCount})
-                        </Text>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-col">
-                          {product.originalPrice &&
-                            product.originalPrice > product.price && (
-                              <Text delete className="text-gray-400 text-sm">
-                                {product.originalPrice.toLocaleString()} تومان
-                              </Text>
-                            )}
-                          <Text className="text-pink-600 font-bold text-lg">
-                            {product.price.toLocaleString()} تومان
+                        <div className="flex items-center gap-2">
+                          <Rate
+                            disabled
+                            value={product.rating}
+                            className="text-xs"
+                          />
+                          <Text className="text-gray-500 text-xs">
+                            ({product.reviewCount})
                           </Text>
                         </div>
 
-                        <motion.div
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <Button
-                            type="primary"
-                            icon={<ShoppingCartOutlined />}
-                            className="bg-gradient-to-r from-pink-500 to-purple-600 border-0 rounded-lg"
+                        <div className="flex items-center justify-between">
+                          <div className="flex flex-col">
+                            {product.originalPrice &&
+                              product.price &&
+                              product.originalPrice > product.price && (
+                                <Text delete className="text-gray-400 text-sm">
+                                  {product.originalPrice.toLocaleString()} تومان
+                                </Text>
+                              )}
+                            {product.price && (
+                              <Text className="text-pink-600 font-bold text-lg">
+                                {product.price.toLocaleString()} تومان
+                              </Text>
+                            )}
+                          </div>
+
+                          <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                           >
-                            خرید
-                          </Button>
-                        </motion.div>
+                            <Button
+                              type="primary"
+                              icon={<ShoppingCartOutlined />}
+                              className="bg-gradient-to-r from-pink-500 to-purple-600 border-0 rounded-lg"
+                            >
+                              خرید
+                            </Button>
+                          </motion.div>
+                        </div>
                       </div>
-                    </div>
+                    </Link>
                   </Card>
                 </motion.div>
               </Col>
@@ -521,4 +526,4 @@ const page: React.FC = () => {
   );
 };
 
-export default page;
+export default Page;

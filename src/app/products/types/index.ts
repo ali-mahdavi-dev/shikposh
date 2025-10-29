@@ -1,5 +1,4 @@
-import { Product, ProductColor, RelatedProduct } from "@/types";
-
+import { Product, ProductSize, RelatedProduct } from "@/types";
 
 // Component props types
 export interface ProductDetailProps {
@@ -12,7 +11,7 @@ export interface ProductImageGalleryProps {
 }
 
 export interface ColorSelectorProps {
-  colors: Record<string, ProductColor>;
+  colors: Record<string, ProductSize>;
   selectedColor: string;
   onColorChange: (color: string) => void;
 }
@@ -34,7 +33,6 @@ export interface RelatedProductsProps {
   products: RelatedProduct[];
 }
 
-
 export interface SellerPageProps {
   sellerId?: string;
 }
@@ -43,7 +41,6 @@ export interface ProductGridProps {
   products: Product[];
   loading?: boolean;
 }
-
 
 // API response types
 export interface ApiResponse<T> {
@@ -60,8 +57,6 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-
-
 // Filter types
 export interface ProductFilters {
   category?: string;
@@ -69,6 +64,6 @@ export interface ProductFilters {
   maxPrice?: number;
   rating?: number;
   inStock?: boolean;
-  sortBy?: 'price' | 'rating' | 'newest' | 'popular';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "price" | "rating" | "newest" | "popular";
+  sortOrder?: "asc" | "desc";
 }

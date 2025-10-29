@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Card,
   Button,
@@ -7,7 +7,6 @@ import {
   Typography,
   Divider,
   Tabs,
-  Breadcrumb,
   Tag,
   Tooltip,
   Badge,
@@ -20,7 +19,6 @@ import {
 import { motion } from "framer-motion";
 import {
   Product,
-  ProductColor,
   RelatedProduct,
   ProductDetailProps,
 } from "../types";
@@ -30,11 +28,14 @@ import QuantitySelector from "../components/quantity-selector";
 import RelatedProducts from "../components/related-products";
 import ProductImageGallery from "../components/product-image-gallery";
 import CommentBox from "@/components/comment-box";
+import { ProductVariant } from "@/types";
+import ProfileCard from "@/app/profile/components/profile-card";
 
 const { Title, Paragraph, Text } = Typography;
 
 const ProductDetail: React.FC<ProductDetailProps> = ({ productId = "1" }) => {
-  const product: Product = {
+  // Memoize product to prevent recreation on every render
+  const product: Product = useMemo(() => ({
     id: productId,
     name: "پیراهن مجلسی زنانه",
     brand: "Fashion Elite",
@@ -49,29 +50,40 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = "1" }) => {
       "مناسب برای تمام فصول",
     ],
     colors: {
+      red: { name: "قرمز" },
+      blue: { name: "آبی" },
+    },
+    variants: {
       red: {
-        name: "قرمز",
-        images: ["/images/dress-main.jpg", "/images/dress-alt1.jpg"],
-        price: 299000,
-        stock: 8,
-        discount: 15,
+        S: {
+          price: 299000,
+          stock: 3,
+          discount: 10,
+          images: ["/images/dress-main.jpg", "/images/dress-alt1.jpg"],
+        },
+        M: {
+          price: 309000,
+          stock: 0,
+          discount: 5,
+          images: ["/images/dress-alt2.jpeg", "/images/dress-main.jpg"],
+        },
       },
       blue: {
-        name: "آبی",
-        images: ["/images/dress-alt2.jpeg", "/images/dress-main.jpg"],
-        price: 329000,
-        stock: 5,
-        discount: 0,
-      },
-      black: {
-        name: "مشکی",
-        images: ["/images/dress-alt1.jpg", "/images/dress-alt2.jpeg"],
-        price: 349000,
-        stock: 12,
-        discount: 10,
+        S: {
+          price: 319000,
+          stock: 2,
+          discount: 0,
+          images: ["/images/dress-alt1.jpg", "/images/dress-main.jpg"],
+        },
+        M: { price: 329000, stock: 1, discount: 15, images: ["/blue-m.jpg"] },
+        XL: {
+          price: 349000,
+          stock: 12,
+          discount: 10,
+          images: ["/images/dress-alt1.jpg", "/images/dress-alt2.jpeg"],
+        },
       },
     },
-    sizes: ["S", "M", "L", "XL"],
     specs: {
       "جنس پارچه": "ساتن",
       "نوع آستین": "کوتاه",
@@ -82,20 +94,42 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = "1" }) => {
     },
     category: "dresses", // Added category
     tags: ["مجلسی", "جدید"],
-  };
+  }), [productId]);
 
-  const [selectedColor, setSelectedColor] = useState<string>(
-    Object.keys(product.colors)[0]
+  const firstColor = Object.keys(product.variants)[0];
+  const firstSize = Object.keys(product.variants[firstColor])[0];
+
+  const [selectedColor, setSelectedColor] = useState<string>(firstColor);
+  const [selectedSize, setSelectedSize] = useState<string>(firstSize);
+  const [currentVariant, setCurrentVariant] = useState<ProductVariant>(
+    product.variants[firstColor][firstSize]
   );
-  const [selectedSize, setSelectedSize] = useState<string>(product.sizes[1]);
+
   const [quantity, setQuantity] = useState<number>(1);
   const [isWishlisted, setIsWishlisted] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>("1");
 
-  const currentColor: ProductColor = product.colors[selectedColor];
-  const discountPrice: number = currentColor.discount
-    ? Math.round(currentColor.price * (1 - currentColor.discount / 100))
-    : currentColor.price;
+  useEffect(() => {
+    const variant = product.variants[selectedColor]?.[selectedSize];
+    if (variant) {
+      setCurrentVariant(variant);
+    } else {
+      // Only update if the size is actually different to prevent infinite loop
+      const availableSizes = Object.keys(product.variants[selectedColor] || {});
+      if (availableSizes.length > 0) {
+        const firstAvailableSize = availableSizes[0];
+        if (firstAvailableSize !== selectedSize) {
+          setSelectedSize(firstAvailableSize);
+          setCurrentVariant(product.variants[selectedColor][firstAvailableSize]);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedColor, selectedSize]);
+
+  const discountPrice = currentVariant.discount
+    ? Math.round(currentVariant.price * (1 - currentVariant.discount / 100))
+    : currentVariant.price;
 
   const relatedProducts: RelatedProduct[] = [
     {
@@ -194,20 +228,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = "1" }) => {
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
       <div className="py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Breadcrumb */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6"
-          >
-            <Breadcrumb className="text-sm">
-              <Breadcrumb.Item>خانه</Breadcrumb.Item>
-              <Breadcrumb.Item>لباس زنانه</Breadcrumb.Item>
-              <Breadcrumb.Item>پیراهن مجلسی</Breadcrumb.Item>
-              <Breadcrumb.Item>{product.name}</Breadcrumb.Item>
-            </Breadcrumb>
-          </motion.div>
-
           {/* Main Product Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -219,9 +239,12 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = "1" }) => {
                 {/* Product Images */}
                 <div className="space-y-4">
                   <ProductImageGallery
-                    images={currentColor.images}
+                    images={currentVariant.images}
                     productName={product.name}
                   />
+                  <div className="mt-4">
+                    <ProfileCard />
+                  </div>
                 </div>
 
                 {/* Product Details */}
@@ -238,9 +261,9 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = "1" }) => {
                     </div>
                     <Title level={2} className="mb-3 text-gray-800">
                       {product.name}
-                      {currentColor.discount && currentColor.discount > 0 && (
+                      {currentVariant.discount > 0 && (
                         <Badge.Ribbon
-                          text={`${currentColor.discount}% تخفیف`}
+                          text={`${currentVariant.discount}% تخفیف`}
                           color="red"
                         >
                           <div></div>
@@ -286,14 +309,28 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = "1" }) => {
 
                   {/* Color Selection */}
                   <ColorSelector
-                    colors={product.colors}
+                    colors={Object.fromEntries(
+                      Object.entries(product.variants).map(
+                        ([colorKey, sizes]) => [
+                          colorKey,
+                          {
+                            name: product.colors[colorKey]?.name || colorKey,
+                            stock: Object.values(sizes).reduce(
+                              (sum, s) => sum + (s.stock ?? 0),
+                              0
+                            ),
+                            discount: Object.values(sizes)[0].discount,
+                          },
+                        ]
+                      )
+                    )}
                     selectedColor={selectedColor}
                     onColorChange={setSelectedColor}
                   />
 
                   {/* Size Selection */}
                   <SizeSelector
-                    sizes={product.sizes}
+                    sizes={Object.keys(product.variants[selectedColor])}
                     selectedSize={selectedSize}
                     onSizeChange={setSelectedSize}
                   />
@@ -302,18 +339,18 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = "1" }) => {
                   <div className="flex items-center gap-2">
                     <div
                       className={`w-3 h-3 rounded-full ${
-                        currentColor.stock > 0 ? "bg-green-500" : "bg-red-500"
+                        currentVariant.stock > 0 ? "bg-green-500" : "bg-red-500"
                       }`}
                     ></div>
                     <Text
                       className={
-                        currentColor.stock > 0
+                        currentVariant.stock > 0
                           ? "text-green-600"
                           : "text-red-500"
                       }
                     >
-                      {currentColor.stock > 0
-                        ? `موجود در انبار (${currentColor.stock} عدد)`
+                      {currentVariant.stock > 0
+                        ? `موجود در انبار (${currentVariant.stock} عدد)`
                         : "ناموجود"}
                     </Text>
                   </div>
@@ -322,10 +359,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = "1" }) => {
                   <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        {currentColor.discount && currentColor.discount > 0 ? (
+                        {currentVariant.discount &&
+                        currentVariant.discount > 0 ? (
                           <>
                             <Text delete className="text-gray-400 text-lg">
-                              {currentColor.price.toLocaleString()} تومان
+                              {currentVariant.price.toLocaleString()} تومان
                             </Text>
                             <Text className="text-2xl font-bold text-red-600">
                               {discountPrice.toLocaleString()} تومان
@@ -333,7 +371,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = "1" }) => {
                           </>
                         ) : (
                           <Text className="text-2xl font-bold text-pink-600">
-                            {currentColor.price.toLocaleString()} تومان
+                            {currentVariant.price.toLocaleString()} تومان
                           </Text>
                         )}
                       </div>
@@ -341,7 +379,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = "1" }) => {
                       <QuantitySelector
                         quantity={quantity}
                         onQuantityChange={setQuantity}
-                        max={currentColor.stock}
+                        max={currentVariant.stock}
                       />
                     </div>
 
@@ -351,7 +389,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = "1" }) => {
                         size="large"
                         icon={<ShoppingCartOutlined />}
                         onClick={handleAddToCart}
-                        disabled={currentColor.stock === 0}
+                        disabled={currentVariant.stock === 0}
                         className="flex-1 bg-gradient-to-r from-pink-500 to-purple-600 border-0 h-12 text-white font-semibold rounded-xl hover:from-pink-600 hover:to-purple-700 transition-all duration-300"
                       >
                         افزودن به سبد خرید
