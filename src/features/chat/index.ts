@@ -4,7 +4,7 @@ export * from './domain/repositories/chat.repository';
 export * from './domain/services/chat.service';
 
 // Infrastructure exports
-export * from './infrastructure/repositories/json-server-chat.repository';
+export * from './infrastructure/repositories/http-chat.repository';
 export * from './infrastructure/di/chat.container';
 
 // Application exports

@@ -1,13 +1,13 @@
 import { ChatService } from '../../domain/services/chat.service';
-import { JsonServerChatRepository } from '../repositories/json-server-chat.repository';
+import { HttpChatRepository } from '../repositories/http-chat.repository';
 
 export class ChatContainer {
-  private static chatRepository: JsonServerChatRepository;
+  private static chatRepository: HttpChatRepository;
   private static chatService: ChatService;
 
-  static getChatRepository(): JsonServerChatRepository {
+  static getChatRepository(): HttpChatRepository {
     if (!this.chatRepository) {
-      this.chatRepository = new JsonServerChatRepository();
+      this.chatRepository = new HttpChatRepository();
     }
     return this.chatRepository;
   }

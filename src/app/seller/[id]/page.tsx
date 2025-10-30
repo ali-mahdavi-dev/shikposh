@@ -10,7 +10,8 @@ import { ProductGrid } from '@/components';
 import { CategoryTile } from '@/components/business';
 // import { Seller } from '@/types'; // Not needed anymore
 import { type ProductGridProps } from '@/components/business';
-import { useProducts, useSeller } from '@/hooks/use-api';
+import { useProducts } from '@/features/products';
+import { useSeller } from '@/features/sellers';
 
 const { Title, Text, Paragraph } = Typography;
 

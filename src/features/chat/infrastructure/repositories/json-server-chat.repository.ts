@@ -1,7 +1,8 @@
 import { ChatRepository } from '../../domain/repositories/chat.repository';
 import { ChatUserEntity, ChatMessageEntity } from '../../domain/entities/chat-user.entity';
+import { getApiBaseUrl } from '../../../../shared/config/env';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = getApiBaseUrl();
 
 export class JsonServerChatRepository implements ChatRepository {
   private async fetchData<T>(endpoint: string): Promise<T> {

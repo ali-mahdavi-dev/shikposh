@@ -5,7 +5,7 @@ import { Avatar, Collapse, CollapseProps, Spin, Alert } from 'antd';
 import { ContentLoading } from '@/shared/components/loading';
 import Title from 'antd/es/typography/Title';
 import React from 'react';
-import { useChatUsers } from '@/hooks/use-api';
+import { useChatUsers } from '@/features/chat';
 
 interface ChatUser {
   id: string;

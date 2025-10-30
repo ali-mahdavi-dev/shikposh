@@ -6,7 +6,7 @@ export * from './domain/repositories/product.repository';
 export * from './domain/services/product.service';
 
 // Infrastructure exports
-export * from './infrastructure/repositories/json-server-product.repository';
+export * from './infrastructure/repositories/http-product.repository';
 export * from './infrastructure/di/product.container';
 
 // Application exports

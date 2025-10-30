@@ -13,6 +13,8 @@ import './globals.css';
 const Header = React.lazy(() => import('@/components/layout/site-header'));
 const Footer = React.lazy(() => import('@/components/layout/footer'));
 const Breadcrumbs = React.lazy(() => import('@/components/breadcrumbs'));
+// Dev-only MSW initializer (client component)
+const DevMocks = React.lazy(() => import('@/providers/dev-mocks').then(m => ({ default: m.DevMocks })));
 
 const theme = {
   token: {
@@ -128,7 +130,7 @@ export default function RootLayout({
           <ReduxProvider>
             <ReactQueryProvider>
               <AntdRegistry>
-                <ConfigProvider theme={theme} direction="rtl">
+                <ConfigProvider theme={theme} direction="rtl" notification={{ placement: 'topRight' }}>
                   <App>
                     <ErrorBoundary>
                       {/* API Monitor - Only in development */}
@@ -136,6 +138,13 @@ export default function RootLayout({
                         <div className="fixed top-4 left-4 z-50">
                           <ApiMonitor showDetails={false} />
                         </div>
+                      )}
+
+                      {/* Initialize MSW in development when enabled */}
+                      {process.env.NODE_ENV === 'development' && (
+                        <Suspense fallback={null}>
+                          <DevMocks />
+                        </Suspense>
                       )}
 
                       {/* Header with Suspense */}

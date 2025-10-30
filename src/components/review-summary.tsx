@@ -1,23 +1,33 @@
-import React from 'react';
-import { Card, Rate, Typography, Button, Progress } from 'antd';
+import React, { useState } from 'react';
+import { Card, Rate, Typography, Button, Progress, Form, Input, App } from 'antd';
 import { StarOutlined, CommentOutlined } from '@ant-design/icons';
-import { ReviewEntity } from '@/features/products';
+import { ReviewEntity, useCreateReview } from '@/features/products';
 
 const { Text, Title } = Typography;
 
 interface ReviewSummaryProps {
+  productId: string;
   reviews: ReviewEntity[];
   averageRating: number;
   totalReviews: number;
-  onViewReviews: () => void;
 }
 
-const ReviewSummary: React.FC<ReviewSummaryProps> = ({
-  reviews,
-  averageRating,
-  totalReviews,
-  onViewReviews,
-}) => {
+const ReviewSummary: React.FC<ReviewSummaryProps> = ({ productId, reviews, averageRating, totalReviews }) => {
+  const { notification } = App.useApp();
+  const [showForm, setShowForm] = useState(false);
+  const [form] = Form.useForm();
+  const createReviewMutation = useCreateReview();
+
+  const handleSubmitReview = async (values: { rating: number; comment: string }) => {
+    try {
+      await createReviewMutation.mutateAsync({ productId, rating: values.rating, comment: values.comment });
+      form.resetFields();
+      setShowForm(false);
+      notification.success({ message: 'عملیات موفق', description: 'نظر شما با موفقیت ثبت شد' });
+    } catch (e) {
+      notification.error({ message: 'خطا', description: 'خطا در ثبت نظر. لطفاً دوباره تلاش کنید' });
+    }
+  };
   // Calculate rating distribution
   const ratingDistribution = [5, 4, 3, 2, 1].map((star) => {
     const count = reviews.filter((review) => review.rating === star).length;
@@ -41,8 +51,8 @@ const ReviewSummary: React.FC<ReviewSummaryProps> = ({
               نظرات کاربران
             </Title>
           </div>
-          <Button type="link" onClick={onViewReviews} className="font-semibold text-pink-600">
-            مشاهده همه نظرات
+          <Button type="link" onClick={() => setShowForm((s) => !s)} className="font-semibold text-pink-600">
+            {showForm ? 'لغو ثبت نظر' : 'ثبت نظر'}
           </Button>
         </div>
 
@@ -77,6 +87,42 @@ const ReviewSummary: React.FC<ReviewSummaryProps> = ({
             ))}
           </div>
         </div>
+
+        {/* Inline Review Form */}
+        {showForm && (
+          <Card className="rounded-xl border-0 bg-white/70">
+            <Form form={form} onFinish={handleSubmitReview} layout="vertical">
+              <Form.Item
+                name="rating"
+                label="امتیاز شما"
+                rules={[{ required: true, message: 'لطفاً امتیاز خود را انتخاب کنید' }]}
+              >
+                <Rate />
+              </Form.Item>
+              <Form.Item
+                name="comment"
+                label="نظر شما"
+                rules={[
+                  { required: true, message: 'لطفاً نظر خود را بنویسید' },
+                  { min: 10, message: 'نظر باید حداقل 10 کاراکتر باشد' },
+                ]}
+              >
+                <Input.TextArea rows={4} className="rounded-xl" placeholder="نظر خود را بنویسید..." />
+              </Form.Item>
+              <Form.Item>
+                <Button
+                  type="primary"
+                  size="large"
+                  htmlType="submit"
+                  loading={createReviewMutation.isPending}
+                  className="h-10 rounded-xl border-0 bg-gradient-to-r from-pink-500 to-purple-600 px-6"
+                >
+                  ثبت نظر
+                </Button>
+              </Form.Item>
+            </Form>
+          </Card>
+        )}
 
         {/* Recent Reviews Preview */}
         {recentReviews.length > 0 && (

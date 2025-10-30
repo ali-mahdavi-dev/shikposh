@@ -1,8 +1,9 @@
 import { SellerRepository } from '../../domain/repositories/seller.repository';
 import { SellerEntity, SellerSummary } from '../../domain/entities/seller.entity';
+import { getApiBaseUrl } from '../../../../shared/config/env';
 
 export class JsonServerSellerRepository implements SellerRepository {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  private baseUrl = getApiBaseUrl();
 
   async getSellerById(id: string): Promise<SellerEntity> {
     const response = await fetch(`${this.baseUrl}/sellers/${id}`);

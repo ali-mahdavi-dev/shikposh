@@ -18,7 +18,7 @@ const SizeSelector = React.lazy(() => import('../components/size-selector'));
 const QuantitySelector = React.lazy(() => import('../components/quantity-selector'));
 const RelatedProducts = React.lazy(() => import('../components/related-products'));
 const ProductImageGallery = React.lazy(() => import('../components/product-image-gallery'));
-const CommentBox = React.lazy(() => import('@/components/comment-box'));
+// Removed inline CommentBox usage; ReviewSummary now contains the form
 const ProfileCard = React.lazy(() => import('@/app/profile/components/profile-card'));
 const ReviewSummary = React.lazy(() => import('@/components/review-summary'));
 
@@ -48,7 +48,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = '1' }) => {
   const [currentVariant, setCurrentVariant] = useState<ProductVariant | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<string>('1');
-  const [showAllReviews, setShowAllReviews] = useState<boolean>(false);
 
   // Check if product is in wishlist using Redux state
   const isWishlisted = product ? wishlistItems.includes(product.id) : false;
@@ -139,17 +138,13 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = '1' }) => {
       {
         key: '2',
         label: `نظرات کاربران (${reviews.length || product?.reviewCount || 0})`,
-        children: showAllReviews ? (
-          <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-gray-200" />}>
-            <CommentBox productId={productId} />
-          </Suspense>
-        ) : (
+        children: (
           <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-gray-200" />}>
             <ReviewSummary
+              productId={productId}
               reviews={reviews}
               averageRating={averageRating}
               totalReviews={reviews.length}
-              onViewReviews={() => setShowAllReviews(true)}
             />
           </Suspense>
         ),
@@ -183,7 +178,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = '1' }) => {
         ),
       },
     ],
-    [product, reviews, averageRating, showAllReviews, productId],
+    [product, reviews, averageRating, productId],
   );
 
   // Loading and error states - moved after all hooks

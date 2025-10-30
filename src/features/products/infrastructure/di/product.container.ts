@@ -1,14 +1,14 @@
 import { ProductService } from '../../domain/services/product.service';
-import { JsonServerProductRepository } from '../repositories/json-server-product.repository';
+import { HttpProductRepository } from '../repositories/http-product.repository';
 
 // Dependency Injection Container
 export class ProductContainer {
-  private static productRepository: JsonServerProductRepository;
+  private static productRepository: HttpProductRepository;
   private static productService: ProductService;
 
-  static getProductRepository(): JsonServerProductRepository {
+  static getProductRepository(): HttpProductRepository {
     if (!this.productRepository) {
-      this.productRepository = new JsonServerProductRepository();
+      this.productRepository = new HttpProductRepository();
     }
     return this.productRepository;
   }

@@ -19,7 +19,7 @@ import { Post } from '@/types';
 import { BaseBadge } from '@/components/ui';
 import { CategoryTile } from '@/components/business';
 import { CategoriesGrid } from '@/components/business';
-import { usePosts, usePlaylists } from '@/hooks/use-api';
+import { usePosts, usePlaylists } from '@/features/content';
 
 const { Title, Text, Paragraph } = Typography;
 

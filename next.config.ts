@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   experimental: {
     // Optimize bundling
     optimizePackageImports: ['antd', '@ant-design/icons', 'framer-motion'],
+    // Enable React Compiler (React 19) when opted-in
+    reactCompiler: process.env.NEXT_REACT_COMPILER === 'true',
   },
 
   // Turbopack configuration (moved from experimental)
@@ -32,6 +34,9 @@ const nextConfig: NextConfig = {
     // Remove console logs in production
     removeConsole: process.env.NODE_ENV === 'production',
   },
+
+  // Prefer SWC minify and disable prod source maps by default for perf
+  productionBrowserSourceMaps: false,
 
   // Webpack optimizations
   webpack: (config, { dev, isServer }) => {

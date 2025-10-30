@@ -10,7 +10,8 @@ export const appConfig = {
   currency: 'IRR',
   timezone: 'Asia/Tehran',
   api: {
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+    // Centralized API base URL. Do not default to local mock; keep externalizable.
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || '',
     timeout: 10000,
   },
   features: {

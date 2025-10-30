@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-console.log('🚀 Starting development environment...\n');
+console.log('🚀 Starting development environment (Next.js + JSON Server)...\n');
 
 // Function to check if port is available
 function checkPort(port) {
@@ -26,7 +26,7 @@ function checkPort(port) {
   });
 }
 
-// Start JSON Server
+// Start JSON Server (mock API)
 const jsonServer = spawn('yarn', ['json-server'], {
   cwd: process.cwd(),
   stdio: 'pipe',
@@ -34,24 +34,18 @@ const jsonServer = spawn('yarn', ['json-server'], {
 });
 
 jsonServer.stdout.on('data', (data) => {
-  console.log(`[JSON Server] ${data.toString().trim()}`);
+  console.log(`[MockAPI] ${data.toString().trim()}`);
 });
 
 jsonServer.stderr.on('data', (data) => {
-  console.error(`[JSON Server Error] ${data.toString().trim()}`);
+  console.error(`[MockAPI Error] ${data.toString().trim()}`);
 });
 
 jsonServer.on('error', (error) => {
-  console.error(`[JSON Server Process Error] ${error.message}`);
+  console.error(`[MockAPI Process Error] ${error.message}`);
 });
 
-jsonServer.on('exit', (code, signal) => {
-  if (code !== 0) {
-    console.error(`[JSON Server] Process exited with code ${code} and signal ${signal}`);
-  }
-});
-
-// Start Next.js development server
+// Start Next.js development server (after starting mock API)
 const nextDev = spawn('yarn', ['dev'], {
   cwd: process.cwd(),
   stdio: 'pipe',
@@ -78,26 +72,24 @@ nextDev.on('exit', (code, signal) => {
 
 // Handle process termination
 process.on('SIGINT', () => {
-  console.log('\n🛑 Shutting down development servers...');
-  jsonServer.kill();
+  console.log('\n🛑 Shutting down Next.js and Mock API...');
   nextDev.kill();
+  jsonServer.kill();
   process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-  console.log('\n🛑 Shutting down development servers...');
-  jsonServer.kill();
+  console.log('\n🛑 Shutting down Next.js and Mock API...');
   nextDev.kill();
+  jsonServer.kill();
   process.exit(0);
 });
 
-// Wait a bit for JSON Server to start before starting Next.js
 setTimeout(() => {
-  console.log('✅ JSON Server started on http://localhost:3001');
+  console.log('✅ Mock API on http://localhost:3001');
   console.log('✅ Next.js will start on http://localhost:3000');
-  console.log('📚 API Documentation: http://localhost:3001');
-  console.log('\nPress Ctrl+C to stop both servers\n');
-}, 2000);
+  console.log('\nPress Ctrl+C to stop the server\n');
+}, 500);
 
 // Add process error handling
 process.on('uncaughtException', (error) => {

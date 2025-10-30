@@ -1,5 +1,7 @@
 import { ApiError } from '../errors';
 import { cacheService } from './cache.service';
+import { getApiBaseUrl } from '../config/env';
+import { handleApiError } from '../utils/error-handler';
 
 export interface ApiResponse<T> {
   data: T;
@@ -20,7 +22,7 @@ export interface PaginatedResponse<T> {
 export class ApiService {
   private baseURL: string;
 
-  constructor(baseURL: string = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') {
+  constructor(baseURL: string = getApiBaseUrl()) {
     this.baseURL = baseURL;
   }
 
@@ -43,21 +45,29 @@ export class ApiService {
       const response = await fetch(url, config);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new ApiError(
-          errorData.message || `HTTP error! status: ${response.status}`,
-          response.status,
-        );
+        // Attempt to parse structured error
+        let serverMessage: string | undefined;
+        try {
+          const errorJson = await response.json();
+          serverMessage = errorJson?.message || errorJson?.error || errorJson?.errors?.[0]?.message;
+        } catch {
+          // ignore body parse errors
+        }
+
+        const message = serverMessage || `${response.status} ${response.statusText}`;
+        throw new ApiError(message, response.status);
+      }
+
+      // Gracefully handle empty body (204)
+      if (response.status === 204) {
+        return undefined as unknown as T;
       }
 
       const data = await response.json();
-      return data;
+      return data as T;
     } catch (error) {
-      if (error instanceof ApiError) {
-        throw error;
-      }
-
-      throw new ApiError(error instanceof Error ? error.message : 'Network error occurred', 0);
+      const normalized = handleApiError(error);
+      throw normalized;
     }
   }
 

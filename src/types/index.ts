@@ -24,6 +24,7 @@ export interface Review {
 
 export interface CommentBoxProps {
   productId?: string;
+  initialShowForm?: boolean;
 }
 
 export interface Category {
