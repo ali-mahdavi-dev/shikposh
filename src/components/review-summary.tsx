@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Card, Rate, Typography, Button, Progress, Form, Input, App } from 'antd';
 import { StarOutlined, CommentOutlined } from '@ant-design/icons';
 import { ReviewEntity, useCreateReview } from '@/features/products';
+import { useAppDispatch } from '@/stores/hooks';
+import { pushNotification } from '@/stores/slices/notificationSlice';
 
 const { Text, Title } = Typography;
 
@@ -14,6 +16,7 @@ interface ReviewSummaryProps {
 
 const ReviewSummary: React.FC<ReviewSummaryProps> = ({ productId, reviews, averageRating, totalReviews }) => {
   const { notification } = App.useApp();
+  const dispatch = useAppDispatch();
   const [showForm, setShowForm] = useState(false);
   const [form] = Form.useForm();
   const createReviewMutation = useCreateReview();
@@ -24,6 +27,14 @@ const ReviewSummary: React.FC<ReviewSummaryProps> = ({ productId, reviews, avera
       form.resetFields();
       setShowForm(false);
       notification.success({ message: 'عملیات موفق', description: 'نظر شما با موفقیت ثبت شد' });
+      dispatch(
+        pushNotification({
+          type: 'review',
+          title: 'نظر جدید برای محصول',
+          message: values.comment,
+          meta: { productId },
+        }),
+      );
     } catch (e) {
       notification.error({ message: 'خطا', description: 'خطا در ثبت نظر. لطفاً دوباره تلاش کنید' });
     }

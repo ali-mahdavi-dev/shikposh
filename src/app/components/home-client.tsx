@@ -7,6 +7,9 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { BaseBadge } from '@/components/ui';
+import { App as AntApp } from 'antd';
+import { useAppDispatch } from '@/stores/hooks';
+import { addToCart } from '@/stores/slices/cartSlice';
 import { useFeaturedProducts, useCategories } from '@/features/products';
 import { ProductCard, CategoryCard } from '@/components/business';
 
@@ -21,6 +24,8 @@ const HomeClient: React.FC<HomeClientProps> = ({
   initialCategories = [],
   initialProducts = [],
 }) => {
+  const dispatch = useAppDispatch();
+  const { message } = AntApp.useApp();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   // Use the new architecture hooks
@@ -235,8 +240,23 @@ const HomeClient: React.FC<HomeClientProps> = ({
                 <ProductCard
                   product={product}
                   index={index}
-                  onAddToCart={(productId) => {
-                    console.log('Add to cart:', productId);
+                  onAddToCart={() => {
+                    const colors = product.colors ? Object.keys(product.colors) : [];
+                    const sizes = product.sizes || [];
+                    const firstColor = colors[0] || 'default';
+                    const firstSize = sizes[0] || 'default';
+                    dispatch(
+                      addToCart({
+                        productId: product.id,
+                        color: firstColor,
+                        size: firstSize,
+                        quantity: 1,
+                        price: product.price,
+                        name: product.name,
+                        image: product.image,
+                      }),
+                    );
+                    message.success('به سبد خرید اضافه شد');
                   }}
                 />
               </Col>

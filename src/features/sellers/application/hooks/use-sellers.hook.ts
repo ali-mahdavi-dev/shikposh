@@ -48,3 +48,22 @@ export const useSellerByProductId = (productId: string) => {
     staleTime: 5 * 60 * 1000,
   });
 };
+
+// Example utility to dispatch a notification for a followed seller's new product
+// Call this from the place you handle "followed seller events" (mock/event-source)
+// import { useAppDispatch } from '@/stores/hooks';
+// import { pushNotification } from '@/stores/slices/notificationSlice';
+// export const useNotifySellerNewProduct = (sellerId: string | null, productName: string | null) => {
+//   const dispatch = useAppDispatch();
+//   React.useEffect(() => {
+//     if (!sellerId || !productName) return;
+//     dispatch(
+//       pushNotification({
+//         type: 'seller_new_product',
+//         title: 'محصول جدید از فروشنده دنبال‌شده',
+//         message: productName,
+//         meta: { sellerId },
+//       }),
+//     );
+//   }, [dispatch, sellerId, productName]);
+// };

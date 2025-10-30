@@ -1,8 +1,8 @@
 'use client';
 import React, { useState, useMemo, useCallback, Suspense } from 'react';
-import { Card, Button, Rate, Typography, Divider, Tabs, Tag, Tooltip, Badge } from 'antd';
+import { Card, Button, Rate, Typography, Divider, Tabs, Tag, Tooltip, Badge, App as AntApp } from 'antd';
 import { PageLoading, ErrorState, ContentLoading } from '@/shared/components/loading';
-import { ShoppingCartOutlined, ShareAltOutlined, HeartOutlined } from '@ant-design/icons';
+import { ShoppingCartOutlined, ShareAltOutlined, HeartOutlined, HeartFilled } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { ProductDetailProps } from '../types';
 import { ProductVariant } from '@/features/products/domain/entities/product.entity';
@@ -18,6 +18,7 @@ const SizeSelector = React.lazy(() => import('../components/size-selector'));
 const QuantitySelector = React.lazy(() => import('../components/quantity-selector'));
 const RelatedProducts = React.lazy(() => import('../components/related-products'));
 const ProductImageGallery = React.lazy(() => import('../components/product-image-gallery'));
+const Questions = React.lazy(() => import('../components/questions'));
 // Removed inline CommentBox usage; ReviewSummary now contains the form
 const ProfileCard = React.lazy(() => import('@/app/profile/components/profile-card'));
 const ReviewSummary = React.lazy(() => import('@/components/review-summary'));
@@ -27,6 +28,7 @@ const { Title, Paragraph, Text } = Typography;
 const ProductDetail: React.FC<ProductDetailProps> = ({ productId = '1' }) => {
   // Redux hooks
   const dispatch = useAppDispatch();
+  const { message } = AntApp.useApp();
   const wishlistItems = useAppSelector((state) => state.wishlist.productIds);
 
   // Use the new architecture hooks
@@ -98,12 +100,14 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = '1' }) => {
           image: currentVariant.images[0] || product.image,
         }),
       );
+      message.success('به سبد خرید اضافه شد');
     }
   }, [product, currentVariant, selectedColor, selectedSize, quantity, dispatch]);
 
   const handleWishlistToggle = useCallback(() => {
     if (product) {
       dispatch(toggleWishlist(product.id));
+      message.success(isWishlisted ? 'از علاقه‌مندی‌ها حذف شد' : 'به علاقه‌مندی‌ها اضافه شد');
     }
   }, [product, dispatch]);
 
@@ -146,6 +150,15 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = '1' }) => {
               averageRating={averageRating}
               totalReviews={reviews.length}
             />
+          </Suspense>
+        ),
+      },
+      {
+        key: 'qa',
+        label: 'سوالات',
+        children: (
+          <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-gray-200" />}>
+            <Questions productId={productId} />
           </Suspense>
         ),
       },
@@ -389,7 +402,13 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = '1' }) => {
                       >
                         <Button
                           size="large"
-                          icon={<HeartOutlined />}
+                          icon={
+                            isWishlisted ? (
+                              <HeartFilled className="text-red-500" />
+                            ) : (
+                              <HeartOutlined />
+                            )
+                          }
                           onClick={handleWishlistToggle}
                           className={`h-12 w-12 rounded-xl border-2 transition-all duration-300 ${
                             isWishlisted

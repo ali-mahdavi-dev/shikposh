@@ -18,6 +18,7 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useAppSelector } from '@/stores/hooks';
 
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
@@ -28,6 +29,9 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }) => {
+  const cartCountFromStore = useAppSelector((state) => state.cart.items.reduce((sum, item) => sum + item.quantity, 0));
+  const wishlistCountFromStore = useAppSelector((state) => state.wishlist.productIds.length);
+  const notificationUnreadCount = useAppSelector((state) => state.notifications.items.filter(n => !n.read).length);
   const [searchValue, setSearchValue] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
@@ -188,7 +192,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
 
   const navLinks = useMemo(
     () => [
-      { href: '/', label: 'صفحه اصلی', icon: <HomeOutlined /> },
+      { href: '/products', label: 'محصولات', icon: <AppstoreOutlined /> },
       { href: '/about', label: 'درباره ما', icon: <InfoCircleOutlined /> },
       { href: '/contact', label: 'تماس با ما', icon: <PhoneOutlined /> },
     ],
@@ -334,16 +338,18 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
                 whileTap={{ scale: 0.9 }}
               >
                 <Badge
-                  count={2}
+                  count={notificationUnreadCount}
                   size="small"
                   className="custom-badge"
                   style={{ backgroundColor: '#ec4899' }}
                 >
-                  <Button
-                    type="text"
-                    icon={<BellOutlined />}
-                    className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
-                  />
+                  <Link href="/notification">
+                    <Button
+                      type="text"
+                      icon={<BellOutlined />}
+                      className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
+                    />
+                  </Link>
                 </Badge>
               </motion.div>
 
@@ -354,7 +360,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
                 whileTap={{ scale: 0.9 }}
               >
                 <Badge
-                  count={wishlistCount}
+                  count={wishlistCountFromStore ?? wishlistCount}
                   size="small"
                   className="custom-badge"
                   style={{ backgroundColor: '#ec4899' }}
@@ -372,7 +378,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
               {/* Shopping Cart */}
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                 <Badge
-                  count={cartItemsCount}
+                  count={cartCountFromStore ?? cartItemsCount}
                   size="small"
                   className="custom-badge"
                   style={{ backgroundColor: '#ec4899' }}
@@ -532,7 +538,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
               <HeartOutlined className="text-lg" />
               <span className="font-medium">علاقه‌مندی‌ها</span>
             </span>
-            <Badge count={wishlistCount} size="small" />
+            <Badge count={wishlistCountFromStore ?? wishlistCount} size="small" />
           </Link>
 
           <Link
@@ -544,7 +550,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
               <ShoppingCartOutlined className="text-lg" />
               <span className="font-medium">سبد خرید</span>
             </span>
-            <Badge count={cartItemsCount} size="small" />
+            <Badge count={cartCountFromStore ?? cartItemsCount} size="small" />
           </Link>
 
           <Link

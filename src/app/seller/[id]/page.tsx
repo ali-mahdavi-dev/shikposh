@@ -12,6 +12,9 @@ import { CategoryTile } from '@/components/business';
 import { type ProductGridProps } from '@/components/business';
 import { useProducts } from '@/features/products';
 import { useSeller } from '@/features/sellers';
+import { useAppDispatch } from '@/stores/hooks';
+import { addToCart } from '@/stores/slices/cartSlice';
+import { App as AntApp } from 'antd';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -34,6 +37,8 @@ const convertToProductGridItem = (product: any): ProductGridProps['products'][nu
 
 export default function SellerPage() {
   const params = useParams<{ id: string }>();
+  const dispatch = useAppDispatch();
+  const { message } = AntApp.useApp();
   const sellerId = params.id || 'seller-1';
 
   const [activeTab, setActiveTab] = useState<string>('products');
@@ -257,7 +262,26 @@ export default function SellerPage() {
               <ProductGrid
                 products={sellerProducts}
                 cols={4}
-                onAddToCart={(id) => console.log('Add to cart:', id)}
+                onAddToCart={(id) => {
+                  const p = (products as any[]).find((sp) => sp.id === id);
+                  if (!p) return;
+                  const colors = p.colors ? Object.keys(p.colors) : [];
+                  const sizes = p.sizes || [];
+                  const firstColor = colors[0] || 'default';
+                  const firstSize = sizes[0] || 'default';
+                  dispatch(
+                    addToCart({
+                      productId: p.id,
+                      color: firstColor,
+                      size: firstSize,
+                      quantity: 1,
+                      price: p.price,
+                      name: p.name,
+                      image: p.image,
+                    }),
+                  );
+                  message.success('به سبد خرید اضافه شد');
+                }}
               />
             )}
           </div>

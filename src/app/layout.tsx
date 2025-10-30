@@ -141,11 +141,11 @@ export default function RootLayout({
                       )}
 
                       {/* Initialize MSW in development when enabled */}
-                      {process.env.NODE_ENV === 'development' && (
+                      {/* {process.env.NODE_ENV === 'development' && (
                         <Suspense fallback={null}>
                           <DevMocks />
                         </Suspense>
-                      )}
+                      )} */}
 
                       {/* Header with Suspense */}
                       <Suspense fallback={<LayoutLoading />}>
