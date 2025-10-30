@@ -17,6 +17,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Post } from '@/types';
 import { BaseBadge } from '@/components/ui';
+import { CategoryTile } from '@/components/business';
+import { CategoriesGrid } from '@/components/business';
 import { usePosts, usePlaylists } from '@/hooks/use-api';
 
 const { Title, Text, Paragraph } = Typography;
@@ -138,61 +140,18 @@ interface Playlist {
   description?: string;
 }
 
-// Playlist Card Component
+// Playlist Card Component -> unified with CategoryTile
 const PlaylistCard: React.FC<{ playlist: Playlist }> = ({ playlist }) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.2 }}
-      className="cursor-pointer"
-    >
-      <Link href={`/profile/playlist/${playlist.id}`} className="block h-full">
-        <div className="flex h-full flex-col overflow-hidden rounded-xl bg-white shadow-md transition-all duration-300 hover:shadow-xl">
-          {/* Thumbnail */}
-          <div className="relative aspect-video w-full flex-shrink-0 overflow-hidden bg-gray-100">
-            <Image
-              src={playlist.thumbnail}
-              alt={playlist.title}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover transition-transform duration-300 hover:scale-110"
-            />
-            {/* Playlist Icon Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-              <div className="rounded-full bg-white/90 p-3">
-                <UnorderedListOutlined className="text-2xl text-pink-600" />
-              </div>
-            </div>
-            {/* Item Count Badge */}
-            <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded bg-black/80 px-2 py-1 text-xs text-white">
-              <PlayCircleOutlined />
-              {playlist.itemCount} پست
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="flex flex-1 flex-col p-3 sm:p-4">
-            <Title
-              level={5}
-              className="!mb-2 line-clamp-2 !text-gray-800 transition-colors hover:text-pink-600"
-              style={{ fontSize: '14px', fontWeight: 600, minHeight: '44px' }}
-            >
-              {playlist.title}
-            </Title>
-
-            {/* Stats */}
-            <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
-              <span className="flex items-center gap-1 whitespace-nowrap">
-                <EyeOutlined />
-                {formatNumber(playlist.views)} بازدید
-              </span>
-            </div>
-          </div>
-        </div>
-      </Link>
-    </motion.div>
+    <CategoryTile
+      id={playlist.id}
+      name={playlist.title}
+      count={playlist.itemCount}
+      thumbnail={playlist.thumbnail}
+      href={`/profile/playlist/${playlist.id}`}
+      icon={<UnorderedListOutlined className="text-2xl text-pink-600" />}
+      countSuffix="پست"
+    />
   );
 };
 
@@ -213,6 +172,18 @@ export default function ProfilePage() {
 
   // Featured post for home tab - جدیدترین یا محبوب‌ترین پست
   const featuredPost = posts[0];
+
+  const categoryCounts = posts.reduce<Record<string, number>>((acc, p) => {
+    const key = p.category ?? 'متفرقه';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+
+  const profileCategories = Object.entries(categoryCounts).map(([name, count], idx) => ({
+    id: `profile-cat-${idx}`,
+    name,
+    count,
+  }));
 
   const tabsItems: TabsProps['items'] = [
     {
@@ -239,6 +210,15 @@ export default function ProfilePage() {
         <span className="flex items-center gap-2 px-4 py-2">
           <span>پست‌ها</span>
           <Badge count={posts.length} showZero />
+        </span>
+      ),
+    },
+    {
+      key: 'categories',
+      label: (
+        <span className="flex items-center gap-2 px-4 py-2">
+          <span>دسته‌بندی‌ها</span>
+          <Badge count={profileCategories.length} showZero />
         </span>
       ),
     },
@@ -543,6 +523,20 @@ export default function ProfilePage() {
               <div className="py-16 text-center">
                 <Text className="text-lg text-gray-500">پستی یافت نشد</Text>
               </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'categories' && (
+          <div>
+            {postsLoading ? (
+              <ContentLoading tip="در حال بارگذاری پست‌ها..." />
+            ) : postsError ? (
+              <div className="py-12 text-center">
+                <Text className="text-lg text-red-500">خطا در بارگذاری پست‌ها</Text>
+              </div>
+            ) : (
+              <CategoriesGrid categories={profileCategories} />
             )}
           </div>
         )}

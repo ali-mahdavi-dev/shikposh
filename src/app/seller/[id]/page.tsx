@@ -7,17 +7,18 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { ProductGrid } from '@/components';
+import { CategoryTile } from '@/components/business';
 // import { Seller } from '@/types'; // Not needed anymore
-import { ProductCardProps } from '@/components/business';
+import { type ProductGridProps } from '@/components/business';
 import { useProducts, useSeller } from '@/hooks/use-api';
 
 const { Title, Text, Paragraph } = Typography;
 
 // Product interface for API data - using any for now due to type compatibility
 
-// Convert product data to ProductCardProps format
+// Convert product data to ProductGrid item format
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const convertToProductCardProps = (product: any): ProductCardProps => ({
+const convertToProductGridItem = (product: any): ProductGridProps['products'][number] => ({
   id: product.id,
   name: product.name,
   price: product.price,
@@ -41,7 +42,7 @@ export default function SellerPage() {
   const { data: seller, isLoading: sellerLoading, error: sellerError } = useSeller(sellerId);
   const { data: products = [], isLoading: productsLoading, error: productsError } = useProducts();
 
-  const sellerProducts = useMemo(() => products.map(convertToProductCardProps), [products]);
+  const sellerProducts = useMemo(() => products.map(convertToProductGridItem), [products]);
 
   const bannerImage = '/images/carousel-homepage-one.jpg';
 
@@ -262,29 +263,32 @@ export default function SellerPage() {
         )}
 
         {activeTab === 'categories' && (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {seller?.categories?.map((category: { id: string; name: string; count: number }) => (
-              <motion.div
-                key={category.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileHover={{ y: -5 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Card
-                  hoverable
-                  className="h-full rounded-xl shadow-md transition-all hover:shadow-xl"
-                >
-                  <div className="flex flex-col items-center p-4 text-center">
-                    <ShopOutlined className="mb-3 text-4xl text-pink-500" />
-                    <Title level={4} className="!mb-2">
-                      {category.name}
-                    </Title>
-                    <Text className="text-gray-600">{category.count} محصول</Text>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
+          <div>
+            {!seller?.categories?.length ? (
+              <div className="py-12 text-center">
+                <Text className="text-lg text-gray-500">دسته‌بندی‌ای یافت نشد</Text>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+                {seller.categories.map((category: { id: string; name: string; count: number }, idx: number) => (
+                  <CategoryTile
+                    key={category.id}
+                    id={category.id}
+                    name={category.name}
+                    count={category.count}
+                    thumbnail={
+                      [
+                        '/images/dress-main.jpg',
+                        '/images/handbag.jpg',
+                        '/images/shoes.jpg',
+                        '/images/jewelry.jpg',
+                      ][idx % 4]
+                    }
+                    href={`/products?category=${encodeURIComponent(category.name)}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
 

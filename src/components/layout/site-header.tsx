@@ -246,21 +246,14 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
                 >
                   <Link
                     href={link.href}
-                    className="group relative px-4 py-3 text-sm font-medium whitespace-nowrap text-gray-700 transition-colors hover:text-pink-600"
+                    className="group relative nav-link px-4 py-3 text-sm font-medium whitespace-nowrap !text-gray-900 !transition-colors !hover:text-pink-600"
                   >
-                    <span className="relative z-10 flex items-center gap-2">
+                    <span className="nav-label relative z-10 inline-flex items-center gap-2">
                       <span className="text-base opacity-70 transition-opacity group-hover:opacity-100">
                         {link.icon}
                       </span>
                       {link.label}
                     </span>
-                    <motion.span
-                      className="absolute right-0 bottom-0 left-0 h-1 origin-center rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-pink-600 opacity-0 group-hover:opacity-100"
-                      layoutId={`navbar-indicator-${link.href}`}
-                      initial={{ scaleX: 0 }}
-                      whileHover={{ scaleX: 1 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                    />
                   </Link>
                 </motion.div>
               ))}
@@ -270,25 +263,15 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
                 placement="bottom"
                 overlayClassName="custom-dropdown"
               >
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="group relative"
-                >
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="group relative">
                   <Button
                     type="text"
-                    className="relative flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap text-gray-700 hover:text-pink-600"
+                    className="relative nav-trigger flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap text-gray-900 hover:text-pink-600"
                   >
                     <AppstoreOutlined className="text-base" />
                     دسته‌بندی‌ها
                     <DownOutlined className="text-xs" />
                   </Button>
-                  <motion.span
-                    className="absolute right-0 bottom-0 left-0 h-1 origin-center rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-pink-600 opacity-0 group-hover:opacity-100"
-                    initial={{ scaleX: 0 }}
-                    whileHover={{ scaleX: 1 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                  />
                 </motion.div>
               </Dropdown>
             </motion.nav>
@@ -639,9 +622,31 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
         .ant-layout-header * {
           max-width: 100%;
         }
-        /* Enhanced navigation link hover effect */
-        .ant-layout-header nav a {
+        /* Enhanced navigation link hover effect (animated underline) */
+        .ant-layout-header nav a,
+        .ant-layout-header .nav-trigger {
           position: relative;
+        }
+        /* Underline only beneath text content */
+        .ant-layout-header nav a .nav-label::after,
+        .ant-layout-header .nav-trigger::after {
+          content: '';
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: -6px; /* sits just below the text line */
+          height: 2px;
+          border-radius: 9999px;
+          background: linear-gradient(90deg, #ec4899, #f43f5e); /* pink → rose, no blue */
+          transform: scaleX(0);
+          transform-origin: center;
+          transition: transform 200ms ease, opacity 200ms ease;
+          opacity: 0;
+        }
+        .ant-layout-header nav a:hover .nav-label::after,
+        .ant-layout-header .nav-trigger:hover::after {
+          transform: scaleX(1);
+          opacity: 1;
         }
         /* Dropdown menu items with gradient hover */
         .ant-dropdown-menu-item:hover {
