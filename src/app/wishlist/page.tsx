@@ -1,14 +1,15 @@
 'use client';
 import React, { useMemo } from 'react';
-import { Card, Button, Typography, Empty, Row, Col, App as AntApp, Popconfirm } from 'antd';
-import Link from 'next/link';
-import Image from 'next/image';
+import { Typography, App as AntApp } from 'antd';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { removeFromWishlist } from '@/stores/slices/wishlistSlice';
 import { addToCart } from '@/stores/slices/cartSlice';
-import { useProducts } from '@/features/products';
+import { useProducts } from '@/app/products/_api';
+import { WishlistGrid, WishlistEmptyState } from './_components';
+import type { WishlistProduct } from './_types';
+import { WishlistSkeleton } from '@/app/_components/skeleton';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 export default function WishlistPage() {
   const dispatch = useAppDispatch();
@@ -21,21 +22,21 @@ export default function WishlistPage() {
     return allProducts.filter((p: any) => byId.has(p.id));
   }, [allProducts, wishlistIds]);
 
-  const handleMoveToCart = (p: any) => {
-    const colors = p.colors ? Object.keys(p.colors) : [];
-    const sizes = p.sizes || [];
+  const handleMoveToCart = (product: WishlistProduct) => {
+    const colors = product.colors ? Object.keys(product.colors) : [];
+    const sizes = product.sizes || [];
     const firstColor = colors[0] || 'default';
     const firstSize = sizes[0] || 'default';
 
     dispatch(
       addToCart({
-        productId: p.id,
+        productId: product.id,
         color: firstColor,
         size: firstSize,
         quantity: 1,
-        price: p.price,
-        name: p.name,
-        image: p.image,
+        price: product.price,
+        name: product.name,
+        image: product.image,
       }),
     );
     message.success('به سبد خرید اضافه شد');
@@ -47,11 +48,7 @@ export default function WishlistPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-pink-500" />
-      </div>
-    );
+    return <WishlistSkeleton />;
   }
   if (error) {
     return (
@@ -62,17 +59,7 @@ export default function WishlistPage() {
   }
 
   if (!items.length) {
-    return (
-      <div className="mx-auto max-w-5xl py-10">
-        <Card className="rounded-2xl shadow-sm">
-          <Empty description="لیست علاقه‌مندی خالی است">
-            <Link href="/">
-              <Button type="primary">شروع خرید</Button>
-            </Link>
-          </Empty>
-        </Card>
-      </div>
-    );
+    return <WishlistEmptyState />;
   }
 
   return (
@@ -81,34 +68,11 @@ export default function WishlistPage() {
         علاقه‌مندی‌ها
       </Title>
 
-      <Row gutter={[24, 24]}>
-        {items.map((p: any, index: number) => (
-          <Col xs={24} sm={12} lg={6} key={p.id}>
-            <Card className="h-full rounded-2xl shadow-md">
-              <Link href={`/products/${p.id}`} className="block">
-                <div className="relative mb-3 h-48 w-full overflow-hidden rounded-xl bg-gray-100">
-                  {p.image && <Image src={p.image} alt={p.name} fill className="object-cover" />}
-                </div>
-                <Text className="mb-2 block line-clamp-2 font-semibold text-gray-800">{p.name}</Text>
-                <Text className="mb-3 block text-pink-600">{p.price?.toLocaleString()} تومان</Text>
-              </Link>
-
-              <div className="flex gap-2">
-                <Button
-                  type="primary"
-                  className="flex-1 rounded-lg border-0 bg-gradient-to-r from-pink-500 to-purple-600"
-                  onClick={() => handleMoveToCart(p)}
-                >
-                  افزودن به سبد
-                </Button>
-                <Popconfirm title="حذف از علاقه‌مندی‌ها؟" onConfirm={() => handleRemove(p.id)} okText="بله" cancelText="خیر">
-                  <Button danger className="rounded-lg">حذف</Button>
-                </Popconfirm>
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      <WishlistGrid
+        items={items as WishlistProduct[]}
+        onMoveToCart={handleMoveToCart}
+        onRemove={handleRemove}
+      />
     </div>
   );
 }

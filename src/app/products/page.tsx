@@ -1,9 +1,16 @@
 'use client';
 
-import React, { useMemo, useState, useEffect, useDeferredValue } from 'react';
-import { useProducts, useCategories } from '@/features/products/application/hooks/use-products.hook';
-import { ProductGrid } from '@/components/business/ProductGrid';
-import { Input, Select, Rate, Button, Drawer, Space, Typography, Tag } from 'antd';
+import React, { useMemo, useState, useEffect } from 'react';
+import {
+  useFilteredProducts,
+  useCategories,
+  useProducts,
+  useDebounced,
+  type ProductFilters,
+} from './_api';
+import { ProductGrid } from './_components';
+import { ProductGridSkeleton } from '@/app/_components/skeleton';
+import { Input, Select, Rate, Button, Drawer, Typography, Tag, Slider } from 'antd';
 import { FilterOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/stores/hooks';
@@ -12,433 +19,495 @@ import { addToCart } from '@/stores/slices/cartSlice';
 const { Text } = Typography;
 const { Option } = Select;
 
-function useDebounced<T>(value: T, delay: number) {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(id);
-  }, [value, delay]);
-  return debounced;
-}
-
 export default function ProductsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
-  
 
-  // URL state
-  const [query, setQuery] = useState<string>(searchParams.get('q') || '');
-  const [category, setCategory] = useState<string>(searchParams.get('category') || 'all');
-  const [sort, setSort] = useState<string>(searchParams.get('sort') || 'relevance');
-  const [priceRange, setPriceRange] = useState<[number, number]>([
-    Number(searchParams.get('min') || 0),
-    Number(searchParams.get('max') || 10_000_000),
-  ]);
-  // Local price range and dedicated text inputs for smooth typing
-  const [localPriceRange, setLocalPriceRange] = useState<[number, number]>([
-    Number(searchParams.get('min') || 0),
-    Number(searchParams.get('max') || 10_000_000),
-  ]);
-  const [minText, setMinText] = useState<string>(String(Number(searchParams.get('min') || 0)));
-  const [maxText, setMaxText] = useState<string>(String(Number(searchParams.get('max') || 10_000_000)));
-  const debouncedMinText = useDebounced(minText, 300);
-  const debouncedMaxText = useDebounced(maxText, 300);
-  const debouncedLocalPrice = useDebounced(localPriceRange, 150);
-  const [minRating, setMinRating] = useState<number>(Number(searchParams.get('rating') || 0));
-  const [onlyFeatured, setOnlyFeatured] = useState<boolean>(searchParams.get('featured') === 'true');
-  const [drawerOpen, setDrawerOpen] = useState(false);
-
-  // (no debounce for query since we apply explicitly)
-
-  // APPLIED (committed) state - used for filtering and URL
-  const [appliedQuery, setAppliedQuery] = useState<string>(searchParams.get('q') || '');
-  const [appliedCategory, setAppliedCategory] = useState<string>(searchParams.get('category') || 'all');
-  const [appliedSort, setAppliedSort] = useState<string>(searchParams.get('sort') || 'relevance');
-  const [appliedPriceRange, setAppliedPriceRange] = useState<[number, number]>([
-    Number(searchParams.get('min') || 0),
-    Number(searchParams.get('max') || 10_000_000),
-  ]);
-  const [appliedMinRating, setAppliedMinRating] = useState<number>(Number(searchParams.get('rating') || 0));
-  const [appliedOnlyFeatured, setAppliedOnlyFeatured] = useState<boolean>(searchParams.get('featured') === 'true');
-
-  // Fetch data
-  const { data: products = [], isLoading, error } = useProducts();
+  // Get all products for add to cart (need full product data)
+  const { data: allProducts = [] } = useProducts();
   const { data: categories = [] } = useCategories();
 
-  // Deduplicate categories and remove built-in "همه"
+  // Initialize filters from URL or defaults
+  const getUrlParam = (key: string, defaultValue: string) => searchParams.get(key) || defaultValue;
+
+  // Instant filters (applied immediately)
+  const [category, setCategory] = useState(getUrlParam('category', 'all'));
+  const [sortBy, setSortBy] = useState(getUrlParam('sort', 'relevance'));
+  const [minRating, setMinRating] = useState(Number(getUrlParam('rating', '0')));
+  const [onlyFeatured, setOnlyFeatured] = useState(getUrlParam('featured', 'false') === 'true');
+  const [selectedTags, setSelectedTags] = useState<string[]>(
+    getUrlParam('tags', '').split(',').filter(Boolean),
+  );
+
+  // Typed filters (with debounce - 1 second)
+  const [searchQuery, setSearchQuery] = useState(getUrlParam('q', ''));
+
+  // Price range for slider (numbers)
+  const initialMin = Number(getUrlParam('min', '1').replace(/\D/g, '') || '1');
+  const initialMax = Number(getUrlParam('max', '10000000').replace(/\D/g, '') || '10000000');
+  const [priceRange, setPriceRange] = useState<[number, number]>([
+    Math.max(0, Math.min(initialMin, 10_000_000)),
+    Math.max(initialMin, Math.min(initialMax, 10_000_000)),
+  ]);
+
+  // Debounced typed filters
+  const debouncedSearchQuery = useDebounced(searchQuery, 1000);
+  const debouncedPriceRange = useDebounced(priceRange, 1000);
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Extract min and max from debounced range
+  const minPriceNum = useMemo(() => debouncedPriceRange[0], [debouncedPriceRange]);
+  const maxPriceNum = useMemo(() => debouncedPriceRange[1], [debouncedPriceRange]);
+
+  // Build filters object for API (using debounced values for typed inputs)
+  const filters: ProductFilters = useMemo(
+    () => ({
+      q: debouncedSearchQuery.trim() || undefined,
+      category: category !== 'all' ? category : undefined,
+      min: minPriceNum > 0 ? minPriceNum : undefined,
+      max: maxPriceNum < 10_000_000 ? maxPriceNum : undefined,
+      rating: minRating > 0 ? minRating : undefined,
+      featured: onlyFeatured || undefined,
+      tags: selectedTags.length > 0 ? selectedTags : undefined,
+      sort: sortBy !== 'relevance' ? sortBy : undefined,
+    }),
+    [
+      debouncedSearchQuery,
+      category,
+      minPriceNum,
+      maxPriceNum,
+      minRating,
+      onlyFeatured,
+      selectedTags,
+      sortBy,
+    ],
+  );
+
+  // Fetch filtered products from API
+  const { data: filteredProducts = [], isLoading, error } = useFilteredProducts(filters);
+
+  // Extract unique categories
   const categoryNames = useMemo(() => {
     const seen = new Set<string>();
-    const names = (categories as any[])
+    return (categories as any[])
       .map((c) => (c?.name ?? '').toString().trim())
-      .filter((n) => n && n !== 'همه')
-      .filter((n) => {
-        if (seen.has(n)) return false;
-        seen.add(n);
-        return true;
-      });
-    return names;
+      .filter((n) => n && n !== 'همه' && !seen.has(n) && (seen.add(n), true));
   }, [categories]);
 
-  // Sync URL only when APPLIED filters change
+  // Extract unique tags from all products (for filter options)
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    allProducts.forEach((product: any) => {
+      if (product.tags && Array.isArray(product.tags)) {
+        product.tags.forEach((tag: string) => {
+          if (tag?.trim()) tagSet.add(tag.trim());
+        });
+      }
+    });
+    return Array.from(tagSet).sort();
+  }, [allProducts]);
+
+  // Pagination
+  const [visibleCount, setVisibleCount] = useState(24);
+  const visibleProducts = useMemo(
+    () => filteredProducts.slice(0, visibleCount),
+    [filteredProducts, visibleCount],
+  );
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setVisibleCount(24);
+  }, [
+    debouncedSearchQuery,
+    category,
+    minPriceNum,
+    maxPriceNum,
+    minRating,
+    onlyFeatured,
+    selectedTags,
+    sortBy,
+  ]);
+
+  // Sync URL with filters (using debounced values for typed inputs)
   useEffect(() => {
     const params = new URLSearchParams();
-    if (appliedQuery) params.set('q', appliedQuery);
-    if (appliedCategory && appliedCategory !== 'all') params.set('category', appliedCategory);
-    if (appliedSort && appliedSort !== 'relevance') params.set('sort', appliedSort);
-    if (appliedPriceRange[0] > 0) params.set('min', String(appliedPriceRange[0]));
-    if (appliedPriceRange[1] < 10_000_000) params.set('max', String(appliedPriceRange[1]));
-    if (appliedMinRating > 0) params.set('rating', String(appliedMinRating));
-    if (appliedOnlyFeatured) params.set('featured', 'true');
+    if (debouncedSearchQuery) params.set('q', debouncedSearchQuery);
+    if (category !== 'all') params.set('category', category);
+    if (sortBy !== 'relevance') params.set('sort', sortBy);
+    if (minPriceNum > 0) params.set('min', String(minPriceNum));
+    if (maxPriceNum < 10_000_000) params.set('max', String(maxPriceNum));
+    if (minRating > 0) params.set('rating', String(minRating));
+    if (onlyFeatured) params.set('featured', 'true');
+    if (selectedTags.length > 0) params.set('tags', selectedTags.join(','));
+
     const qs = params.toString();
-    router.replace(`/products${qs ? `?${qs}` : ''}`);
-  }, [appliedQuery, appliedCategory, appliedSort, appliedPriceRange, appliedMinRating, appliedOnlyFeatured, router]);
+    const url = `/products${qs ? `?${qs}` : ''}`;
+    router.replace(url);
+  }, [
+    debouncedSearchQuery,
+    category,
+    sortBy,
+    minPriceNum,
+    maxPriceNum,
+    minRating,
+    onlyFeatured,
+    selectedTags,
+    router,
+  ]);
 
-  // Keep local slider in sync when committed range changes
-  useEffect(() => {
-    setLocalPriceRange(priceRange);
-  }, [priceRange]);
-
-  // Commit price range based on debounced text inputs
-  useEffect(() => {
-    const minValRaw = Number((debouncedMinText || '0').toString().replace(/\D/g, ''));
-    const maxValRaw = Number((debouncedMaxText || '0').toString().replace(/\D/g, ''));
-    const clampedMin = Math.max(0, Math.min(minValRaw, 10_000_000));
-    const clampedMax = Math.max(clampedMin, Math.min(maxValRaw || 0, 10_000_000));
-    const next: [number, number] = [clampedMin, clampedMax];
-    if (next[0] !== priceRange[0] || next[1] !== priceRange[1]) {
-      setLocalPriceRange(next);
-      setPriceRange(next);
-    }
-  }, [debouncedMinText, debouncedMaxText]);
-
-  // Debounce local slider changes to commit to filters smoothly
-  useEffect(() => {
-    if (
-      Array.isArray(debouncedLocalPrice) &&
-      (debouncedLocalPrice[0] !== priceRange[0] || debouncedLocalPrice[1] !== priceRange[1])
-    ) {
-      setPriceRange(debouncedLocalPrice as [number, number]);
-    }
-  }, [debouncedLocalPrice, priceRange]);
-
-  // Derived filtered products (client-side filters) - based on APPLIED state
-  const filteredProducts = useMemo(() => {
-    let list = products;
-
-    if (appliedOnlyFeatured) {
-      list = list.filter((p) => p.isFeatured);
-    }
-
-    if (appliedCategory && appliedCategory !== 'all') {
-      list = list.filter((p) => p.category === appliedCategory);
-    }
-
-    if (appliedQuery) {
-      const q = appliedQuery.toLowerCase();
-      const norm = (v?: string) => (v ?? '').toLowerCase();
-      list = list.filter((p) => norm(p.name).includes(q) || norm(p.brand).includes(q) || norm(p.description).includes(q));
-    }
-
-    list = list.filter((p) => p.price >= appliedPriceRange[0] && p.price <= appliedPriceRange[1]);
-    if (appliedMinRating > 0) {
-      list = list.filter((p) => Math.round(p.rating) >= appliedMinRating);
-    }
-
-    switch (appliedSort) {
-      case 'price_asc':
-        list = [...list].sort((a, b) => a.price - b.price);
-        break;
-      case 'price_desc':
-        list = [...list].sort((a, b) => b.price - a.price);
-        break;
-      case 'rating_desc':
-        list = [...list].sort((a, b) => b.rating - a.rating);
-        break;
-      case 'newest':
-        list = [...list].sort((a, b) => Number(b.isNew) - Number(a.isNew));
-        break;
-      default:
-        break;
-    }
-
-    return list.map((p) => ({
-      id: p.id,
-      name: p.name,
-      image: p.image,
-      price: p.price,
-      originalPrice: p.originalPrice,
-      discount: p.discount,
-      rating: p.rating,
-      reviewCount: p.reviewCount,
-      isNew: p.isNew,
-      isFeatured: p.isFeatured,
-    }));
-  }, [products, appliedQuery, appliedCategory, appliedPriceRange, appliedMinRating, appliedSort, appliedOnlyFeatured]);
-
-  // Defer rendering large lists to keep typing and filter controls responsive
-  const deferredProducts = useDeferredValue(filteredProducts);
-
-  // Client-side pagination (Load more)
-  const DEFAULT_PAGE_SIZE = 24;
-  const [visibleCount, setVisibleCount] = useState<number>(DEFAULT_PAGE_SIZE);
-
-  // Reset pagination whenever APPLIED filters change
-  useEffect(() => {
-    setVisibleCount(DEFAULT_PAGE_SIZE);
-  }, [appliedQuery, appliedCategory, appliedPriceRange, appliedMinRating, appliedSort, appliedOnlyFeatured]);
-
-  const visibleProducts = useMemo(() => {
-    if (!Array.isArray(deferredProducts)) return [];
-    return deferredProducts.slice(0, visibleCount);
-  }, [deferredProducts, visibleCount]);
-
+  // Handlers
   const handleAddToCart = (id: string) => {
-    const p = products.find((x: any) => String(x.id) === String(id));
-    if (!p) return;
-    const colors = p.colors ? Object.keys(p.colors) : [];
-    const sizes = p.sizes || [];
-    const firstColor = colors[0] || 'default';
-    const firstSize = sizes[0] || 'default';
+    const product = allProducts.find((p: any) => String(p.id) === String(id));
+    if (!product) return;
+
+    const colors = product.colors ? Object.keys(product.colors) : [];
+    const sizes = product.sizes || [];
     dispatch(
       addToCart({
-        productId: p.id,
-        color: firstColor,
-        size: firstSize,
+        productId: product.id,
+        color: colors[0] || 'default',
+        size: sizes[0] || 'default',
         quantity: 1,
-        price: p.price,
-        name: p.name,
-        image: p.image,
+        price: product.price,
+        name: product.name,
+        image: product.image,
       }),
     );
   };
 
-  const applyFilters = () => {
-    const minValRaw = Number((minText || '0').toString().replace(/\D/g, ''));
-    const maxValRaw = Number((maxText || '0').toString().replace(/\D/g, ''));
-    const clampedMin = Math.max(0, Math.min(minValRaw, 10_000_000));
-    const clampedMax = Math.max(clampedMin, Math.min(maxValRaw || 0, 10_000_000));
-    const committedRange: [number, number] = [clampedMin, clampedMax];
-
-    setAppliedQuery(query.trim());
-    setAppliedCategory(category);
-    setAppliedSort(sort);
-    setAppliedMinRating(minRating);
-    setAppliedOnlyFeatured(onlyFeatured);
-    setAppliedPriceRange(committedRange);
-  };
-
   const resetFilters = () => {
-    // Reset pending
-    setQuery('');
+    setSearchQuery('');
     setCategory('all');
-    setSort('relevance');
+    setSortBy('relevance');
     setPriceRange([0, 10_000_000]);
-    setLocalPriceRange([0, 10_000_000]);
-    setMinText('0');
-    setMaxText('10000000');
     setMinRating(0);
     setOnlyFeatured(false);
-
-    // Reset applied
-    setAppliedQuery('');
-    setAppliedCategory('all');
-    setAppliedSort('relevance');
-    setAppliedPriceRange([0, 10_000_000]);
-    setAppliedMinRating(0);
-    setAppliedOnlyFeatured(false);
+    setSelectedTags([]);
   };
 
   const ActiveFilters = () => {
-    const active: string[] = [];
-    if (appliedQuery) active.push(`جستجو: ${appliedQuery}`);
-    if (appliedCategory !== 'all') active.push(`دسته: ${appliedCategory}`);
-    if (appliedOnlyFeatured) active.push('ویژه');
-    if (appliedPriceRange[0] > 0 || appliedPriceRange[1] < 10_000_000)
-      active.push(`قیمت: ${appliedPriceRange[0].toLocaleString()} - ${appliedPriceRange[1].toLocaleString()} تومان`);
-    if (appliedMinRating > 0) active.push(`حداقل امتیاز: ${appliedMinRating}`);
-    if (appliedSort !== 'relevance') active.push(`مرتب‌سازی: ${appliedSort}`);
+    const getSortLabel = (sortValue: string): string => {
+      const sortLabels: Record<string, string> = {
+        relevance: 'مرتبط‌ترین',
+        price_asc: 'قیمت: کم به زیاد',
+        price_desc: 'قیمت: زیاد به کم',
+        rating_desc: 'بالاترین امتیاز',
+        newest: 'جدیدترین',
+      };
+      return sortLabels[sortValue] || sortValue;
+    };
 
-    if (active.length === 0) return null;
+    const active: string[] = [];
+    if (debouncedSearchQuery) active.push(`جستجو: ${debouncedSearchQuery}`);
+    if (category !== 'all') active.push(`دسته: ${category}`);
+    if (selectedTags.length > 0) active.push(`تگ‌ها: ${selectedTags.join(', ')}`);
+    if (onlyFeatured) active.push('ویژه');
+    if (minPriceNum > 0 || maxPriceNum < 10_000_000) {
+      active.push(`قیمت: ${minPriceNum.toLocaleString()} - ${maxPriceNum.toLocaleString()} تومان`);
+    }
+    if (minRating > 0) active.push(`حداقل امتیاز: ${minRating}`);
+    if (sortBy !== 'relevance') {
+      const sortLabel = getSortLabel(sortBy);
+      active.push(`مرتب‌سازی: ${sortLabel}`);
+    }
+
     return (
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        {active.map((a) => (
-          <Tag key={a} color="magenta" className="m-0 px-2 py-1">
-            {a}
-          </Tag>
-        ))}
-        <Button type="link" onClick={resetFilters} icon={<ReloadOutlined />}>بازنشانی</Button>
+      <div className="mt-1 flex min-h-[32px] flex-wrap items-center gap-2">
+        {active.length > 0 && (
+          <>
+            {active.map((filter, idx) => (
+              <Tag key={idx} color="magenta" className="m-0 px-2 py-1">
+                {filter}
+              </Tag>
+            ))}
+            <Button type="link" onClick={resetFilters} icon={<ReloadOutlined />} size="small">
+              بازنشانی
+            </Button>
+          </>
+        )}
       </div>
     );
   };
 
-  const FiltersPanel = () => (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-2">
-        <Text className="text-sm text-gray-600">دسته‌بندی</Text>
-        <Select value={category} onChange={setCategory} className="w-full">
-          <Option key="cat-all-default" value="all">همه</Option>
-          {categoryNames.map((name) => (
-            <Option key={`cat-name-${name}`} value={name}>
-              {name}
-            </Option>
-          ))}
-        </Select>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Text className="text-sm text-gray-600">محدوده قیمت (تومان)</Text>
-        <div className="grid grid-cols-2 gap-3">
-          <Input
-            inputMode="numeric"
-            pattern="[0-9]*"
-            value={minText}
-            onChange={(e) => {
-              const raw = e.target.value.replace(/\D/g, '');
-              setMinText(raw);
-            }}
-            placeholder="حداقل"
-            suffix="تومان"
-          />
-          <Input
-            inputMode="numeric"
-            pattern="[0-9]*"
-            value={maxText}
-            onChange={(e) => {
-              const raw = e.target.value.replace(/\D/g, '');
-              setMaxText(raw);
-            }}
-            placeholder="حداکثر"
-            suffix="تومان"
-          />
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Text className="text-sm text-gray-600">حداقل امتیاز</Text>
-        <Rate value={minRating} onChange={setMinRating as any} />
-      </div>
-
-      <div className="flex items-center justify-between">
-        <Space>
-          <Text className="text-sm text-gray-600">فقط ویژه</Text>
-        </Space>
-        <Select value={onlyFeatured ? 'yes' : 'no'} onChange={(v) => setOnlyFeatured(v === 'yes')} className="w-24">
-          <Option value="no">خیر</Option>
-          <Option value="yes">بله</Option>
-        </Select>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Text className="text-sm text-gray-600">مرتب‌سازی</Text>
-        <Select value={sort} onChange={setSort} suffixIcon={<FilterOutlined />}>
-          <Option value="relevance">مرتبط‌ترین</Option>
-          <Option value="price_asc">قیمت: کم به زیاد</Option>
-          <Option value="price_desc">قیمت: زیاد به کم</Option>
-          <Option value="rating_desc">بالاترین امتیاز</Option>
-          <Option value="newest">جدیدترین</Option>
-        </Select>
-      </div>
-    </div>
-  );
-
   return (
     <div className="mx-auto max-w-7xl px-4 py-4 sm:py-6">
-      {/* Header: search + sort (mobile-first) */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <div className="lg:hidden">
-          <Button icon={<FilterOutlined />} onClick={() => setDrawerOpen(true)}>
-            فیلترها
-          </Button>
+      {/* Header */}
+      <div className="!sm:flex-row !sm:items-center !sm:justify-between flex flex-col gap-3">
+        <div>
+          {/* Active Filters */}
+          <ActiveFilters />
+        </div>
+
+        <div className="flex gap-3 items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="lg:hidden">
+              <Button icon={<FilterOutlined />} onClick={() => setDrawerOpen(true)}>
+                فیلترها
+              </Button>
+            </div>
           </div>
-          <Input
-            allowClear
-            prefix={<SearchOutlined />}
-            placeholder="جستجوی محصول، برند یا توضیحات..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            type="text"
-            inputMode="text"
-            autoComplete="off"
-            onKeyDown={(e) => e.stopPropagation()}
-            className="h-10 w-full sm:w-80"
-          />
-        </div>
 
-        <div className="flex items-center gap-2">
-          <Text className="hidden text-sm text-gray-600 sm:block">مرتب‌سازی:</Text>
-          <Select value={sort} onChange={setSort} className="w-full sm:w-56">
-            <Option value="relevance">مرتبط‌ترین</Option>
-            <Option value="price_asc">قیمت: کم به زیاد</Option>
-            <Option value="price_desc">قیمت: زیاد به کم</Option>
-            <Option value="rating_desc">بالاترین امتیاز</Option>
-            <Option value="newest">جدیدترین</Option>
-          </Select>
+          {/* Results count */}
+          <div className="flex-1 text-xs text-gray-500">
+            {isLoading
+              ? 'در حال بارگذاری...'
+              : `تعداد نتایج: ${filteredProducts.length.toLocaleString('fa-IR')}`}
+          </div>
+
+          <div className="flex w-1/3 items-center justify-end gap-2 sm:w-auto">
+            <Text className="hidden text-sm text-gray-600 sm:block">مرتب‌سازی:</Text>
+            <Select value={sortBy} onChange={setSortBy} className="w-full sm:w-56">
+              <Option value="relevance">مرتبط‌ترین</Option>
+              <Option value="price_asc">قیمت: کم به زیاد</Option>
+              <Option value="price_desc">قیمت: زیاد به کم</Option>
+              <Option value="rating_desc">بالاترین امتیاز</Option>
+              <Option value="newest">جدیدترین</Option>
+            </Select>
+          </div>
         </div>
       </div>
-
-      {/* Results meta */}
-      <div className="mt-2 text-xs text-gray-500">
-        {isLoading ? 'در حال بارگذاری محصولات…' : `تعداد نتایج: ${deferredProducts.length.toLocaleString('fa-IR')}`}
-      </div>
-
-      <ActiveFilters />
 
       {/* Content */}
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-12">
-        {/* Sidebar (desktop) */}
+        {/* Sidebar - Desktop */}
         <aside className="hidden lg:col-span-3 lg:block">
           <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <FiltersPanel />
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <Button onClick={applyFilters} type="primary" block>
-                اعمال فیلترها
-              </Button>
-              <Button icon={<ReloadOutlined />} onClick={resetFilters} block>
+            {/* Filters Panel */}
+            <div className="space-y-4">
+              <Input
+                allowClear
+                prefix={<SearchOutlined />}
+                placeholder="جستجوی محصول، برند یا توضیحات..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-10 w-full sm:w-80"
+              />
+
+              <div className="flex flex-col gap-2">
+                <Text className="text-sm text-gray-600">دسته‌بندی</Text>
+                <Select value={category} onChange={setCategory} className="w-full">
+                  <Option value="all">همه</Option>
+                  {categoryNames.map((name) => (
+                    <Option key={name} value={name}>
+                      {name}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <div className="flex flex-col gap-1">
+                    <Text className="text-xs text-gray-500">حداقل قیمت</Text>
+                    <Text className="text-base font-semibold text-gray-900">
+                      {priceRange[0].toLocaleString('fa-IR')} تومان
+                    </Text>
+                  </div>
+                  <div className="mx-2 text-gray-400">–</div>
+                  <div className="flex flex-col gap-1">
+                    <Text className="text-xs text-gray-500">حداکثر قیمت</Text>
+                    <Text className="text-base font-semibold text-gray-900">
+                      {priceRange[1].toLocaleString('fa-IR')} تومان
+                    </Text>
+                  </div>
+                </div>
+                <Slider
+                  range
+                  min={0}
+                  max={10_000_000}
+                  step={10000}
+                  value={priceRange}
+                  onChange={(value) => setPriceRange(value as [number, number])}
+                  tooltip={{
+                    formatter: (value) => `${value?.toLocaleString('fa-IR')} تومان`,
+                  }}
+                  className="!mb-0"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Text className="text-sm text-gray-600">حداقل امتیاز</Text>
+                <Rate value={minRating} onChange={(val) => setMinRating(val)} />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Text className="text-sm text-gray-600">فقط ویژه</Text>
+                <Select
+                  value={onlyFeatured ? 'yes' : 'no'}
+                  onChange={(v) => setOnlyFeatured(v === 'yes')}
+                  className="w-24"
+                >
+                  <Option value="no">خیر</Option>
+                  <Option value="yes">بله</Option>
+                </Select>
+              </div>
+
+              {allTags.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <Text className="text-sm text-gray-600">تگ‌ها</Text>
+                  <Select
+                    mode="multiple"
+                    value={selectedTags}
+                    onChange={setSelectedTags}
+                    placeholder="تگ‌ها را انتخاب کنید"
+                    className="w-full"
+                    maxTagCount="responsive"
+                    showSearch
+                    filterOption={(input, option) => {
+                      const label =
+                        typeof option?.label === 'string'
+                          ? option.label
+                          : String(option?.label || '');
+                      return label.toLowerCase().includes(input.toLowerCase());
+                    }}
+                  >
+                    {allTags.map((tag) => (
+                      <Option key={tag} value={tag}>
+                        {tag}
+                      </Option>
+                    ))}
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4">
+              <Button onClick={resetFilters} icon={<ReloadOutlined />} block>
                 بازنشانی
               </Button>
             </div>
           </div>
         </aside>
 
-        {/* Grid */}
+        {/* Products Grid */}
         <section className="products-page lg:col-span-9">
-          <ProductGrid
-            products={visibleProducts}
-            loading={isLoading}
-            error={(error as any)?.message}
-            cols={3}
-            gap="lg"
-            emptyMessage="هیچ محصولی مطابق فیلترها یافت نشد"
-            onAddToCart={handleAddToCart}
-          />
+          {isLoading ? (
+            <ProductGridSkeleton count={12} cols={3} />
+          ) : (
+            <ProductGrid
+              products={visibleProducts}
+              loading={false}
+              error={(error as any)?.message}
+              cols={3}
+              gap="lg"
+              emptyMessage="هیچ محصولی مطابق فیلترها یافت نشد"
+              onAddToCart={handleAddToCart}
+            />
+          )}
 
           {/* Load more */}
-          {!isLoading && visibleProducts.length < deferredProducts.length && (
+          {!isLoading && visibleProducts.length < filteredProducts.length && (
             <div className="mt-4 flex justify-center">
-              <Button onClick={() => setVisibleCount((c) => c + DEFAULT_PAGE_SIZE)}>
-                نمایش موارد بیشتر
-              </Button>
+              <Button onClick={() => setVisibleCount((c) => c + 24)}>نمایش موارد بیشتر</Button>
             </div>
           )}
         </section>
       </div>
 
       {/* Mobile Filters Drawer */}
-      <Drawer title="فیلتر محصولات" placement="right" onClose={() => setDrawerOpen(false)} open={drawerOpen} width={320}>
-        <FiltersPanel />
-        <div className="mt-6 flex gap-2">
-          <Button onClick={resetFilters} icon={<ReloadOutlined />} className="flex-1">
+      <Drawer
+        title="فیلتر محصولات"
+        placement="right"
+        onClose={() => setDrawerOpen(false)}
+        open={drawerOpen}
+        width={320}
+      >
+        <div className="space-y-4">
+          <div className="flex flex-col gap-2">
+            <Text className="text-sm text-gray-600">دسته‌بندی</Text>
+            <Select value={category} onChange={setCategory} className="w-full">
+              <Option value="all">همه</Option>
+              {categoryNames.map((name) => (
+                <Option key={name} value={name}>
+                  {name}
+                </Option>
+              ))}
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
+              <div className="flex flex-col gap-1">
+                <Text className="text-xs text-gray-500">حداقل قیمت</Text>
+                <Text className="text-base font-semibold text-gray-900">
+                  {priceRange[0].toLocaleString('fa-IR')} تومان
+                </Text>
+              </div>
+              <div className="mx-2 text-gray-400">–</div>
+              <div className="flex flex-col gap-1">
+                <Text className="text-xs text-gray-500">حداکثر قیمت</Text>
+                <Text className="text-base font-semibold text-gray-900">
+                  {priceRange[1].toLocaleString('fa-IR')} تومان
+                </Text>
+              </div>
+            </div>
+            <Slider
+              range
+              min={0}
+              max={10_000_000}
+              step={10000}
+              value={priceRange}
+              onChange={(value) => setPriceRange(value as [number, number])}
+              tooltip={{
+                formatter: (value) => `${value?.toLocaleString('fa-IR')} تومان`,
+              }}
+              className="!mb-0"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Text className="text-sm text-gray-600">حداقل امتیاز</Text>
+            <Rate value={minRating} onChange={(val) => setMinRating(val)} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Text className="text-sm text-gray-600">فقط ویژه</Text>
+            <Select
+              value={onlyFeatured ? 'yes' : 'no'}
+              onChange={(v) => setOnlyFeatured(v === 'yes')}
+              className="w-24"
+            >
+              <Option value="no">خیر</Option>
+              <Option value="yes">بله</Option>
+            </Select>
+          </div>
+
+          {allTags.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <Text className="text-sm text-gray-600">تگ‌ها</Text>
+              <Select
+                mode="multiple"
+                value={selectedTags}
+                onChange={setSelectedTags}
+                placeholder="تگ‌ها را انتخاب کنید"
+                className="w-full"
+                maxTagCount="responsive"
+                showSearch
+                filterOption={(input, option) => {
+                  const label =
+                    typeof option?.label === 'string' ? option.label : String(option?.label || '');
+                  return label.toLowerCase().includes(input.toLowerCase());
+                }}
+              >
+                {allTags.map((tag) => (
+                  <Option key={tag} value={tag}>
+                    {tag}
+                  </Option>
+                ))}
+              </Select>
+            </div>
+          )}
+        </div>
+        <div className="mt-6">
+          <Button onClick={resetFilters} icon={<ReloadOutlined />} block>
             بازنشانی
-          </Button>
-          <Button type="primary" onClick={() => { applyFilters(); setDrawerOpen(false); }} className="flex-1">
-            اعمال
           </Button>
         </div>
       </Drawer>
+
       <style jsx global>{`
-        /* Scoped fixes for product list rendering */
         .products-page .ant-card {
           direction: rtl;
         }
@@ -447,11 +516,9 @@ export default function ProductsPage() {
           writing-mode: horizontal-tb;
         }
         .products-page .ant-card .ant-rate {
-          direction: ltr; /* ensure stars align properly */
+          direction: ltr;
         }
       `}</style>
     </div>
   );
 }
-
-

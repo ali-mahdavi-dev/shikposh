@@ -1,7 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { Button, Tabs, TabsProps, Typography, Badge, Spin } from 'antd';
-import { ContentLoading } from '@/shared/components/loading';
+import { Button, Tabs, TabsProps, Typography } from 'antd';
 import {
   BellOutlined,
   CalendarOutlined,
@@ -9,17 +8,19 @@ import {
   LikeOutlined,
   MessageOutlined,
   CheckOutlined,
-  PlayCircleOutlined,
   UnorderedListOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Post } from '@/types';
-import { BaseBadge } from '@/components/ui';
-import { CategoryTile } from '@/components/business';
-import { CategoriesGrid } from '@/components/business';
-import { usePosts, usePlaylists } from '@/features/content';
+import type { Post } from './_api';
+import { Badge } from '@/app/_components';
+import { CategoriesGrid } from '@/app/_components/business';
+import { usePosts, usePlaylists } from './_api';
+import { PostCard, PlaylistCard } from './_components';
+import { ProductGridSkeleton } from '@/app/_components/skeleton';
+import type { Playlist } from './_types';
+import { Badge as AntBadge } from 'antd';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -49,112 +50,6 @@ const formatDate = (dateString: string): string => {
   return `${Math.floor(diffDays / 365)} سال پیش`;
 };
 
-// Use BaseBadge component for consistency
-
-// Post Card Component
-const PostCard: React.FC<{ post: Post }> = ({ post }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.2 }}
-      className="cursor-pointer"
-    >
-      <Link href={`/products/${post.id}`} className="block h-full">
-        <div className="flex h-full flex-col overflow-hidden rounded-xl bg-white shadow-md transition-all duration-300 hover:shadow-xl">
-          {/* Thumbnail */}
-          <div className="relative aspect-video w-full flex-shrink-0 overflow-hidden bg-gray-100">
-            <Image
-              src={post.thumbnail}
-              alt={post.title}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-              className="object-cover transition-transform duration-300 hover:scale-110"
-            />
-
-            {/* Post Badges - Top Left */}
-            {post.badges && post.badges.length > 0 && (
-              <div className="absolute top-2 left-2 z-10 flex flex-col gap-1.5">
-                {post.badges.map((badge, index) => (
-                  <BaseBadge key={index} text={badge} />
-                ))}
-              </div>
-            )}
-
-            {/* Category badge - Bottom Left */}
-            <div className="absolute bottom-2 left-2 rounded bg-black/80 px-2 py-1 text-xs text-white backdrop-blur-sm">
-              {post.category}
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="flex flex-1 flex-col p-3 sm:p-4">
-            <Title
-              level={5}
-              className="!mb-2 line-clamp-2 !text-gray-800 transition-colors hover:text-pink-600"
-              style={{ fontSize: '14px', fontWeight: 600, minHeight: '44px' }}
-            >
-              {post.title}
-            </Title>
-
-            {/* Stats */}
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-500">
-              <span className="flex items-center gap-1 whitespace-nowrap">
-                <EyeOutlined />
-                {formatNumber(post.views)} بازدید
-              </span>
-              <span className="flex items-center gap-1 whitespace-nowrap">
-                <CalendarOutlined />
-                {formatDate(post.publishedAt)}
-              </span>
-            </div>
-
-            {/* Engagement */}
-            {post.likes && post.comments && (
-              <div className="mt-3 flex items-center gap-4 border-t border-gray-100 pt-3">
-                <span className="flex items-center gap-1 text-xs text-gray-600">
-                  <LikeOutlined className="text-pink-500" />
-                  {formatNumber(post.likes)}
-                </span>
-                <span className="flex items-center gap-1 text-xs text-gray-600">
-                  <MessageOutlined className="text-purple-500" />
-                  {formatNumber(post.comments)}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      </Link>
-    </motion.div>
-  );
-};
-
-// Playlist interface
-interface Playlist {
-  id: string;
-  title: string;
-  thumbnail: string;
-  itemCount: number;
-  views: number;
-  description?: string;
-}
-
-// Playlist Card Component -> unified with CategoryTile
-const PlaylistCard: React.FC<{ playlist: Playlist }> = ({ playlist }) => {
-  return (
-    <CategoryTile
-      id={playlist.id}
-      name={playlist.title}
-      count={playlist.itemCount}
-      thumbnail={playlist.thumbnail}
-      href={`/profile/playlist/${playlist.id}`}
-      icon={<UnorderedListOutlined className="text-2xl text-pink-600" />}
-      countSuffix="پست"
-    />
-  );
-};
-
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<string>('home');
   const [subscribed, setSubscribed] = useState<boolean>(false);
@@ -167,10 +62,8 @@ export default function ProfilePage() {
     error: playlistsError,
   } = usePlaylists();
 
-  // Mock banner image - در واقعیت از API می‌آید
   const bannerImage = '/images/carousel-homepage-one.jpg';
 
-  // Featured post for home tab - جدیدترین یا محبوب‌ترین پست
   const featuredPost = posts[0];
 
   const categoryCounts = posts.reduce<Record<string, number>>((acc, p) => {
@@ -200,7 +93,7 @@ export default function ProfilePage() {
         <span className="flex items-center gap-2 px-4 py-2">
           <UnorderedListOutlined />
           <span>فهرست‌ها</span>
-          <Badge count={playlists.length} showZero />
+          <AntBadge count={playlists.length} showZero />
         </span>
       ),
     },
@@ -209,7 +102,7 @@ export default function ProfilePage() {
       label: (
         <span className="flex items-center gap-2 px-4 py-2">
           <span>پست‌ها</span>
-          <Badge count={posts.length} showZero />
+          <AntBadge count={posts.length} showZero />
         </span>
       ),
     },
@@ -218,7 +111,7 @@ export default function ProfilePage() {
       label: (
         <span className="flex items-center gap-2 px-4 py-2">
           <span>دسته‌بندی‌ها</span>
-          <Badge count={profileCategories.length} showZero />
+          <AntBadge count={profileCategories.length} showZero />
         </span>
       ),
     },
@@ -279,7 +172,7 @@ export default function ProfilePage() {
                       Ali Ahmagh
                     </Title>
                     {subscribed && (
-                      <Badge
+                      <AntBadge
                         status="success"
                         text={
                           <span className="flex items-center gap-1 text-xs text-green-600">
@@ -369,7 +262,7 @@ export default function ProfilePage() {
         {activeTab === 'home' && (
           <div className="space-y-6">
             {postsLoading ? (
-              <ContentLoading tip="در حال بارگذاری پست‌ها..." />
+              <ProductGridSkeleton count={6} cols={3} />
             ) : postsError ? (
               <div className="py-12 text-center">
                 <Text className="text-lg text-red-500">خطا در بارگذاری پست‌ها</Text>
@@ -394,7 +287,7 @@ export default function ProfilePage() {
                         {featuredPost.badges && featuredPost.badges.length > 0 && (
                           <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
                             {featuredPost.badges.map((badge: string, index: number) => (
-                              <BaseBadge key={index} text={badge} />
+                              <Badge key={index} text={badge} />
                             ))}
                           </div>
                         )}
@@ -486,15 +379,15 @@ export default function ProfilePage() {
         {activeTab === 'playlists' && (
           <div>
             {playlistsLoading ? (
-              <ContentLoading tip="در حال بارگذاری پلی‌لیست‌ها..." />
+              <ProductGridSkeleton count={6} cols={3} />
             ) : playlistsError ? (
               <div className="py-12 text-center">
                 <Text className="text-lg text-red-500">خطا در بارگذاری فهرست‌ها</Text>
               </div>
             ) : playlists.length > 0 ? (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-                {playlists.map((playlist: Playlist) => (
-                  <PlaylistCard key={playlist.id} playlist={playlist} />
+                {playlists.map((playlist) => (
+                  <PlaylistCard key={playlist.id} playlist={playlist as Playlist} />
                 ))}
               </div>
             ) : (
@@ -508,7 +401,7 @@ export default function ProfilePage() {
         {activeTab === 'posts' && (
           <div>
             {postsLoading ? (
-              <ContentLoading tip="در حال بارگذاری پست‌ها..." />
+              <ProductGridSkeleton count={6} cols={3} />
             ) : postsError ? (
               <div className="py-12 text-center">
                 <Text className="text-lg text-red-500">خطا در بارگذاری پست‌ها</Text>
@@ -530,7 +423,7 @@ export default function ProfilePage() {
         {activeTab === 'categories' && (
           <div>
             {postsLoading ? (
-              <ContentLoading tip="در حال بارگذاری پست‌ها..." />
+              <ProductGridSkeleton count={8} cols={4} />
             ) : postsError ? (
               <div className="py-12 text-center">
                 <Text className="text-lg text-red-500">خطا در بارگذاری پست‌ها</Text>

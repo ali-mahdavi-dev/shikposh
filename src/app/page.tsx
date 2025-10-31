@@ -1,6 +1,6 @@
 import React from 'react';
 import { Metadata } from 'next';
-import HomeClient from './components/home-client';
+import HomeClient from './_components/home/home-client';
 
 // This will be used for static generation
 export const metadata: Metadata = {

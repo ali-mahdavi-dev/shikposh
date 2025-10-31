@@ -29,7 +29,8 @@
       "@configs/*": ["./src/configs/*"],
       "@providers/*": ["./src/providers/*"],
       "@stores/*": ["./src/stores/*"],
-      "@types/*": ["./src/types/*"]
+      "@types/*": ["./src/types/*"],
+      "@arch/*": ["./react-application-architecture-for-large-scale-projects/src/*"]
     },
     "allowJs": true,
     "incremental": true,

@@ -1,27 +1,28 @@
 'use client';
 import React, { useState, useMemo, useCallback, Suspense } from 'react';
 import { Card, Button, Rate, Typography, Divider, Tabs, Tag, Tooltip, Badge, App as AntApp } from 'antd';
-import { PageLoading, ErrorState, ContentLoading } from '@/shared/components/loading';
+import { ErrorState, ContentLoading } from '@/shared/components/loading';
+import { FeaturesList, ShippingInfo, StockStatus } from './_components';
+import { ProductDetailSkeleton } from '@/app/_components/skeleton';
 import { ShoppingCartOutlined, ShareAltOutlined, HeartOutlined, HeartFilled } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import { ProductDetailProps } from '../types';
-import { ProductVariant } from '@/features/products/domain/entities/product.entity';
-import { useProduct, useReviews, useProductsByCategory } from '@/features/products';
-import { useSellerByProductId } from '@/features/sellers';
+import { ProductDetailProps } from './_types';
+import { ProductVariant } from '../_api';
+import { useProduct, useReviews, useProductsByCategory } from '../_api';
+import { useSellerByProductId } from '@/app/seller/_api';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { addToCart } from '@/stores/slices/cartSlice';
 import { toggleWishlist } from '@/stores/slices/wishlistSlice';
 
 // Lazy load components for better performance
-const ColorSelector = React.lazy(() => import('../components/color-selector'));
-const SizeSelector = React.lazy(() => import('../components/size-selector'));
-const QuantitySelector = React.lazy(() => import('../components/quantity-selector'));
-const RelatedProducts = React.lazy(() => import('../components/related-products'));
-const ProductImageGallery = React.lazy(() => import('../components/product-image-gallery'));
-const Questions = React.lazy(() => import('../components/questions'));
-// Removed inline CommentBox usage; ReviewSummary now contains the form
-const ProfileCard = React.lazy(() => import('@/app/profile/components/profile-card'));
-const ReviewSummary = React.lazy(() => import('@/components/review-summary'));
+const ColorSelector = React.lazy(() => import('../_components/color-selector'));
+const SizeSelector = React.lazy(() => import('../_components/size-selector'));
+const QuantitySelector = React.lazy(() => import('../_components/quantity-selector'));
+const RelatedProducts = React.lazy(() => import('../_components/related-products'));
+const ProductImageGallery = React.lazy(() => import('../_components/product-image-gallery'));
+const Questions = React.lazy(() => import('../_components/questions'));
+const ProfileCard = React.lazy(() => import('@/app/profile/_components/profile-card'));
+const ReviewSummary = React.lazy(() => import('@/app/_components/review-summary'));
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -196,7 +197,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = '1' }) => {
 
   // Loading and error states - moved after all hooks
   if (isLoading) {
-    return <PageLoading tip="در حال بارگذاری محصول..." />;
+    return <ProductDetailSkeleton />;
   }
 
   if (error || !product) {
@@ -258,11 +259,12 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = '1' }) => {
                           name={sellerData?.name || 'فروشنده'}
                           avatar={sellerData?.avatar || '/images/default-avatar.jpg'}
                           description={sellerData?.description || 'توضیحاتی در دسترس نیست'}
-                          rating={sellerData?.rating || 0}
+                          rating={sellerData?.rating || sellerData?.stats?.averageRating || 0}
                           totalProducts={sellerData?.totalProducts || 0}
                           joinDate={sellerData?.joinDate || 'نامشخص'}
                           verified={sellerData?.verified || false}
                           sellerId={sellerData?.id}
+                          reviewCount={sellerData?.stats?.totalReviews}
                         />
                       </Suspense>
                     ) : (
@@ -305,18 +307,27 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = '1' }) => {
                     {product.description}
                   </Paragraph>
 
-                  {/* Features */}
-                  <div className="rounded-xl bg-gradient-to-r from-pink-50 to-purple-50 p-4">
-                    <h4 className="mb-3 font-semibold text-gray-800">ویژگی‌های محصول:</h4>
-                    <ul className="space-y-2">
-                      {product.features.map((feature, index) => (
-                        <li key={index} className="flex items-center gap-2 text-sm text-gray-600">
-                          <span className="h-1.5 w-1.5 rounded-full bg-pink-400"></span>
-                          {feature}
-                        </li>
+                  {/* Tags for SEO */}
+                  {product.tags && product.tags.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Text className="text-sm font-semibold text-gray-700">تگ‌ها:</Text>
+                      {product.tags.map((tag, index) => (
+                        <Tag
+                          key={`${tag}-${index}`}
+                          color="pink"
+                          className="cursor-pointer transition-all hover:scale-105"
+                          onClick={() => {
+                            window.location.href = `/products?tags=${encodeURIComponent(tag)}`;
+                          }}
+                        >
+                          {tag}
+                        </Tag>
                       ))}
-                    </ul>
-                  </div>
+                    </div>
+                  )}
+
+                  {/* Features */}
+                  <FeaturesList features={product.features} />
 
                   {/* Color Selection */}
                   <Suspense
@@ -341,18 +352,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = '1' }) => {
                   </Suspense>
 
                   {/* Stock Status */}
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`h-3 w-3 rounded-full ${
-                        currentVariant.stock > 0 ? 'bg-green-500' : 'bg-red-500'
-                      }`}
-                    ></div>
-                    <Text className={currentVariant.stock > 0 ? 'text-green-600' : 'text-red-500'}>
-                      {currentVariant.stock > 0
-                        ? `موجود در انبار (${currentVariant.stock} عدد)`
-                        : 'ناموجود'}
-                    </Text>
-                  </div>
+                  <StockStatus stock={currentVariant.stock} />
 
                   {/* Price and Actions */}
                   <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg">
@@ -429,22 +429,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId = '1' }) => {
                   </div>
 
                   {/* Shipping Info */}
-                  <div className="rounded-xl bg-gradient-to-r from-green-50 to-blue-50 p-4">
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="text-green-600">🚚</span>
-                        <Text>ارسال رایگان برای خرید بالای 500,000 تومان</Text>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-blue-600">🛡️</span>
-                        <Text>گارانتی اصالت و کیفیت محصول</Text>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-purple-600">↩️</span>
-                        <Text>امکان بازگشت تا 7 روز</Text>
-                      </div>
-                    </div>
-                  </div>
+                  <ShippingInfo />
                 </div>
               </div>
 

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>اتصال اینترنت قطع است - شیک‌پوشان</title>
+  <meta name="theme-color" content="#ec4899">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #fdf2f8 0%, #f3e8ff 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      direction: rtl;
+    }
+    .container {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      max-width: 28rem;
+      width: 100%;
+      padding: 2rem;
+      text-align: center;
+    }
+    .icon {
+      font-size: 4rem;
+      color: #9ca3af;
+      margin-bottom: 1rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 1rem;
+    }
+    p {
+      font-size: 1rem;
+      color: #4b5563;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+    .tip {
+      background: #dbeafe;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-top: 1.5rem;
+    }
+    .tip-text {
+      font-size: 0.875rem;
+      color: #1e40af;
+      margin: 0;
+    }
+    .tip strong {
+      font-weight: 700;
+    }
+    .button {
+      display: inline-block;
+      width: 100%;
+      padding: 0.75rem 1.5rem;
+      margin-top: 0.75rem;
+      background: #ec4899;
+      color: white;
+      text-decoration: none;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      transition: background 0.2s;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .button:hover {
+      background: #db2777;
+    }
+    .button-secondary {
+      background: white;
+      color: #1f2937;
+      border: 1px solid #e5e7eb;
+    }
+    .button-secondary:hover {
+      background: #f9fafb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📡</div>
+    <h1>اتصال اینترنت قطع است</h1>
+    <p>
+      متأسفانه در حال حاضر به اینترنت متصل نیستید. لطفاً اتصال خود را بررسی کنید و مجدداً تلاش کنید.
+    </p>
+    
+    <button class="button" onclick="window.location.reload()">
+      🔄 تلاش مجدد
+    </button>
+    
+    <a href="/" class="button button-secondary">
+      🏠 بازگشت به صفحه اصلی
+    </a>
+    
+    <div class="tip">
+      <p class="tip-text">
+        💡 <strong>نکته:</strong> برخی از صفحات ممکن است در حالت آفلاین نیز در دسترس باشند.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

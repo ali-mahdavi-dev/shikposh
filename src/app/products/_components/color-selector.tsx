@@ -1,0 +1,65 @@
+'use client';
+
+import React from 'react';
+import { Tooltip, Typography } from 'antd';
+import { CheckOutlined } from '@ant-design/icons';
+import { motion } from 'framer-motion';
+import { ColorSelectorProps } from '../_types';
+
+const { Text } = Typography;
+
+type ColorValue = { name: string; stock?: number; discount?: number };
+
+const ColorSelector: React.FC<ColorSelectorProps> = ({ colors, selectedColor, onColorChange }) => {
+  return (
+    <div className="space-y-3">
+      <Text strong className="text-gray-800">
+        رنگ: <span className="font-normal text-gray-600">{colors[selectedColor].name}</span>
+      </Text>
+      <div className="flex flex-wrap gap-3">
+        {Object.entries(colors).map(([colorKey, color]: [string, ColorValue]) => (
+          <Tooltip
+            key={colorKey}
+            title={
+              <div className="text-right">
+                <p className="font-bold">{color.name}</p>
+                {color.discount ? <p className="text-red-400">{color.discount}% تخفیف</p> : null}
+                {color.stock !== undefined && (
+                  <p>موجودی: {color.stock > 0 ? `${color.stock} عدد` : 'ناموجود'}</p>
+                )}
+              </div>
+            }
+          >
+            <motion.div
+              className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-200 ${
+                colorKey === selectedColor
+                  ? 'border-pink-500 shadow-md'
+                  : 'border-gray-300 hover:border-pink-300'
+              } ${color.stock === 0 ? 'cursor-not-allowed opacity-50' : ''}`}
+              style={{
+                backgroundColor:
+                  colorKey === 'red'
+                    ? '#ef4444'
+                    : colorKey === 'blue'
+                      ? '#3b82f6'
+                      : colorKey === 'black'
+                        ? '#1f2937'
+                        : '#d1d5db',
+              }}
+              onClick={() => (color.stock === 0 ? undefined : onColorChange(colorKey))}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              {colorKey === selectedColor && (color.stock === undefined || color.stock > 0) && (
+                <CheckOutlined className="text-lg text-white" />
+              )}
+            </motion.div>
+          </Tooltip>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default ColorSelector;
+

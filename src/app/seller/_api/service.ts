@@ -1,0 +1,26 @@
+import type { SellerRepository } from './repository';
+import type { SellerEntity, SellerSummary } from './entities';
+
+export class SellerService {
+  constructor(private sellerRepository: SellerRepository) {}
+
+  async getSellerById(id: string): Promise<SellerEntity> {
+    return this.sellerRepository.getSellerById(id);
+  }
+
+  async getAllSellers(): Promise<SellerSummary[]> {
+    return this.sellerRepository.getAllSellers();
+  }
+
+  async getSellersByCategory(category: string): Promise<SellerSummary[]> {
+    return this.sellerRepository.getSellersByCategory(category);
+  }
+
+  async searchSellers(query: string): Promise<SellerSummary[]> {
+    return this.sellerRepository.searchSellers(query);
+  }
+
+  async getSellerByProductId(productId: string): Promise<SellerEntity> {
+    return this.sellerRepository.getSellerByProductId(productId);
+  }
+}

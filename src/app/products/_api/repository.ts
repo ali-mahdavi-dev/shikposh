@@ -1,0 +1,126 @@
+import { apiService, PaginatedResponse } from '@/shared/services/api.service';
+import type { ProductEntity, ProductSummary, CategoryEntity, ReviewEntity, ReviewFormData } from './entities';
+
+export interface ProductFilters {
+  q?: string;
+  category?: string;
+  min?: number;
+  max?: number;
+  rating?: number;
+  featured?: boolean;
+  tags?: string[];
+  sort?: string;
+}
+
+export interface ProductRepository {
+  getAllProducts(): Promise<ProductEntity[]>;
+  getProductById(id: string): Promise<ProductEntity>;
+  getFeaturedProducts(): Promise<ProductSummary[]>;
+  getProductsByCategory(category: string): Promise<ProductSummary[]>;
+  searchProducts(query: string): Promise<ProductSummary[]>;
+  getFilteredProducts(filters: ProductFilters): Promise<ProductSummary[]>;
+  getAllCategories(): Promise<CategoryEntity[]>;
+  getReviewsByProductId(productId: string): Promise<ReviewEntity[]>;
+  createReview(review: ReviewFormData & { productId: string }): Promise<ReviewEntity>;
+  updateReviewHelpful(reviewId: number, type: 'helpful' | 'notHelpful'): Promise<ReviewEntity>;
+}
+
+export class HttpProductRepository implements ProductRepository {
+  async getAllProducts(): Promise<ProductEntity[]> {
+    return apiService.get<ProductEntity[]>('/products');
+  }
+
+  async getProductById(id: string): Promise<ProductEntity> {
+    return apiService.get<ProductEntity>(`/products/${id}`);
+  }
+
+  async getFeaturedProducts(): Promise<ProductSummary[]> {
+    const products = await apiService.get<ProductEntity[]>('/products?isFeatured=true');
+    return this.mapToProductSummary(products);
+  }
+
+  async getProductsByCategory(category: string): Promise<ProductSummary[]> {
+    const products = await apiService.get<ProductEntity[]>(`/products?category=${category}`);
+    return this.mapToProductSummary(products);
+  }
+
+  async searchProducts(query: string): Promise<ProductSummary[]> {
+    const products = await apiService.get<ProductEntity[]>('/products');
+    const filteredProducts = products.filter(
+      (product) =>
+        product.name.toLowerCase().includes(query.toLowerCase()) ||
+        product.description.toLowerCase().includes(query.toLowerCase()) ||
+        product.brand.toLowerCase().includes(query.toLowerCase()),
+    );
+    return this.mapToProductSummary(filteredProducts);
+  }
+
+  async getFilteredProducts(filters: ProductFilters): Promise<ProductSummary[]> {
+    const params = new URLSearchParams();
+    if (filters.q) params.set('q', filters.q);
+    if (filters.category && filters.category !== 'all') params.set('category', filters.category);
+    if (filters.min !== undefined && filters.min > 0) params.set('min', String(filters.min));
+    if (filters.max !== undefined && filters.max < 10_000_000) params.set('max', String(filters.max));
+    if (filters.rating !== undefined && filters.rating > 0) params.set('rating', String(filters.rating));
+    if (filters.featured) params.set('featured', 'true');
+    if (filters.tags && filters.tags.length > 0) params.set('tags', filters.tags.join(','));
+    if (filters.sort && filters.sort !== 'relevance') params.set('sort', filters.sort);
+
+    const queryString = params.toString();
+    const endpoint = `/products${queryString ? `?${queryString}` : ''}`;
+    const products = await apiService.get<ProductEntity[]>(endpoint);
+    return this.mapToProductSummary(products);
+  }
+
+  async getAllCategories(): Promise<CategoryEntity[]> {
+    return apiService.get<CategoryEntity[]>('/categories');
+  }
+
+  async getReviewsByProductId(productId: string): Promise<ReviewEntity[]> {
+    try {
+      const response = await apiService.get<PaginatedResponse<ReviewEntity>>(
+        `/products/${productId}/reviews`,
+      );
+      return response.data || [];
+    } catch (_error) {
+      return apiService.get<ReviewEntity[]>(`/reviews?productId=${productId}`);
+    }
+  }
+
+  async createReview(review: ReviewFormData & { productId: string }): Promise<ReviewEntity> {
+    const reviewData = {
+      rating: review.rating,
+      comment: review.comment,
+      productId: review.productId,
+    };
+    return apiService.post<ReviewEntity>('/reviews', reviewData);
+  }
+
+  async updateReviewHelpful(
+    reviewId: number,
+    type: 'helpful' | 'notHelpful',
+  ): Promise<ReviewEntity> {
+    return apiService.patch<ReviewEntity>(`/reviews/${reviewId}`, { type });
+  }
+
+  private mapToProductSummary(products: ProductEntity[]): ProductSummary[] {
+    return products.map((product) => ({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      originalPrice: product.originalPrice,
+      discount: product.discount,
+      rating: product.rating,
+      reviewCount: product.reviewCount,
+      image: product.image,
+      category: product.category,
+      isNew: product.isNew,
+      isFeatured: product.isFeatured,
+      colors: product.colors,
+      sizes: product.sizes,
+      brand: product.brand,
+      description: product.description,
+      tags: product.tags || [],
+    }));
+  }
+}

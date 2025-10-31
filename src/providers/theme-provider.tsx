@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ConfigProvider, theme } from 'antd';
-import { themeConfig, appConfig } from '@/configs';
+import { themeConfig } from '@/configs';
 
 interface ThemeContextType {
   isDark: boolean;
