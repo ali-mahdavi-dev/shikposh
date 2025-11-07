@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 Starting Shikpush Development Environment..."
+echo "🚀 Starting Shikposh Development Environment..."
 echo ""
 
 # Function to cleanup processes on exit

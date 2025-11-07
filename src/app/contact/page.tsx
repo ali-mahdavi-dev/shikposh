@@ -23,7 +23,7 @@ export default function ContactPage() {
     mainEntity: {
       '@type': 'Organization',
       name: 'شیک‌پوشان',
-      email: 'support@shikpushan.ir',
+      email: 'support@shikposhan.ir',
       url: 'https://localhost:3000/contact',
       contactPoint: {
         '@type': 'ContactPoint',

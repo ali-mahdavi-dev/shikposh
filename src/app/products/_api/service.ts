@@ -90,6 +90,7 @@ export class ProductService {
       sizes: product.sizes,
       brand: product.brand,
       description: product.description,
+      tags: product.tags || [],
     }));
   }
 }

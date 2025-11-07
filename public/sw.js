@@ -1,5 +1,5 @@
 // Service Worker for caching and offline support
-const CACHE_NAME = 'shikpush-v1';
+const CACHE_NAME = 'shikposh-v1';
 const STATIC_CACHE = 'static-v1';
 const DYNAMIC_CACHE = 'dynamic-v1';
 

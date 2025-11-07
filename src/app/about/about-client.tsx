@@ -38,7 +38,7 @@ export default function AboutClient() {
             <Paragraph className="text-gray-600">
               برای همکاری یا پرسش‌ها با ما از صفحه تماس با ما در ارتباط باشید.
             </Paragraph>
-            <Text className="text-gray-700">ایمیل: support@shikpushan.ir</Text>
+            <Text className="text-gray-700">ایمیل: support@shikposhan.ir</Text>
           </Card>
         </Col>
       </Row>

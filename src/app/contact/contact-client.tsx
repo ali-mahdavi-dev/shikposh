@@ -38,7 +38,7 @@ export default function ContactClient() {
           </Form.Item>
         </Form>
         <div className="mt-6 space-y-1 text-sm text-gray-600">
-          <Text>ایمیل پشتیبانی: support@shikpushan.ir</Text>
+          <Text>ایمیل پشتیبانی: support@shikposhan.ir</Text>
           <br />
           <Text>تلفن: 021-00000000</Text>
         </div>

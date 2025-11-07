@@ -3,20 +3,56 @@ import { cacheService } from './cache.service';
 import { getApiBaseUrl } from '../config/env';
 import { handleApiError } from '../utils/error-handler';
 
-export interface ApiResponse<T> {
-  data: T;
-  success: boolean;
-  message?: string;
+// HTTPError structure matching backend HTTPError
+export interface HTTPError {
+  code: string;
+  message: string;
+  detail: string;
+  status: string;
+  request_id?: string;
 }
 
+// Base response structure matching backend ResponseResult
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  total?: number;
+  page?: number;
+  pages?: number;
+  error?: HTTPError;
+}
+
+// Paginated response structure matching backend ResponseResult with pagination
 export interface PaginatedResponse<T> {
+  success: boolean;
   data: T[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  total: number;
+  page: number;
+  pages: number;
+  error?: HTTPError;
+}
+
+const statusMap: Record<string, number> = {
+  'Bad Request': 400,
+  Unauthorized: 401,
+  'Payment Required': 402,
+  Forbidden: 403,
+  'Not Found': 404,
+  'Method Not Allowed': 405,
+  Conflict: 409,
+  'Request Entity Too Large': 413,
+  'Request Timeout': 408,
+  'Too Many Requests': 429,
+  'Internal Server Error': 500,
+};
+
+const defaultHeaders = {
+  'Content-Type': 'application/json',
+};
+
+// Helper function to convert HTTP status text to status code
+function statusTextToCode(statusText: string): number {
+  return statusMap[statusText] || 500;
 }
 
 export class ApiService {
@@ -29,10 +65,6 @@ export class ApiService {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
 
-    const defaultHeaders = {
-      'Content-Type': 'application/json',
-    };
-
     const config: RequestInit = {
       ...options,
       headers: {
@@ -44,12 +76,54 @@ export class ApiService {
     try {
       const response = await fetch(url, config);
 
+      // Gracefully handle empty body (204)
+      if (response.status === 204) {
+        return undefined as unknown as T;
+      }
+
+      const data = await response.json();
+
+      // Check if response follows backend ResponseResult structure
+      if (data && typeof data === 'object' && 'success' in data) {
+        const apiResponse = data as ApiResponse<any>;
+
+        // If there's an error in the response, throw it
+        if (apiResponse.error) {
+          const httpError = apiResponse.error;
+          throw new ApiError(
+            httpError.message || httpError.detail || 'خطای سرور',
+            statusTextToCode(httpError.status),
+          );
+        }
+
+        // If success is false but no error object, treat as error
+        if (!apiResponse.success) {
+          throw new ApiError('درخواست با خطا مواجه شد', response.status);
+        }
+
+        // If response has pagination fields (total, page, pages), return full structure
+        // This handles PaginatedResponse cases
+        if (
+          apiResponse.total !== undefined ||
+          apiResponse.page !== undefined ||
+          apiResponse.pages !== undefined
+        ) {
+          return apiResponse as T;
+        }
+
+        // Otherwise, extract and return just the data field
+        // This handles simple ApiResponse cases where user expects just the data
+        return (apiResponse.data !== undefined ? apiResponse.data : apiResponse) as T;
+      }
+
+      // If response is not ok and doesn't follow ResponseResult structure
       if (!response.ok) {
         // Attempt to parse structured error
         let serverMessage: string | undefined;
         try {
-          const errorJson = await response.json();
-          serverMessage = errorJson?.message || errorJson?.error || errorJson?.errors?.[0]?.message;
+          if (data && typeof data === 'object') {
+            serverMessage = data?.message || data?.error?.message || data?.errors?.[0]?.message;
+          }
         } catch {
           // ignore body parse errors
         }
@@ -58,12 +132,6 @@ export class ApiService {
         throw new ApiError(message, response.status);
       }
 
-      // Gracefully handle empty body (204)
-      if (response.status === 204) {
-        return undefined as unknown as T;
-      }
-
-      const data = await response.json();
       return data as T;
     } catch (error) {
       const normalized = handleApiError(error);

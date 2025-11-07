@@ -40,19 +40,8 @@ export interface ProductGridProps {
   loading?: boolean;
 }
 
-export interface ApiResponse<T> {
-  data: T;
-  success: boolean;
-  message?: string;
-}
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
+// Import shared response types from api.service
+export type { ApiResponse, PaginatedResponse } from '@/shared/services/api.service';
 
 export interface ProductFilters {
   category?: string;
