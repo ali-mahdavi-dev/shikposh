@@ -13,6 +13,29 @@
 
 ---
 
+## 📑 Table of Contents
+
+- [✨ Features](#-features)
+  - [🚀 Performance & Modern Stack](#-performance--modern-stack)
+  - [🎨 UI/UX Excellence](#-uiux-excellence)
+  - [🔄 State Management & Data](#-state-management--data)
+  - [🛠️ Developer Experience](#️-developer-experience)
+  - [⚡ Performance Optimizations](#-performance-optimizations)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [📋 Prerequisites](#-prerequisites)
+- [🚀 Quick Start](#-quick-start)
+- [📜 Available Scripts](#-available-scripts)
+- [📁 Project Structure](#-project-structure)
+- [💻 Development Guide](#-development-guide)
+- [🧪 Testing](#-testing)
+- [🏗️ Build & Deployment](#️-build--deployment)
+- [🎯 Key Features & Highlights](#-key-features--highlights)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+- [📞 Contact & Support](#-contact--support)
+
+---
+
 ## ✨ Features
 
 ### 🚀 Performance & Modern Stack
