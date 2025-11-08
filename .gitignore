@@ -12,26 +12,42 @@
 
 # testing
 /coverage
+*.lcov
+.nyc_output
 
 # next.js
 /.next/
 /out/
+.next
+out
 
 # production
 /build
+dist
 
 # misc
 .DS_Store
 *.pem
+*.log
+*.swp
+*.swo
+*~
+.vscode
+.idea
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+lerna-debug.log*
 
 # env files (can opt-in for committing if needed)
-.env*
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # vercel
 .vercel
@@ -44,7 +60,52 @@ next-env.d.ts
 *.mkv
 *.mp4
 *.avi
+*.mov
+*.wmv
+*.flv
 public/images/Friends*.mkv
 
+# Storybook
 *storybook.log
 storybook-static
+.storybook-static
+
+# Cache
+.cache
+.parcel-cache
+.eslintcache
+.stylelintcache
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea
+.cursor
+*.sublime-project
+*.sublime-workspace
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Build outputs
+*.tgz
+*.tar.gz
+
+# Local development
+db.json
+*.local
