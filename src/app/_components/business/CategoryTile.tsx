@@ -1,10 +1,7 @@
-'use client';
-
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Typography } from 'antd';
-import { motion } from 'framer-motion';
 import { AppstoreOutlined, RightOutlined } from '@ant-design/icons';
 
 const { Title } = Typography;
@@ -19,16 +16,18 @@ export interface CategoryTileProps {
   countSuffix?: string; // e.g., "محصول" or "پست"
 }
 
-export const CategoryTile: React.FC<CategoryTileProps> = ({ id, name, count = 0, thumbnail = '/images/dress-main.jpg', href, icon, countSuffix = 'محصول' }) => {
+export const CategoryTile: React.FC<CategoryTileProps> = ({
+  id: _id,
+  name,
+  count = 0,
+  thumbnail = '/images/dress-main.jpg',
+  href,
+  icon,
+  countSuffix = 'محصول',
+}) => {
   const content = (
-    <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      whileHover={{ y: -6, scale: 1.02 }}
-      transition={{ duration: 0.3 }}
-      className="group h-full cursor-pointer"
-    >
-      <div className="relative flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:shadow-2xl">
+    <div className="group h-full cursor-pointer">
+      <div className="relative flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
         {/* Thumbnail */}
         <div className="relative aspect-[4/3] w-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-pink-100 to-purple-100">
           <Image
@@ -44,24 +43,21 @@ export const CategoryTile: React.FC<CategoryTileProps> = ({ id, name, count = 0,
 
           {/* Icon Overlay */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <motion.div
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              className="rounded-full bg-white/95 p-4 shadow-xl backdrop-blur-sm"
-            >
+            <div className="rounded-full bg-white/95 p-4 shadow-xl backdrop-blur-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
               {icon ?? <AppstoreOutlined className="text-3xl text-pink-600" />}
-            </motion.div>
+            </div>
           </div>
 
           {/* Count Badge */}
           {count > 0 && (
-            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-gray-800 backdrop-blur-sm shadow-md">
+            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-gray-800 shadow-md backdrop-blur-sm">
               <span>{count}</span>
               <span className="text-[10px]">{countSuffix}</span>
             </div>
           )}
 
           {/* Shine Effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+          <div className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000 group-hover:translate-x-[100%]" />
         </div>
 
         {/* Content */}
@@ -82,7 +78,7 @@ export const CategoryTile: React.FC<CategoryTileProps> = ({ id, name, count = 0,
         {/* Hover Border */}
         <div className="absolute inset-0 rounded-2xl border-2 border-transparent transition-colors duration-300 group-hover:border-pink-300" />
       </div>
-    </motion.div>
+    </div>
   );
 
   if (href) {
@@ -97,5 +93,3 @@ export const CategoryTile: React.FC<CategoryTileProps> = ({ id, name, count = 0,
 };
 
 export default CategoryTile;
-
-

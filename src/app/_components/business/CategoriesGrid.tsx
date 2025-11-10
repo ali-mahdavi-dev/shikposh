@@ -1,8 +1,5 @@
-'use client';
-
 import React from 'react';
 import { Typography, Badge } from 'antd';
-import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ShopOutlined, RightOutlined } from '@ant-design/icons';
@@ -49,18 +46,13 @@ export const CategoriesGrid: React.FC<CategoriesGridProps> = ({ categories }) =>
         const href = `/products?category=${encodeURIComponent(category.name)}`;
 
         return (
-          <motion.div
-            key={category.id}
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.3, delay: index * 0.05 }}
-            whileHover={{ y: -8, scale: 1.02 }}
-            className="group"
-          >
+          <div key={category.id} className="group">
             <Link href={href} className="block h-full">
-              <div className="relative h-full overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:shadow-2xl">
+              <div className="relative h-full overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
                 {/* Image Background */}
-                <div className={`relative h-32 w-full overflow-hidden bg-gradient-to-br ${gradientColor}`}>
+                <div
+                  className={`relative h-32 w-full overflow-hidden bg-gradient-to-br ${gradientColor}`}
+                >
                   <Image
                     src={imageUrl}
                     alt={category.name}
@@ -68,10 +60,12 @@ export const CategoriesGrid: React.FC<CategoriesGridProps> = ({ categories }) =>
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
                     className="object-cover opacity-30 transition-transform duration-500 group-hover:scale-110"
                   />
-                  
+
                   {/* Gradient Overlay */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${gradientColor} mix-blend-multiply`} />
-                  
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${gradientColor} mix-blend-multiply`}
+                  />
+
                   {/* Icon */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="rounded-full bg-white/90 p-3 shadow-lg backdrop-blur-sm transition-transform duration-300 group-hover:scale-110">
@@ -103,16 +97,14 @@ export const CategoriesGrid: React.FC<CategoriesGridProps> = ({ categories }) =>
                     </Title>
                     <RightOutlined className="text-xs text-gray-400 transition-all duration-300 group-hover:translate-x-1 group-hover:text-pink-500" />
                   </div>
-                  <Text className="mt-1 text-xs text-gray-500">
-                    {category.count ?? 0} محصول
-                  </Text>
+                  <Text className="mt-1 text-xs text-gray-500">{category.count ?? 0} محصول</Text>
                 </div>
 
                 {/* Hover Effect Border */}
                 <div className="absolute inset-0 rounded-2xl border-2 border-transparent transition-colors duration-300 group-hover:border-pink-300" />
               </div>
             </Link>
-          </motion.div>
+          </div>
         );
       })}
     </div>
@@ -120,5 +112,3 @@ export const CategoriesGrid: React.FC<CategoriesGridProps> = ({ categories }) =>
 };
 
 export default CategoriesGrid;
-
-
