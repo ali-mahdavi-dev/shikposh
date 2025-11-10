@@ -12,7 +12,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "json-server": "json-server --watch db.json --port 3001",
+    "json-server": "node json-server.mjs",
     "mock:api": "yarn json-server",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",

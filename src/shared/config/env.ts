@@ -1,7 +1,12 @@
 // Centralized environment configuration for API endpoints
 
 const isServer = typeof window === 'undefined';
-let hasWarnedAboutApiBaseUrl = false;
+
+// Use global to track warning across module reloads in Next.js (survives HMR)
+declare global {
+  // eslint-disable-next-line no-var
+  var __apiBaseUrlWarned: boolean | undefined;
+}
 
 export function getApiBaseUrl(): string {
   // Prefer server-only var, fall back to public for client compatibility
@@ -14,12 +19,13 @@ export function getApiBaseUrl(): string {
     const isDev = process.env.NODE_ENV !== 'production';
     // Provide a sensible dev default to avoid crashes during local development
     if (isDev) {
-      baseUrl = 'http://localhost:3001';
-      if (!hasWarnedAboutApiBaseUrl) {
-        hasWarnedAboutApiBaseUrl = true;
-        console.warn(
-          'API base URL not set. Falling back to http://localhost:3001 for development. '
-            + 'Set API_BASE_URL or NEXT_PUBLIC_API_URL to override.',
+      baseUrl = 'http://localhost:8080';
+      // Only log once per process (survives HMR in Next.js)
+      if (isServer && !global.__apiBaseUrlWarned) {
+        global.__apiBaseUrlWarned = true;
+        console.log(
+          '[API Config] Using default API base URL: http://localhost:8080 (json-server). ' +
+            'To override, set API_BASE_URL or NEXT_PUBLIC_API_URL in your environment.',
         );
       }
     } else {
@@ -29,8 +35,8 @@ export function getApiBaseUrl(): string {
         throw new Error(message);
       }
       // In the browser, avoid throwing synchronously; return empty to surface at call sites
-      if (!hasWarnedAboutApiBaseUrl) {
-        hasWarnedAboutApiBaseUrl = true;
+      if (!global.__apiBaseUrlWarned) {
+        global.__apiBaseUrlWarned = true;
         console.warn(message);
       }
     }
@@ -38,5 +44,3 @@ export function getApiBaseUrl(): string {
 
   return baseUrl;
 }
-
-

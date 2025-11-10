@@ -35,6 +35,7 @@ export interface ProductEntity {
   isNew: boolean;
   isFeatured: boolean;
   sizes: string[];
+  sellerId?: string;
 }
 
 export interface ProductSummary {

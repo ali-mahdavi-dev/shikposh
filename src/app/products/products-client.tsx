@@ -44,7 +44,7 @@ export default function ProductsClient() {
   const [searchQuery, setSearchQuery] = useState(getUrlParam('q', ''));
 
   // Price range for slider (numbers)
-  const initialMin = Number(getUrlParam('min', '1').replace(/\D/g, '') || '1');
+  const initialMin = Number(getUrlParam('min', '0').replace(/\D/g, '') || '0');
   const initialMax = Number(getUrlParam('max', '10000000').replace(/\D/g, '') || '10000000');
   const [priceRange, setPriceRange] = useState<[number, number]>([
     Math.max(0, Math.min(initialMin, 10_000_000)),

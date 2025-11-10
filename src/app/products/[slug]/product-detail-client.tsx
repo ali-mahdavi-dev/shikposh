@@ -1,10 +1,26 @@
 'use client';
 import React, { useState, useMemo, useCallback, Suspense } from 'react';
-import { Card, Button, Rate, Typography, Divider, Tabs, Tag, Tooltip, Badge, App as AntApp } from 'antd';
+import {
+  Card,
+  Button,
+  Rate,
+  Typography,
+  Divider,
+  Tabs,
+  Tag,
+  Tooltip,
+  Badge,
+  App as AntApp,
+} from 'antd';
 import { ErrorState, ContentLoading } from '@/shared/components/loading';
 import { FeaturesList, ShippingInfo, StockStatus } from './_components';
 import { ProductDetailSkeleton } from '@/app/_components/skeleton';
-import { ShoppingCartOutlined, ShareAltOutlined, HeartOutlined, HeartFilled } from '@ant-design/icons';
+import {
+  ShoppingCartOutlined,
+  ShareAltOutlined,
+  HeartOutlined,
+  HeartFilled,
+} from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { ProductDetailProps } from './_types';
 import { ProductVariant } from '../_api';
@@ -13,6 +29,7 @@ import { useSellerByProductId } from '@/app/seller/_api';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { addToCart } from '@/stores/slices/cartSlice';
 import { toggleWishlist } from '@/stores/slices/wishlistSlice';
+import ReviewSummary from '@/app/_components/review-summary';
 
 // Lazy load components for better performance
 const ColorSelector = React.lazy(() => import('../_components/color-selector'));
@@ -22,7 +39,6 @@ const RelatedProducts = React.lazy(() => import('../_components/related-products
 const ProductImageGallery = React.lazy(() => import('../_components/product-image-gallery'));
 const Questions = React.lazy(() => import('../_components/questions'));
 const ProfileCard = React.lazy(() => import('@/app/profile/_components/profile-card'));
-const ReviewSummary = React.lazy(() => import('@/app/_components/review-summary'));
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -37,7 +53,11 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
   const { data: reviews = [] } = useReviews(productId);
 
   // Get seller information from API
-  const { data: sellerData, isLoading: sellerLoading } = useSellerByProductId(productId);
+  const {
+    data: sellerData,
+    isLoading: sellerLoading,
+    error: sellerError,
+  } = useSellerByProductId(productId);
 
   // Get related products from API based on product category
   const { data: relatedProductsData = [] } = useProductsByCategory(productData?.category || '');
@@ -57,23 +77,40 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
 
   // Initialize state when product data is available
   React.useEffect(() => {
-    if (product && Object.keys(product.variants).length > 0) {
+    if (product && product.variants && Object.keys(product.variants).length > 0) {
       const firstColor = Object.keys(product.variants)[0];
-      const firstSize = Object.keys(product.variants[firstColor])[0];
+      const firstSize = Object.keys(product.variants[firstColor])?.[0];
+
+      if (firstColor && firstSize) {
+        setSelectedColor(firstColor);
+        setSelectedSize(firstSize);
+        setCurrentVariant(product.variants[firstColor][firstSize]);
+      }
+    } else if (product && product.colors && Object.keys(product.colors).length > 0) {
+      // Fallback: if no variants, use colors and sizes
+      const firstColor = Object.keys(product.colors)[0];
+      const firstSize = product.sizes?.[0] || 'M';
 
       setSelectedColor(firstColor);
       setSelectedSize(firstSize);
-      setCurrentVariant(product.variants[firstColor][firstSize]);
+
+      // Create a default variant from product data
+      setCurrentVariant({
+        price: product.price,
+        stock: product.colors[firstColor]?.stock || 0,
+        discount: product.discount || 0,
+        images: [product.image],
+      });
     }
   }, [product]);
 
   // Update current variant when color or size changes
   React.useEffect(() => {
     if (product && selectedColor && selectedSize) {
-      const variant = product.variants[selectedColor]?.[selectedSize];
-      if (variant) {
+      if (product.variants && product.variants[selectedColor]?.[selectedSize]) {
+        const variant = product.variants[selectedColor][selectedSize];
         setCurrentVariant(variant);
-      } else {
+      } else if (product.variants && product.variants[selectedColor]) {
         // Only update if the size is actually different to prevent infinite loop
         const availableSizes = Object.keys(product.variants[selectedColor] || {});
         if (availableSizes.length > 0) {
@@ -83,6 +120,14 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
             setCurrentVariant(product.variants[selectedColor][firstAvailableSize]);
           }
         }
+      } else {
+        // Fallback: create variant from product data
+        setCurrentVariant({
+          price: product.price,
+          stock: product.colors?.[selectedColor]?.stock || 0,
+          discount: product.discount || 0,
+          images: [product.image],
+        });
       }
     }
   }, [product, selectedColor, selectedSize]);
@@ -128,7 +173,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
         label: 'مشخصات فنی',
         children: (
           <div className="space-y-3">
-            {product &&
+            {product && product.specs && Object.keys(product.specs).length > 0 ? (
               Object.entries(product.specs).map(([key, value]) => (
                 <div key={key} className="flex justify-between border-b border-gray-100 py-2">
                   <Text strong className="text-gray-700">
@@ -136,7 +181,10 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                   </Text>
                   <Text className="text-gray-600">{value}</Text>
                 </div>
-              ))}
+              ))
+            ) : (
+              <Text className="text-gray-500">مشخصات فنی برای این محصول ثبت نشده است.</Text>
+            )}
           </div>
         ),
       },
@@ -144,14 +192,12 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
         key: '2',
         label: `نظرات کاربران (${reviews.length || product?.reviewCount || 0})`,
         children: (
-          <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-gray-200" />}>
-            <ReviewSummary
-              productId={productId}
-              reviews={reviews}
-              averageRating={averageRating}
-              totalReviews={reviews.length}
-            />
-          </Suspense>
+          <ReviewSummary
+            productId={productId}
+            reviews={reviews}
+            averageRating={averageRating}
+            totalReviews={reviews.length}
+          />
         ),
       },
       {
@@ -251,6 +297,10 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                   <div className="mt-4">
                     {sellerLoading ? (
                       <ContentLoading tip="در حال بارگذاری اطلاعات فروشنده..." size="small" />
+                    ) : sellerError ? (
+                      <div className="p-8 text-center text-gray-500">
+                        خطا در بارگذاری اطلاعات فروشنده
+                      </div>
                     ) : sellerData ? (
                       <Suspense
                         fallback={<div className="h-32 animate-pulse rounded-lg bg-gray-200" />}
@@ -267,6 +317,10 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                           reviewCount={sellerData?.stats?.totalReviews}
                         />
                       </Suspense>
+                    ) : product?.sellerId ? (
+                      <div className="p-8 text-center text-gray-500">
+                        در حال بارگذاری اطلاعات فروشنده...
+                      </div>
                     ) : (
                       <div className="p-8 text-center text-gray-500">
                         اطلاعات فروشنده در دسترس نیست
@@ -345,7 +399,11 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                     fallback={<div className="h-16 animate-pulse rounded-lg bg-gray-200" />}
                   >
                     <SizeSelector
-                      sizes={Object.keys(product.variants[selectedColor])}
+                      sizes={
+                        product.variants?.[selectedColor]
+                          ? Object.keys(product.variants[selectedColor])
+                          : product.sizes || []
+                      }
                       selectedSize={selectedSize}
                       onSizeChange={setSelectedSize}
                     />
@@ -460,4 +518,3 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
     </div>
   );
 }
-
