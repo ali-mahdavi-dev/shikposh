@@ -7,6 +7,10 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1.13-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
 
+## 🎬 Demo
+
+![Demo](public/images/demo_fast.gif)
+
 ### 🔗 Related Projects
 
 - **Backend Repository**: [shikposh-backend](https://github.com/ali-mahdavi-dev/shikposh-backend) - Enterprise e-commerce backend built with Go, Fiber, and Clean Architecture
