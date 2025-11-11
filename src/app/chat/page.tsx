@@ -18,10 +18,10 @@ export default function Page() {
             <div className="ml-1 size-3 rounded-full bg-green-300"></div>
             <div className="flex items-center">
               <div className="ml-1 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 p-[0.5px]">
-                <Avatar className="w-24" src="/images/alilaloii.jpg" />
+                <Avatar className="w-24" src="/images/suit-Top.jpg" />
               </div>
               <Title className="ml-1" level={5}>
-                Ali Ahmagh
+                فروشنده تست
               </Title>
             </div>
           </div>

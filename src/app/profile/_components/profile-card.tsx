@@ -23,8 +23,8 @@ export interface ProfileCardProps {
 }
 
 const ProfileCard: React.FC<ProfileCardProps> = ({
-  name = 'Ali Ahmagh',
-  avatar = '/images/alilaloii.jpg',
+  name = 'فروشنده تست',
+  avatar = '/images/suit-Top.jpg',
   description = 'فروشنده معتبر با بیش از 5 سال تجربه در زمینه پوشاک و فشن. ارائه محصولات با کیفیت و قیمت مناسب.',
   rating = 4.8,
   totalProducts = 127,
@@ -47,29 +47,33 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
       transition={{ duration: 0.3 }}
     >
       <Card
-        className={`overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md transition-all duration-300 ${sellerId ? 'cursor-pointer hover:shadow-xl hover:border-pink-300' : ''} ${className}`}
+        className={`overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md transition-all duration-300 ${sellerId ? 'cursor-pointer hover:border-pink-300 hover:shadow-xl' : ''} ${className}`}
         hoverable={!!sellerId}
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           {/* Avatar Section */}
-          <div className="relative flex-shrink-0 flex justify-center sm:justify-start">
+          <div className="relative flex flex-shrink-0 justify-center sm:justify-start">
             <div className="relative">
               <div className="rounded-full bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 p-1">
                 <Avatar size={140} src={avatar} alt={name} className="border-4 border-white" />
               </div>
               {verified && (
-                <div className="absolute -bottom-1 -right-1 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg">
-                  <CheckCircleOutlined className="!text-xl !bg-blue-500 !text-white rounded-full" />
+                <div className="absolute -right-1 -bottom-1 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg">
+                  <CheckCircleOutlined className="rounded-full !bg-blue-500 !text-xl !text-white" />
                 </div>
               )}
             </div>
           </div>
 
           {/* Content Section */}
-          <div className="min-w-0 flex-1 text-center sm:text-right sm:flex sm:flex-col sm:justify-start">
+          <div className="min-w-0 flex-1 text-center sm:flex sm:flex-col sm:justify-start sm:text-right">
             {/* Name and Verified Badge */}
             <div className="mb-3 flex flex-col items-center gap-2 sm:flex-row sm:justify-end">
-              <Title level={3} className="!mb-0 text-gray-800" style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+              <Title
+                level={3}
+                className="!mb-0 text-gray-800"
+                style={{ fontSize: '1.5rem', fontWeight: 700 }}
+              >
                 {name}
               </Title>
               {verified && (
@@ -100,10 +104,10 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
             {/* Description */}
             <div>
               {description && (
-                  <Text className="mb-4 line-clamp-2 block text-sm leading-relaxed text-gray-600">
-                    {description}
-                  </Text>
-                )}
+                <Text className="mb-4 line-clamp-2 block text-sm leading-relaxed text-gray-600">
+                  {description}
+                </Text>
+              )}
             </div>
 
             {/* Stats */}

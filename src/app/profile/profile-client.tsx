@@ -149,8 +149,8 @@ export default function ProfileClient() {
                     <div className="relative h-full w-full rounded-full bg-white p-1">
                       <div className="absolute inset-1 overflow-hidden rounded-full">
                         <Image
-                          src="/images/alilaloii.jpg"
-                          alt="Ali Ahmagh"
+                          src="/images/suit-Top.jpg"
+                          alt="فروشنده تست"
                           fill
                           className="object-cover"
                           sizes="(max-width: 640px) 112px, (max-width: 1024px) 128px, 144px"
@@ -169,7 +169,7 @@ export default function ProfileClient() {
                 <div className="min-w-0 flex-1">
                   <div className="mb-2 flex flex-wrap items-center gap-2">
                     <Title level={2} className="!mb-0 !text-2xl !text-gray-800 lg:!text-3xl">
-                      Ali Ahmagh
+                      فروشنده تست
                     </Title>
                     {subscribed && (
                       <AntBadge
