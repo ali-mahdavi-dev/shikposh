@@ -9,7 +9,7 @@
 
 ## 🎬 Demo
 
-![Demo](public/images/demo_fast.gif)
+![Demo](public/gif/demo.gif)
 
 ### 🔗 Related Projects
 
