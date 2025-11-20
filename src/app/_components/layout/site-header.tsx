@@ -425,12 +425,12 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
                         icon={<UserOutlined />}
                         className="border-2 border-white bg-gradient-to-br from-pink-500 to-purple-600 shadow-md"
                       >
-                        {user?.firstName?.[0] || user?.userName?.[0]}
+                        {user?.first_name?.[0] || user?.phone?.[0]}
                       </Avatar>
                       <span className="hidden text-sm font-medium text-gray-700 lg:inline">
-                        {user?.firstName && user?.lastName
-                          ? `${user.firstName} ${user.lastName}`
-                          : user?.userName || 'حساب کاربری'}
+                        {user?.first_name && user?.last_name
+                          ? `${user.first_name} ${user.last_name}`
+                          : user?.phone || 'حساب کاربری'}
                       </span>
                       <DownOutlined className="hidden text-xs text-gray-500 lg:inline" />
                     </Button>

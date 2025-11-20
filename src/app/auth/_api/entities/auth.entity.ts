@@ -1,26 +1,13 @@
+// Request interfaces (camelCase - for sending to backend)
 export interface SendOtpRequest {
   phone: string;
   type: 'login' | 'register';
-}
-
-export interface SendOtpResponse {
-  success: boolean;
-  message?: string;
-  expiresIn?: number;
 }
 
 export interface VerifyOtpRequest {
   phone: string;
   otp: string;
   type: 'login' | 'register';
-}
-
-export interface VerifyOtpResponse {
-  success: boolean;
-  token?: string;
-  user?: User;
-  message?: string;
-  userExists?: boolean; // Indicates if user already exists in system
 }
 
 export interface RegisterRequest {
@@ -31,13 +18,67 @@ export interface RegisterRequest {
   avatarIdentifier?: string;
 }
 
-export interface RegisterResponse {
+export interface LoginRequest {
+  phone: string;
+}
+
+// Backend response interfaces (snake_case - received from backend)
+export interface SendOtpResponseBackend {
+  success: boolean;
+  message?: string;
+  expires_in?: number;
+}
+
+export interface VerifyOtpResponseBackend {
+  success: boolean;
+  token?: string;
+  user?: UserBackend;
+  message?: string;
+  user_exists?: boolean; // Indicates if user already exists in system
+}
+
+export interface RegisterResponseBackend {
   success: boolean;
   message?: string;
 }
 
-export interface LoginRequest {
-  phone: string;
+export interface LoginResponseBackend {
+  success: boolean;
+  message?: string;
+}
+
+export interface UserBackend {
+  id: string | number;
+  first_name?: string;
+  last_name?: string;
+  email: string;
+  phone?: string;
+  avatar?: string;
+}
+
+export interface AuthTokenResponseBackend {
+  access: string;
+  user?: UserBackend;
+}
+
+// Frontend entity interfaces (snake_case - matching backend responses)
+export interface SendOtpResponse {
+  success: boolean;
+  message?: string;
+  expires_in?: number;
+}
+
+export interface VerifyOtpResponse {
+  success: boolean;
+  token?: string;
+  user?: User;
+  message?: string;
+  user_exists?: boolean; // Indicates if user already exists in system
+}
+
+export interface RegisterResponse {
+  success: boolean;
+  message?: string;
 }
 
 export interface LoginResponse {
@@ -47,12 +88,8 @@ export interface LoginResponse {
 
 export interface User {
   id: string | number;
-  user_name?: string;
-  userName?: string;
   first_name?: string;
-  firstName?: string;
   last_name?: string;
-  lastName?: string;
   email: string;
   phone?: string;
   avatar?: string;

@@ -2,12 +2,18 @@ import { apiService } from '@/shared/services/api.service';
 import type {
   SendOtpRequest,
   SendOtpResponse,
+  SendOtpResponseBackend,
   VerifyOtpRequest,
   VerifyOtpResponse,
+  VerifyOtpResponseBackend,
   RegisterRequest,
   RegisterResponse,
+  RegisterResponseBackend,
   LoginRequest,
   LoginResponse,
+  LoginResponseBackend,
+  User,
+  UserBackend,
 } from './entities';
 
 export interface AuthRepository {
@@ -16,31 +22,79 @@ export interface AuthRepository {
   register(request: RegisterRequest): Promise<RegisterResponse>;
   login(request: LoginRequest): Promise<LoginResponse>;
   logout(): Promise<void>;
-  getCurrentUser(): Promise<any>;
+  getCurrentUser(): Promise<User | null>;
 }
 
 export class HttpAuthRepository implements AuthRepository {
   async sendOtp(request: SendOtpRequest): Promise<SendOtpResponse> {
-    return apiService.post<SendOtpResponse>('/api/v1/public/auth/send-otp', request);
+    const backendResponse = await apiService.post<SendOtpResponseBackend>(
+      '/api/v1/public/auth/send-otp',
+      request,
+    );
+    return {
+      success: backendResponse.success,
+      message: backendResponse.message,
+      expires_in: backendResponse.expires_in,
+    };
   }
 
   async verifyOtp(request: VerifyOtpRequest): Promise<VerifyOtpResponse> {
-    return apiService.post<VerifyOtpResponse>('/api/v1/public/auth/verify-otp', request);
+    const backendResponse = await apiService.post<VerifyOtpResponseBackend>(
+      '/api/v1/public/auth/verify-otp',
+      request,
+    );
+    console.log('backendResponse', backendResponse);
+    return {
+      success: backendResponse.success,
+      token: backendResponse.token,
+      user: backendResponse.user as User | undefined,
+      message: backendResponse.message,
+      user_exists: backendResponse.user_exists,
+    };
   }
 
   async register(request: RegisterRequest): Promise<RegisterResponse> {
-    return apiService.post<RegisterResponse>('/api/v1/public/register', request);
+    // Convert RegisterRequest to backend format
+    // Note: avatarIdentifier stays camelCase, other fields convert to snake_case
+    const backendRequest: Record<string, any> = {
+      phone: request.phone,
+      first_name: request.firstName,
+      last_name: request.lastName,
+      avatarIdentifier: request.avatarIdentifier, // Keep camelCase
+    };
+
+    // Add email only if provided
+    if (request.email !== undefined) {
+      backendRequest.email = request.email;
+    }
+
+    const backendResponse = await apiService.post<RegisterResponseBackend>(
+      '/api/v1/public/register',
+      backendRequest,
+    );
+    return {
+      success: backendResponse.success,
+      message: backendResponse.message,
+    };
   }
 
   async login(request: LoginRequest): Promise<LoginResponse> {
-    return apiService.post<LoginResponse>('/api/v1/public/auth/login', request);
+    const backendResponse = await apiService.post<LoginResponseBackend>(
+      '/api/v1/public/auth/login',
+      request,
+    );
+    return {
+      success: backendResponse.success,
+      message: backendResponse.message,
+    };
   }
 
   async logout(): Promise<void> {
     return apiService.post<void>('/api/v1/public/logout');
   }
 
-  async getCurrentUser(): Promise<any> {
-    return apiService.get<any>('/api/v1/user/profile');
+  async getCurrentUser(): Promise<User | null> {
+    const backendUser = await apiService.get<UserBackend>('/api/v1/user/profile');
+    return (backendUser as User) || null;
   }
 }

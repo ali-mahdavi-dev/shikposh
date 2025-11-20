@@ -8,6 +8,7 @@ import type {
   RegisterResponse,
   LoginRequest,
   LoginResponse,
+  User,
 } from './entities';
 
 export class AuthService {
@@ -77,7 +78,7 @@ export class AuthService {
     return this.authRepository.logout();
   }
 
-  async getCurrentUser(): Promise<any> {
+  async getCurrentUser(): Promise<User | null> {
     return this.authRepository.getCurrentUser();
   }
 }

@@ -77,20 +77,26 @@ export default function AuthClient() {
         type: 'login',
       });
 
+      console.log('verifyResult', verifyResult);
+      console.log('verifyResult.user_exists', verifyResult.user_exists);
+      console.log('verifyResult.token', verifyResult.token);
+      console.log('verifyResult.user', verifyResult.user);
+      console.log('verifyResult.success', verifyResult.success);
+
       // Check if user exists
-      if (verifyResult.userExists === false) {
+      if (verifyResult.user_exists === false) {
+        console.log('user_exists === false');
         // User doesn't exist, go to register form
         setCurrentStep('register');
         message.info('لطفاً اطلاعات خود را تکمیل کنید');
       } else if (verifyResult.token && verifyResult.user) {
+        console.log('user_exists === true');
         // User exists, login successful
-        // Normalize user object from backend
         const backendUser = verifyResult.user;
         const normalizedUser = {
           id: String(backendUser.id),
-          userName: backendUser.user_name || backendUser.userName || phone,
-          firstName: backendUser.first_name || backendUser.firstName || '',
-          lastName: backendUser.last_name || backendUser.lastName || '',
+          first_name: backendUser.first_name || '',
+          last_name: backendUser.last_name || '',
           email: backendUser.email || '',
           phone: backendUser.phone || phone,
           avatar: backendUser.avatar,
@@ -105,10 +111,12 @@ export default function AuthClient() {
         message.success('ورود با موفقیت انجام شد');
         router.push('/');
       } else {
+        console.log('else');
         message.error('خطا در تایید کد OTP');
         setOtp('');
       }
     } catch (error: any) {
+      console.log('catch');
       // Log error for debugging
       console.error('Verify OTP Error in component:', {
         error: error,
@@ -129,7 +137,7 @@ export default function AuthClient() {
     try {
       const values = await form.validateFields(['firstName', 'lastName']);
 
-      // First register user
+      // Register user
       await registerMutation.mutateAsync({
         phone,
         firstName: values.firstName,
@@ -138,45 +146,12 @@ export default function AuthClient() {
         avatarIdentifier: phone,
       });
 
-      // After successful registration, verify OTP again to get token
-      const verifyResult = await verifyOtpMutation.mutateAsync({
-        phone,
-        otp,
-        type: 'register',
-      });
-
-      if (!verifyResult.success || !verifyResult.token) {
-        message.error('خطا در دریافت توکن. لطفاً دوباره تلاش کنید');
-        return;
-      }
-
-      // Normalize user object from backend response
-      const backendUser = verifyResult.user;
-      if (!backendUser) {
-        message.error('خطا در دریافت اطلاعات کاربر');
-        return;
-      }
-
-      // Map backend user format to frontend format
-      const finalUser = {
-        id: String(backendUser.id || phone),
-        userName: backendUser.user_name || backendUser.userName || phone,
-        firstName: backendUser.first_name || backendUser.firstName || values.firstName,
-        lastName: backendUser.last_name || backendUser.lastName || values.lastName,
-        email: backendUser.email || values.email || '',
-        phone: backendUser.phone || phone,
-        avatar: backendUser.avatar,
-      };
-
-      dispatch(
-        setCredentials({
-          user: finalUser,
-          token: verifyResult.token,
-        }),
-      );
-
-      message.success('ثبت نام با موفقیت انجام شد');
-      router.push('/');
+      message.success('ثبت نام با موفقیت انجام شد. لطفاً وارد شوید');
+      // Reset form and go back to phone step
+      setCurrentStep('phone');
+      setPhone('');
+      setOtp('');
+      form.resetFields();
     } catch (error: any) {
       message.error(error?.message || 'خطا در ثبت نام');
     }
