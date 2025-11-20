@@ -144,7 +144,6 @@ export class ApiService {
 
     // Get access token from localStorage and add to Authorization header
     // Add Authorization header for all requests if token exists (client-side only)
-    console.log('getAccessToken', getAccessToken());
     if (typeof window !== 'undefined') {
       const token = getAccessToken();
       if (token) {
