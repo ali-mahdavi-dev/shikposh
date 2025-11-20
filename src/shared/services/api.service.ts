@@ -55,12 +55,27 @@ function statusTextToCode(statusText: string): number {
   return statusMap[statusText] || 500;
 }
 
-// Helper function to get auth token
-function getAuthToken(): string | null {
-  if (typeof window === 'undefined') {
-    return null;
+// Helper function to refresh token
+async function refreshToken(): Promise<boolean> {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/v1/public/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include', // Include cookies
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    // Check if response has data
+    const data = await response.json().catch(() => null);
+    return data !== null && data.success === true;
+  } catch {
+    return false;
   }
-  return localStorage.getItem('auth_token');
 }
 
 export class ApiService {
@@ -70,24 +85,22 @@ export class ApiService {
     this.baseURL = baseURL;
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {},
+    retryCount: number = 0,
+  ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
 
-    // Get auth token
-    const token = getAuthToken();
     const headers: Record<string, string> = {
       ...defaultHeaders,
       ...(options.headers as Record<string, string>),
     };
 
-    // Add Authorization header if token exists
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
     const config: RequestInit = {
       ...options,
       headers,
+      credentials: 'include', // Always include cookies for httpOnly tokens
     };
 
     try {
@@ -225,13 +238,19 @@ export class ApiService {
         });
       }
 
-      // Handle 401 Unauthorized - clear auth and redirect to login
-      if (normalized.statusCode === 401 && typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('auth_user');
-        // Only redirect if not already on auth pages
-        if (!window.location.pathname.startsWith('/auth')) {
-          window.location.href = '/auth';
+      // Handle 401 Unauthorized - try to refresh token
+      if (normalized.statusCode === 401 && typeof window !== 'undefined' && retryCount === 0) {
+        const refreshed = await refreshToken();
+        if (refreshed) {
+          // Retry the request once after refresh
+          return this.request<T>(endpoint, options, 1);
+        } else {
+          // Refresh failed, clear auth and redirect to login
+          localStorage.removeItem('auth_user');
+          // Only redirect if not already on auth pages
+          if (!window.location.pathname.startsWith('/auth')) {
+            window.location.href = '/auth';
+          }
         }
       }
 

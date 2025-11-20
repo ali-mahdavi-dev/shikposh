@@ -27,21 +27,20 @@ const loadInitialState = (): AuthState => {
     };
   }
 
-  const token = localStorage.getItem('auth_token');
+  // Tokens are now in httpOnly cookies, only load user from localStorage
   const userStr = localStorage.getItem('auth_user');
 
-  if (token && userStr) {
+  if (userStr) {
     try {
       const user = JSON.parse(userStr);
       return {
         user,
-        token,
+        token: null, // Token is in httpOnly cookie
         isAuthenticated: true,
         isLoading: false,
       };
     } catch {
       // If parsing fails, clear invalid data
-      localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
     }
   }
@@ -60,15 +59,14 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setCredentials: (state, action: PayloadAction<{ user: User; token: string }>) => {
+    setCredentials: (state, action: PayloadAction<{ user: User; token?: string }>) => {
       state.user = action.payload.user;
-      state.token = action.payload.token;
+      state.token = null; // Token is now in httpOnly cookie
       state.isAuthenticated = true;
       state.isLoading = false;
 
-      // Persist to localStorage
+      // Only persist user to localStorage, token is in httpOnly cookie
       if (typeof window !== 'undefined') {
-        localStorage.setItem('auth_token', action.payload.token);
         localStorage.setItem('auth_user', JSON.stringify(action.payload.user));
       }
     },
@@ -78,9 +76,8 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.isLoading = false;
 
-      // Clear localStorage
+      // Clear localStorage (cookies will be cleared by backend on logout)
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token');
         localStorage.removeItem('auth_user');
       }
     },

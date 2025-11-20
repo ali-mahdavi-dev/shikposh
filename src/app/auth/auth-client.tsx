@@ -82,8 +82,8 @@ export default function AuthClient() {
         // User doesn't exist, go to register form
         setCurrentStep('register');
         message.info('لطفاً اطلاعات خود را تکمیل کنید');
-      } else if (verifyResult.token && verifyResult.user) {
-        // User exists, login successful
+      } else if (verifyResult.user) {
+        // User exists, login successful (tokens are in httpOnly cookies)
         const backendUser = verifyResult.user;
         const normalizedUser = {
           id: String(backendUser.id),
@@ -97,7 +97,6 @@ export default function AuthClient() {
         dispatch(
           setCredentials({
             user: normalizedUser,
-            token: verifyResult.token,
           }),
         );
         message.success('ورود با موفقیت انجام شد');
