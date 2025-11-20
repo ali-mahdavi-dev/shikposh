@@ -55,6 +55,14 @@ function statusTextToCode(statusText: string): number {
   return statusMap[statusText] || 500;
 }
 
+// Helper function to get auth token
+function getAuthToken(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  return localStorage.getItem('auth_token');
+}
+
 export class ApiService {
   private baseURL: string;
 
@@ -65,12 +73,21 @@ export class ApiService {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
 
+    // Get auth token
+    const token = getAuthToken();
+    const headers: Record<string, string> = {
+      ...defaultHeaders,
+      ...(options.headers as Record<string, string>),
+    };
+
+    // Add Authorization header if token exists
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const config: RequestInit = {
       ...options,
-      headers: {
-        ...defaultHeaders,
-        ...options.headers,
-      },
+      headers,
     };
 
     try {
@@ -135,6 +152,17 @@ export class ApiService {
       return data as T;
     } catch (error) {
       const normalized = handleApiError(error);
+
+      // Handle 401 Unauthorized - clear auth and redirect to login
+      if (normalized.statusCode === 401 && typeof window !== 'undefined') {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
+        // Only redirect if not already on auth pages
+        if (!window.location.pathname.startsWith('/auth')) {
+          window.location.href = '/auth';
+        }
+      }
+
       throw normalized;
     }
   }

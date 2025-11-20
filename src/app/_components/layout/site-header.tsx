@@ -10,7 +10,6 @@ import {
   BellOutlined,
   DownOutlined,
   CloseOutlined,
-  HomeOutlined,
   AppstoreOutlined,
   InfoCircleOutlined,
   PhoneOutlined,
@@ -19,6 +18,7 @@ import {
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useAppSelector } from '@/stores/hooks';
+import { useLogout } from '@/app/auth/_api';
 
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
@@ -29,9 +29,16 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }) => {
-  const cartCountFromStore = useAppSelector((state) => state.cart.items.reduce((sum, item) => sum + item.quantity, 0));
+  const cartCountFromStore = useAppSelector((state) =>
+    state.cart.items.reduce((sum, item) => sum + item.quantity, 0),
+  );
   const wishlistCountFromStore = useAppSelector((state) => state.wishlist.productIds.length);
-  const notificationUnreadCount = useAppSelector((state) => state.notifications.items.filter(n => !n.read).length);
+  const notificationUnreadCount = useAppSelector(
+    (state) => state.notifications.items.filter((n) => !n.read).length,
+  );
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const user = useAppSelector((state) => state.auth.user);
+  const logoutMutation = useLogout();
   const [searchValue, setSearchValue] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
@@ -103,11 +110,18 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
       },
       {
         key: 'logout',
-        label: <span className="block px-2 py-1 text-red-500">خروج از حساب</span>,
+        label: (
+          <span
+            className="block cursor-pointer px-2 py-1 text-red-500"
+            onClick={() => logoutMutation.mutate()}
+          >
+            خروج از حساب
+          </span>
+        ),
         danger: true,
       },
     ],
-    [],
+    [logoutMutation],
   );
 
   const categoryMenuItems = useMemo(
@@ -250,7 +264,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
                 >
                   <Link
                     href={link.href}
-                    className="group relative nav-link px-4 py-3 text-sm font-medium whitespace-nowrap !text-gray-900 !transition-colors !hover:text-pink-600"
+                    className="group nav-link !hover:text-pink-600 relative px-4 py-3 text-sm font-medium whitespace-nowrap !text-gray-900 !transition-colors"
                   >
                     <span className="nav-label relative z-10 inline-flex items-center gap-2">
                       <span className="text-base opacity-70 transition-opacity group-hover:opacity-100">
@@ -267,10 +281,14 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
                 placement="bottom"
                 overlayClassName="custom-dropdown"
               >
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="group relative">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="group relative"
+                >
                   <Button
                     type="text"
-                    className="relative nav-trigger flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap text-gray-900 hover:text-pink-600"
+                    className="nav-trigger relative flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap text-gray-900 hover:text-pink-600"
                   >
                     <AppstoreOutlined className="text-base" />
                     دسته‌بندی‌ها
@@ -393,25 +411,41 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
                 </Badge>
               </motion.div>
 
-              {/* User Menu */}
-              <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              {/* User Menu - Show if authenticated, otherwise show login/register buttons */}
+              {isAuthenticated ? (
+                <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      type="text"
+                      className="flex h-11 flex-shrink-0 items-center gap-2 rounded-full border border-gray-200 px-2 transition-all hover:border-pink-300 hover:bg-pink-50 lg:px-3"
+                    >
+                      <Avatar
+                        size="small"
+                        src={user?.avatar}
+                        icon={<UserOutlined />}
+                        className="border-2 border-white bg-gradient-to-br from-pink-500 to-purple-600 shadow-md"
+                      >
+                        {user?.firstName?.[0] || user?.userName?.[0]}
+                      </Avatar>
+                      <span className="hidden text-sm font-medium text-gray-700 lg:inline">
+                        {user?.firstName && user?.lastName
+                          ? `${user.firstName} ${user.lastName}`
+                          : user?.userName || 'حساب کاربری'}
+                      </span>
+                      <DownOutlined className="hidden text-xs text-gray-500 lg:inline" />
+                    </Button>
+                  </motion.div>
+                </Dropdown>
+              ) : (
+                <Link href="/auth">
                   <Button
-                    type="text"
-                    className="flex h-11 flex-shrink-0 items-center gap-2 rounded-full border border-gray-200 px-2 transition-all hover:border-pink-300 hover:bg-pink-50 lg:px-3"
+                    type="primary"
+                    className="h-11 rounded-full border-0 bg-gradient-to-r from-pink-500 to-purple-600 px-4 font-semibold text-white shadow-md transition-all hover:from-pink-600 hover:to-purple-700"
                   >
-                    <Avatar
-                      size="small"
-                      icon={<UserOutlined />}
-                      className="border-2 border-white bg-gradient-to-br from-pink-500 to-purple-600 shadow-md"
-                    />
-                    <span className="hidden text-sm font-medium text-gray-700 lg:inline">
-                      حساب کاربری
-                    </span>
-                    <DownOutlined className="hidden text-xs text-gray-500 lg:inline" />
+                    ورود / ثبت نام
                   </Button>
-                </motion.div>
-              </Dropdown>
+                </Link>
+              )}
 
               {/* Mobile Menu Button - Hidden on desktop (lg and above) */}
               <div className="lg:hidden">
@@ -562,9 +596,47 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
               <BellOutlined className="text-lg" />
               <span className="font-medium">اعلان‌ها</span>
             </span>
-            <Badge count={2} size="small" />
+            <Badge count={notificationUnreadCount} size="small" />
           </Link>
         </div>
+
+        <Divider />
+
+        {/* Mobile Auth Section */}
+        {isAuthenticated ? (
+          <div className="flex flex-col gap-2">
+            <Link
+              href="/profile"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-gray-700 transition-all hover:bg-pink-50 hover:text-pink-600"
+            >
+              <UserOutlined className="text-lg" />
+              <span>پروفایل کاربری</span>
+            </Link>
+            <Button
+              type="text"
+              danger
+              onClick={() => {
+                logoutMutation.mutate();
+                setMobileMenuOpen(false);
+              }}
+              className="flex items-center justify-start gap-3 rounded-xl px-4 py-3 font-medium text-red-500 transition-all hover:bg-red-50"
+              loading={logoutMutation.isPending}
+            >
+              <span>خروج از حساب</span>
+            </Button>
+          </div>
+        ) : (
+          <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+            <Button
+              type="primary"
+              block
+              className="h-11 rounded-xl border-0 bg-gradient-to-r from-pink-500 to-purple-600 font-semibold text-white shadow-md"
+            >
+              ورود / ثبت نام
+            </Button>
+          </Link>
+        )}
       </Drawer>
 
       <style jsx global>{`
@@ -646,7 +718,9 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
           background: linear-gradient(90deg, #ec4899, #f43f5e); /* pink → rose, no blue */
           transform: scaleX(0);
           transform-origin: center;
-          transition: transform 200ms ease, opacity 200ms ease;
+          transition:
+            transform 200ms ease,
+            opacity 200ms ease;
           opacity: 0;
         }
         .ant-layout-header nav a:hover .nav-label::after,
