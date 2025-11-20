@@ -77,20 +77,12 @@ export default function AuthClient() {
         type: 'login',
       });
 
-      console.log('verifyResult', verifyResult);
-      console.log('verifyResult.user_exists', verifyResult.user_exists);
-      console.log('verifyResult.token', verifyResult.token);
-      console.log('verifyResult.user', verifyResult.user);
-      console.log('verifyResult.success', verifyResult.success);
-
       // Check if user exists
       if (verifyResult.user_exists === false) {
-        console.log('user_exists === false');
         // User doesn't exist, go to register form
         setCurrentStep('register');
         message.info('لطفاً اطلاعات خود را تکمیل کنید');
       } else if (verifyResult.token && verifyResult.user) {
-        console.log('user_exists === true');
         // User exists, login successful
         const backendUser = verifyResult.user;
         const normalizedUser = {
@@ -111,12 +103,10 @@ export default function AuthClient() {
         message.success('ورود با موفقیت انجام شد');
         router.push('/');
       } else {
-        console.log('else');
         message.error('خطا در تایید کد OTP');
         setOtp('');
       }
     } catch (error: any) {
-      console.log('catch');
       // Log error for debugging
       console.error('Verify OTP Error in component:', {
         error: error,
