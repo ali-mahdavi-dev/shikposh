@@ -98,7 +98,31 @@ export class ApiService {
         return undefined as unknown as T;
       }
 
-      const data = await response.json();
+      // Try to parse JSON, but handle non-JSON responses
+      let data: any;
+      try {
+        const text = await response.text();
+        if (text) {
+          data = JSON.parse(text);
+        } else {
+          data = null;
+        }
+      } catch (parseError) {
+        // If JSON parsing fails, check if response is not ok
+        if (!response.ok) {
+          const errorMessage = `خطای سرور: ${response.status} ${response.statusText}`;
+          if (process.env.NODE_ENV === 'development') {
+            console.error('API Response Parse Error:', {
+              endpoint: url,
+              status: response.status,
+              parseError: parseError,
+            });
+          }
+          throw new ApiError(errorMessage, response.status);
+        }
+        // If response is ok but JSON parsing failed, rethrow
+        throw parseError;
+      }
 
       // Check if response follows backend ResponseResult structure
       if (data && typeof data === 'object' && 'success' in data) {
@@ -107,14 +131,32 @@ export class ApiService {
         // If there's an error in the response, throw it
         if (apiResponse.error) {
           const httpError = apiResponse.error;
-          throw new ApiError(
-            httpError.message || httpError.detail || 'خطای سرور',
-            statusTextToCode(httpError.status),
-          );
+          const errorMessage = httpError.message || httpError.detail || 'خطای سرور';
+
+          // Log error in development mode
+          if (process.env.NODE_ENV === 'development') {
+            console.error('API Response Error:', {
+              endpoint: url,
+              status: response.status,
+              errorMessage: errorMessage,
+              error: httpError,
+              fullResponse: apiResponse,
+            });
+          }
+
+          throw new ApiError(errorMessage, statusTextToCode(httpError.status));
         }
 
         // If success is false but no error object, treat as error
         if (!apiResponse.success) {
+          // Log error in development mode
+          if (process.env.NODE_ENV === 'development') {
+            console.error('API Response Success False:', {
+              endpoint: url,
+              status: response.status,
+              response: apiResponse,
+            });
+          }
           throw new ApiError('درخواست با خطا مواجه شد', response.status);
         }
 
@@ -139,19 +181,49 @@ export class ApiService {
         let serverMessage: string | undefined;
         try {
           if (data && typeof data === 'object') {
-            serverMessage = data?.message || data?.error?.message || data?.errors?.[0]?.message;
+            // Try multiple possible error message locations
+            serverMessage =
+              data?.message ||
+              data?.error?.message ||
+              data?.error?.detail ||
+              data?.errors?.[0]?.message ||
+              data?.errors?.[0]?.detail;
           }
         } catch {
           // ignore body parse errors
         }
 
-        const message = serverMessage || `${response.status} ${response.statusText}`;
-        throw new ApiError(message, response.status);
+        const errorMessage = serverMessage || `${response.status} ${response.statusText}`;
+
+        // Log error in development mode
+        if (process.env.NODE_ENV === 'development') {
+          console.error('API HTTP Error:', {
+            endpoint: url,
+            status: response.status,
+            statusText: response.statusText,
+            errorMessage: errorMessage,
+            responseData: data,
+          });
+        }
+
+        throw new ApiError(errorMessage, response.status);
       }
 
       return data as T;
     } catch (error) {
       const normalized = handleApiError(error);
+
+      // Log error in development mode for debugging
+      if (process.env.NODE_ENV === 'development') {
+        console.error('API Error:', {
+          endpoint: url,
+          message: normalized.message,
+          statusCode: normalized.statusCode,
+          isOperational: normalized.isOperational,
+          error: normalized,
+          originalError: error,
+        });
+      }
 
       // Handle 401 Unauthorized - clear auth and redirect to login
       if (normalized.statusCode === 401 && typeof window !== 'undefined') {

@@ -4,6 +4,7 @@ import type { SendOtpRequest, VerifyOtpRequest, RegisterRequest, LoginRequest } 
 import { useAppDispatch } from '@/stores/hooks';
 import { logout } from '@/stores/slices/authSlice';
 import { App } from 'antd';
+import { getErrorMessage } from '@/shared/utils/error-handler';
 
 const authService = AuthContainer.getAuthService();
 
@@ -25,7 +26,18 @@ export const useVerifyOtp = () => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
     },
     onError: (error: any) => {
-      message.error(error?.message || 'خطا در تایید کد OTP');
+      // Log error for debugging
+      console.error('Verify OTP Error:', {
+        error: error,
+        errorMessage: error?.message,
+        errorType: error?.constructor?.name,
+        errorString: String(error),
+      });
+
+      // Use the error handler utility to get the message
+      const errorMessage = getErrorMessage(error) || 'خطا در تایید کد OTP';
+
+      message.error(errorMessage);
     },
   });
 };

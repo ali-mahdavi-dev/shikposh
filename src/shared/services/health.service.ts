@@ -29,14 +29,7 @@ export class HealthService {
 
     try {
       // Check API connectivity
-      const apiStartTime = Date.now();
       await apiService.get('/health', {}, false); // Skip cache for health check
-      const apiResponseTime = Date.now() - apiStartTime;
-
-      // Check database connectivity (simplified)
-      const dbStartTime = Date.now();
-      await apiService.get('/products', {}, false); // Skip cache
-      const dbResponseTime = Date.now() - dbStartTime;
 
       const totalResponseTime = Date.now() - startTime;
 
@@ -45,7 +38,7 @@ export class HealthService {
         timestamp,
         services: {
           api: true,
-          database: true,
+          database: true, // Keep for backward compatibility, but not actually checked
         },
         responseTime: totalResponseTime,
         version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',

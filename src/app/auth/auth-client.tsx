@@ -9,6 +9,7 @@ import { OtpInput } from './_components';
 import { useSendOtp, useVerifyOtp, useRegister } from './_api';
 import { useAppSelector, useAppDispatch } from '@/stores/hooks';
 import { setCredentials } from '@/stores/slices/authSlice';
+import { getErrorMessage } from '@/shared/utils/error-handler';
 
 const { Title, Text } = Typography;
 
@@ -108,7 +109,18 @@ export default function AuthClient() {
         setOtp('');
       }
     } catch (error: any) {
-      message.error(error?.message || 'کد OTP نامعتبر است');
+      // Log error for debugging
+      console.error('Verify OTP Error in component:', {
+        error: error,
+        errorMessage: error?.message,
+        errorType: error?.constructor?.name,
+        errorString: String(error),
+      });
+
+      // Use the error handler utility to get the message
+      const errorMessage = getErrorMessage(error) || 'کد OTP نامعتبر است';
+
+      message.error(errorMessage);
       setOtp('');
     }
   };

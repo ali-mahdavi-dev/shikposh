@@ -25,7 +25,8 @@ export const handleApiError = (error: unknown): ApiError => {
 
 export const getErrorMessage = (error: unknown): string => {
   const apiError = handleApiError(error);
-  return apiError.message;
+  // Ensure we get the message property correctly
+  return apiError?.message || String(apiError) || 'خطای ناشناخته';
 };
 
 export const getErrorStatus = (error: unknown): number => {
