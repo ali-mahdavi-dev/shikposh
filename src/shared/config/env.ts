@@ -19,12 +19,12 @@ export function getApiBaseUrl(): string {
     const isDev = process.env.NODE_ENV !== 'production';
     // Provide a sensible dev default to avoid crashes during local development
     if (isDev) {
-      baseUrl = 'http://localhost:8080';
+      baseUrl = 'http://localhost:8000';
       // Only log once per process (survives HMR in Next.js)
       if (isServer && !global.__apiBaseUrlWarned) {
         global.__apiBaseUrlWarned = true;
         console.log(
-          '[API Config] Using default API base URL: http://localhost:8080 (json-server). ' +
+          '[API Config] Using default API base URL: http://localhost:8000 (backend). ' +
             'To override, set API_BASE_URL or NEXT_PUBLIC_API_URL in your environment.',
         );
       }
