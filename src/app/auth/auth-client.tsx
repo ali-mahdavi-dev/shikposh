@@ -77,6 +77,7 @@ export default function AuthClient() {
         type: 'login',
       });
 
+      console.log('verifyResult', verifyResult);
       // Check if user exists
       if (verifyResult.user_exists === false) {
         // User doesn't exist, go to register form

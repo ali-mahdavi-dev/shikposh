@@ -57,10 +57,7 @@ function statusTextToCode(statusText: string): number {
 
 // Helper function to get access token from localStorage
 function getAccessToken(): string | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-  return localStorage.getItem('auth_token');
+  return localStorage.getItem('auth_token') || null;
 }
 
 // Helper function to get refresh token from localStorage
@@ -147,6 +144,7 @@ export class ApiService {
 
     // Get access token from localStorage and add to Authorization header
     // Add Authorization header for all requests if token exists (client-side only)
+    console.log('getAccessToken', getAccessToken());
     if (typeof window !== 'undefined') {
       const token = getAccessToken();
       if (token) {
