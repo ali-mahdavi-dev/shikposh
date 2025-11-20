@@ -5,6 +5,7 @@ import { useAppDispatch } from '@/stores/hooks';
 import { logout } from '@/stores/slices/authSlice';
 import { App } from 'antd';
 import { getErrorMessage } from '@/shared/utils/error-handler';
+import { clearTokens } from '@/shared/services/api.service';
 
 const authService = AuthContainer.getAuthService();
 
@@ -71,6 +72,8 @@ export const useLogout = () => {
   return useMutation({
     mutationFn: () => authService.logout(),
     onSuccess: () => {
+      // Clear tokens
+      clearTokens();
       dispatch(logout());
       queryClient.clear();
       message.success('خروج با موفقیت انجام شد');
@@ -78,6 +81,7 @@ export const useLogout = () => {
     onError: (error: any) => {
       message.error(error?.message || 'خطا در خروج');
       // Even if logout fails on server, clear local state
+      clearTokens();
       dispatch(logout());
       queryClient.clear();
     },

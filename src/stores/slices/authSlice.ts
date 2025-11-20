@@ -12,6 +12,7 @@ export interface User {
 interface AuthState {
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -22,32 +23,39 @@ const loadInitialState = (): AuthState => {
     return {
       user: null,
       token: null,
+      refreshToken: null,
       isAuthenticated: false,
       isLoading: false,
     };
   }
 
-  // Tokens are now in httpOnly cookies, only load user from localStorage
+  // Load user and tokens from localStorage
   const userStr = localStorage.getItem('auth_user');
+  const token = localStorage.getItem('auth_token');
+  const refreshToken = localStorage.getItem('auth_refresh_token');
 
-  if (userStr) {
+  if (userStr && token) {
     try {
       const user = JSON.parse(userStr);
       return {
         user,
-        token: null, // Token is in httpOnly cookie
+        token,
+        refreshToken: refreshToken || null,
         isAuthenticated: true,
         isLoading: false,
       };
     } catch {
       // If parsing fails, clear invalid data
       localStorage.removeItem('auth_user');
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_refresh_token');
     }
   }
 
   return {
     user: null,
     token: null,
+    refreshToken: null,
     isAuthenticated: false,
     isLoading: false,
   };
@@ -59,26 +67,36 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setCredentials: (state, action: PayloadAction<{ user: User; token?: string }>) => {
+    setCredentials: (state, action: PayloadAction<{ user: User; token?: string; refreshToken?: string }>) => {
       state.user = action.payload.user;
-      state.token = null; // Token is now in httpOnly cookie
+      state.token = action.payload.token || null;
+      state.refreshToken = action.payload.refreshToken || null;
       state.isAuthenticated = true;
       state.isLoading = false;
 
-      // Only persist user to localStorage, token is in httpOnly cookie
+      // Persist user and tokens to localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('auth_user', JSON.stringify(action.payload.user));
+        if (action.payload.token) {
+          localStorage.setItem('auth_token', action.payload.token);
+        }
+        if (action.payload.refreshToken) {
+          localStorage.setItem('auth_refresh_token', action.payload.refreshToken);
+        }
       }
     },
     logout: (state) => {
       state.user = null;
       state.token = null;
+      state.refreshToken = null;
       state.isAuthenticated = false;
       state.isLoading = false;
 
-      // Clear localStorage (cookies will be cleared by backend on logout)
+      // Clear localStorage
       if (typeof window !== 'undefined') {
         localStorage.removeItem('auth_user');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_refresh_token');
       }
     },
     setLoading: (state, action: PayloadAction<boolean>) => {

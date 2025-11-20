@@ -47,6 +47,7 @@ export class HttpAuthRepository implements AuthRepository {
     return {
       success: backendResponse.success,
       token: backendResponse.token,
+      refresh_token: backendResponse.refresh_token,
       user: backendResponse.user as User | undefined,
       message: backendResponse.message,
       user_exists: backendResponse.user_exists,
@@ -85,6 +86,8 @@ export class HttpAuthRepository implements AuthRepository {
     );
     return {
       success: backendResponse.success,
+      token: backendResponse.token,
+      refresh_token: backendResponse.refresh_token,
       message: backendResponse.message,
     };
   }

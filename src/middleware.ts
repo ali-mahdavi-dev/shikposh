@@ -13,26 +13,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url), 302);
   }
 
-  // Get token from cookie or header
-  const token =
-    request.cookies.get('auth_token')?.value ||
-    request.headers.get('authorization')?.replace('Bearer ', '');
-
-  // Check if route is protected
-  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
-  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
-
-  // Redirect to login if accessing protected route without token
-  if (isProtectedRoute && !token) {
-    const loginUrl = new URL('/auth', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  // Redirect to home if accessing auth routes with token
-  if (isAuthRoute && token) {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
+  // Note: Authentication check is handled client-side since tokens are stored in localStorage
+  // which is not accessible in server-side middleware
+  // Protected routes will check authentication in their client components
 
   return NextResponse.next();
 }

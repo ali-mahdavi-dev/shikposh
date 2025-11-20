@@ -55,15 +55,56 @@ function statusTextToCode(statusText: string): number {
   return statusMap[statusText] || 500;
 }
 
+// Helper function to get access token from localStorage
+function getAccessToken(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  return localStorage.getItem('auth_token');
+}
+
+// Helper function to get refresh token from localStorage
+function getRefreshToken(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  return localStorage.getItem('auth_refresh_token');
+}
+
+// Helper function to save tokens to localStorage
+export function saveTokens(token: string, refreshToken?: string) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  localStorage.setItem('auth_token', token);
+  if (refreshToken) {
+    localStorage.setItem('auth_refresh_token', refreshToken);
+  }
+}
+
+// Helper function to clear tokens (call after logout)
+export function clearTokens() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('auth_refresh_token');
+}
+
 // Helper function to refresh token
 async function refreshToken(): Promise<boolean> {
+  const refreshTokenValue = getRefreshToken();
+  if (!refreshTokenValue) {
+    return false;
+  }
+
   try {
     const response = await fetch(`${getApiBaseUrl()}/api/v1/public/auth/refresh`, {
       method: 'POST',
-      credentials: 'include', // Include cookies
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ refresh_token: refreshTokenValue }),
     });
 
     if (!response.ok) {
@@ -72,7 +113,14 @@ async function refreshToken(): Promise<boolean> {
 
     // Check if response has data
     const data = await response.json().catch(() => null);
-    return data !== null && data.success === true;
+    const success = data !== null && data.success === true;
+
+    // Save new tokens after refresh
+    if (success && data.token) {
+      saveTokens(data.token, data.refresh_token);
+    }
+
+    return success;
   } catch {
     return false;
   }
@@ -97,10 +145,18 @@ export class ApiService {
       ...(options.headers as Record<string, string>),
     };
 
+    // Get access token from localStorage and add to Authorization header
+    // Add Authorization header for all requests if token exists (client-side only)
+    if (typeof window !== 'undefined') {
+      const token = getAccessToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+
     const config: RequestInit = {
       ...options,
       headers,
-      credentials: 'include', // Always include cookies for httpOnly tokens
     };
 
     try {
@@ -246,6 +302,7 @@ export class ApiService {
           return this.request<T>(endpoint, options, 1);
         } else {
           // Refresh failed, clear auth and redirect to login
+          clearTokens();
           localStorage.removeItem('auth_user');
           // Only redirect if not already on auth pages
           if (!window.location.pathname.startsWith('/auth')) {

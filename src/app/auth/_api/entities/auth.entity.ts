@@ -32,6 +32,7 @@ export interface SendOtpResponseBackend {
 export interface VerifyOtpResponseBackend {
   success: boolean;
   token?: string;
+  refresh_token?: string;
   user?: UserBackend;
   message?: string;
   user_exists?: boolean; // Indicates if user already exists in system
@@ -44,6 +45,8 @@ export interface RegisterResponseBackend {
 
 export interface LoginResponseBackend {
   success: boolean;
+  token?: string;
+  refresh_token?: string;
   message?: string;
 }
 
@@ -71,6 +74,7 @@ export interface SendOtpResponse {
 export interface VerifyOtpResponse {
   success: boolean;
   token?: string;
+  refresh_token?: string;
   user?: User;
   message?: string;
   user_exists?: boolean; // Indicates if user already exists in system
@@ -83,6 +87,8 @@ export interface RegisterResponse {
 
 export interface LoginResponse {
   success: boolean;
+  token?: string;
+  refresh_token?: string;
   message?: string;
 }
 
