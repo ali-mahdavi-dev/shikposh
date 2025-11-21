@@ -9,15 +9,8 @@ const nextConfig: NextConfig = {
     reactCompiler: process.env.NEXT_REACT_COMPILER === 'true',
   },
 
-  // Turbopack configuration (moved from experimental)
-  turbopack: {
-    rules: {
-      '*.svg': {
-        loaders: ['@svgr/webpack'],
-        as: '*.js',
-      },
-    },
-  },
+  // Turbopack configuration removed - using webpack instead due to wasm bindings compatibility
+  // SVG handling is done via webpack config below
 
   // Optimize images
   images: {
