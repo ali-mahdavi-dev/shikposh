@@ -53,7 +53,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
 
   // Memoize callbacks to prevent unnecessary re-renders
   const handleCategoryChange = useCallback((categoryId: string) => {
-    setSelectedCategory(categoryId);
+    setSelectedCategory(String(categoryId));
   }, []);
 
   // Memoize hero slides to prevent recreation on every render
@@ -129,7 +129,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
     <div className="space-y-12">
       {/* Hero Carousel */}
       <section className="relative">
-        <Carousel autoplay className="rounded-2xl overflow-hidden shadow-xl">
+        <Carousel autoplay className="overflow-hidden rounded-2xl shadow-xl">
           {heroSlides.map((slide) => (
             <div key={slide.id} className="relative h-[450px] md:h-[600px]">
               <div
@@ -139,10 +139,10 @@ const HomeClient: React.FC<HomeClientProps> = ({
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
                 <div className="absolute inset-0 flex items-center justify-end pr-8 md:pr-16">
                   <div className="max-w-md text-right text-white">
-                    <Title level={1} className="!text-white !mb-4">
+                    <Title level={1} className="!mb-4 !text-white">
                       {slide.title}
                     </Title>
-                    <Paragraph className="!text-white text-lg mb-6">{slide.subtitle}</Paragraph>
+                    <Paragraph className="mb-6 text-lg !text-white">{slide.subtitle}</Paragraph>
                     <a
                       href={slide.link}
                       className="inline-block rounded-lg bg-pink-500 px-6 py-3 font-semibold text-white transition-colors hover:bg-pink-600"
@@ -166,18 +166,27 @@ const HomeClient: React.FC<HomeClientProps> = ({
           <Text className="text-gray-600">محصولات برتر را در دسته‌بندی مورد نظر خود پیدا کنید</Text>
         </div>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {categories.map((category: any, index: number) => (
-            <CategoryCard
-              key={category.id}
-              category={{
-                ...category,
-                image: category.image || categoryImages[index % categoryImages.length],
-              }}
-              index={index}
-              isSelected={selectedCategory === category.id}
-              onSelect={handleCategoryChange}
-            />
-          ))}
+          {categories.map((category: any, index: number) => {
+            // Ensure categoryId is always a string and unique
+            const categoryId = String(category.id || category.slug || `category-${index}`);
+            const isSelected = selectedCategory === categoryId;
+
+            return (
+              <CategoryCard
+                key={categoryId}
+                category={{
+                  id: categoryId,
+                  name: category.name,
+                  count: category.productCount || 0,
+                  color: category.color,
+                  image: category.image || categoryImages[index % categoryImages.length],
+                }}
+                index={index}
+                isSelected={isSelected}
+                onSelect={handleCategoryChange}
+              />
+            );
+          })}
         </div>
       </section>
 
@@ -186,7 +195,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
         <Title level={2} className="mb-6 text-center">
           محصولات برتر
         </Title>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {filteredProducts.slice(0, 8).map((product: any, index: number) => (
             <ProductCard
               key={product.id}
