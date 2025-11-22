@@ -6,6 +6,7 @@ import type {
   ReviewEntity,
   ReviewFormData,
 } from './entities';
+import type { CartProduct } from './repository';
 
 export class ProductService {
   constructor(private productRepository: ProductRepository) {}
@@ -77,6 +78,13 @@ export class ProductService {
       throw new Error('Review ID is required');
     }
     return this.productRepository.updateReviewHelpful(reviewId, type);
+  }
+
+  async getProductsForCart(productIds: string[]): Promise<CartProduct[]> {
+    if (!productIds || productIds.length === 0) {
+      return [];
+    }
+    return this.productRepository.getProductsForCart(productIds);
   }
 
   private mapToProductSummary(products: ProductEntity[]): ProductSummary[] {

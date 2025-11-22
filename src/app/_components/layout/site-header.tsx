@@ -1,8 +1,7 @@
 'use client';
 import React, { useState, useEffect, useMemo } from 'react';
-import { Layout, Input, Button, Badge, Dropdown, Avatar, Drawer, Typography, Divider } from 'antd';
+import { Layout, Button, Badge, Dropdown, Avatar, Drawer, Typography, Divider } from 'antd';
 import {
-  SearchOutlined,
   ShoppingCartOutlined,
   HeartOutlined,
   UserOutlined,
@@ -17,8 +16,10 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/stores/hooks';
 import { useLogout } from '@/app/auth/_api';
+import { SearchDropdown } from './search-dropdown';
 
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
@@ -29,10 +30,20 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }) => {
+  const router = useRouter();
   const cartCountFromStore = useAppSelector((state) =>
     state.cart.items.reduce((sum, item) => sum + item.quantity, 0),
   );
   const wishlistCountFromStore = useAppSelector((state) => state.wishlist.productIds.length);
+
+  // Fix hydration error: only show cart count after client-side mount
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Use cartCountFromStore only after mount to prevent hydration mismatch
+  const displayCartCount = mounted ? cartCountFromStore : 0;
   const notificationUnreadCount = useAppSelector(
     (state) => state.notifications.items.filter((n) => !n.read).length,
   );
@@ -42,7 +53,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
   const [searchValue, setSearchValue] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
-  const [searchFocused, setSearchFocused] = useState<boolean>(false);
+  const [searchDropdownVisible, setSearchDropdownVisible] = useState<boolean>(false);
   const [hasAnimated, setHasAnimated] = useState<boolean>(false);
   const [isDesktop, setIsDesktop] = useState<boolean>(false);
 
@@ -201,7 +212,10 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
   );
 
   const handleSearch = (value: string) => {
-    console.log('Search:', value);
+    if (value.trim()) {
+      router.push(`/products?q=${encodeURIComponent(value.trim())}`);
+      setSearchDropdownVisible(false);
+    }
   };
 
   const navLinks = useMemo(
@@ -305,41 +319,16 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <div
-                className={`relative w-full transition-all duration-300 ${
-                  searchFocused ? 'scale-105' : ''
-                }`}
-              >
-                <Input
-                  placeholder="جستجو در محصولات..."
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  onFocus={() => setSearchFocused(true)}
-                  onBlur={() => setSearchFocused(false)}
-                  onPressEnter={(e) => handleSearch((e.target as HTMLInputElement).value)}
-                  size="large"
-                  prefix={<SearchOutlined className="text-gray-400" />}
-                  className="w-full rounded-full border-gray-200 shadow-sm hover:border-pink-300 focus:border-pink-500"
-                  style={{
-                    borderRadius: '9999px',
-                  }}
-                />
-                {searchValue && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="absolute top-1/2 left-2 -translate-y-1/2"
-                  >
-                    <Button
-                      type="primary"
-                      size="small"
-                      icon={<SearchOutlined />}
-                      onClick={() => handleSearch(searchValue)}
-                      className="rounded-full border-0 bg-gradient-to-r from-pink-500 to-purple-600 shadow-md"
-                    />
-                  </motion.div>
-                )}
-              </div>
+              <SearchDropdown
+                value={searchValue}
+                onChange={(value) => {
+                  setSearchValue(value);
+                  setSearchDropdownVisible(true);
+                }}
+                onSearch={handleSearch}
+                onClose={() => setSearchDropdownVisible(false)}
+                visible={searchDropdownVisible}
+              />
             </motion.div>
 
             {/* User Actions - Left Side (RTL End) */}
@@ -396,7 +385,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
               {/* Shopping Cart */}
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                 <Badge
-                  count={cartCountFromStore ?? cartItemsCount}
+                  count={displayCartCount || 0}
                   size="small"
                   className="custom-badge"
                   style={{ backgroundColor: '#ec4899' }}
@@ -500,25 +489,15 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount = 3, wishlistCount = 5 }
       >
         {/* Mobile Search */}
         <div className="mb-6">
-          <Input
-            placeholder="جستجو در محصولات..."
+          <SearchDropdown
             value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            onPressEnter={(e) => handleSearch((e.target as HTMLInputElement).value)}
-            size="large"
-            prefix={<SearchOutlined className="text-gray-400" />}
-            suffix={
-              searchValue && (
-                <Button
-                  type="primary"
-                  size="small"
-                  icon={<SearchOutlined />}
-                  onClick={() => handleSearch(searchValue)}
-                  className="border-0 bg-gradient-to-r from-pink-500 to-purple-600"
-                />
-              )
-            }
-            className="rounded-xl"
+            onChange={(value) => {
+              setSearchValue(value);
+              setSearchDropdownVisible(true);
+            }}
+            onSearch={handleSearch}
+            onClose={() => setSearchDropdownVisible(false)}
+            visible={searchDropdownVisible}
           />
         </div>
 

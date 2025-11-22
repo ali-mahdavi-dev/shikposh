@@ -18,6 +18,15 @@ export interface ProductFilters {
   sort?: string;
 }
 
+export interface CartProduct {
+  id: string;
+  name: string;
+  image: string;
+  price: number;
+  discount: number;
+  hasDiscount: boolean;
+}
+
 export interface ProductRepository {
   getAllProducts(): Promise<ProductEntity[]>;
   getProductById(id: string): Promise<ProductEntity>;
@@ -29,6 +38,7 @@ export interface ProductRepository {
   getReviewsByProductId(productId: string): Promise<ReviewEntity[]>;
   createReview(review: ReviewFormData & { productId: string }): Promise<ReviewEntity>;
   updateReviewHelpful(reviewId: number, type: 'helpful' | 'notHelpful'): Promise<ReviewEntity>;
+  getProductsForCart(productIds: string[]): Promise<CartProduct[]>;
 }
 
 export class HttpProductRepository implements ProductRepository {
@@ -53,14 +63,15 @@ export class HttpProductRepository implements ProductRepository {
   }
 
   async searchProducts(query: string): Promise<ProductSummary[]> {
-    const products = await apiService.get<ProductEntity[]>('/api/v1/public/products');
-    const filteredProducts = products.filter(
-      (product) =>
-        product.name.toLowerCase().includes(query.toLowerCase()) ||
-        product.description.toLowerCase().includes(query.toLowerCase()) ||
-        product.brand.toLowerCase().includes(query.toLowerCase()),
+    if (!query.trim()) {
+      return [];
+    }
+    const params = new URLSearchParams();
+    params.set('q', query.trim());
+    const products = await apiService.get<ProductEntity[]>(
+      `/api/v1/public/products?${params.toString()}`,
     );
-    return this.mapToProductSummary(filteredProducts);
+    return this.mapToProductSummary(products);
   }
 
   async getFilteredProducts(filters: ProductFilters): Promise<ProductSummary[]> {
@@ -111,6 +122,13 @@ export class HttpProductRepository implements ProductRepository {
     type: 'helpful' | 'notHelpful',
   ): Promise<ReviewEntity> {
     return apiService.patch<ReviewEntity>(`/api/v1/public/reviews/${reviewId}`, { type });
+  }
+
+  async getProductsForCart(productIds: string[]): Promise<CartProduct[]> {
+    if (productIds.length === 0) {
+      return [];
+    }
+    return apiService.post<CartProduct[]>('/api/v1/public/products/cart', productIds);
   }
 
   private mapToProductSummary(products: ProductEntity[]): ProductSummary[] {

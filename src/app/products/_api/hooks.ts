@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ProductContainer } from './container';
-import type { ProductEntity, ProductSummary, CategoryEntity, ReviewEntity, ReviewFormData } from './entities';
+import type {
+  ProductEntity,
+  ProductSummary,
+  CategoryEntity,
+  ReviewEntity,
+  ReviewFormData,
+} from './entities';
 import type { ProductFilters } from './repository';
 
 const productService = ProductContainer.getProductService();
@@ -122,5 +128,16 @@ export const useUpdateReviewHelpful = () => {
     onError: (error) => {
       console.error('Failed to update review helpful:', error);
     },
+  });
+};
+
+export const useProductsForCart = (productIds: string[]) => {
+  return useQuery({
+    queryKey: ['products', 'cart', productIds],
+    queryFn: () => productService.getProductsForCart(productIds),
+    enabled: productIds.length > 0,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    retry: 1, // Only retry once on failure
+    retryOnMount: false, // Don't retry on mount if query failed
   });
 };
