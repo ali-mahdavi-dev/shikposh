@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo } from 'react';
-import { Card, Button, Rate, Typography, Badge } from 'antd';
+import { Card, Button, Rate, Typography } from 'antd';
 import { ShoppingCartOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -12,6 +12,7 @@ const { Text } = Typography;
 
 export interface ProductCardProps {
   product: {
+    slug: string;
     id: string;
     name: string;
     image?: string;
@@ -45,7 +46,7 @@ const ProductCard: React.FC<ProductCardProps> = memo(({ product, index, onAddToC
         className="group h-full overflow-hidden rounded-2xl border-0 shadow-lg transition-all duration-300 hover:shadow-2xl"
         style={{ padding: 0 }}
       >
-        <Link href={`/products/${product.id}`} className="block">
+        <Link href={`/products/${product.slug}`} className="block">
           <div className="relative overflow-hidden">
             {product.image && (
               <Image

@@ -116,6 +116,7 @@ export class HttpProductRepository implements ProductRepository {
   private mapToProductSummary(products: ProductEntity[]): ProductSummary[] {
     return products.map((product) => ({
       id: product.id,
+      slug: product.slug,
       name: product.name,
       price: product.price,
       originalPrice: product.originalPrice,

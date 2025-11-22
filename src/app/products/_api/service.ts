@@ -1,5 +1,11 @@
 import type { ProductRepository, ProductFilters } from './repository';
-import type { ProductEntity, ProductSummary, CategoryEntity, ReviewEntity, ReviewFormData } from './entities';
+import type {
+  ProductEntity,
+  ProductSummary,
+  CategoryEntity,
+  ReviewEntity,
+  ReviewFormData,
+} from './entities';
 
 export class ProductService {
   constructor(private productRepository: ProductRepository) {}
@@ -76,6 +82,7 @@ export class ProductService {
   private mapToProductSummary(products: ProductEntity[]): ProductSummary[] {
     return products.map((product) => ({
       id: product.id,
+      slug: product.slug,
       name: product.name,
       price: product.price,
       originalPrice: product.originalPrice,

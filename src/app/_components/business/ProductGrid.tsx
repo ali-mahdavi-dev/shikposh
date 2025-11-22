@@ -7,6 +7,7 @@ import { cn } from '@/utils/cn';
 export interface ProductGridProps {
   products: Array<{
     id: string;
+    slug: string;
     name: string;
     image?: string;
     price: number;

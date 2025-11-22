@@ -17,6 +17,7 @@ export interface ProductSpecs {
 
 export interface ProductEntity {
   id: string;
+  slug: string;
   name: string;
   brand: string;
   rating: number;
@@ -40,6 +41,7 @@ export interface ProductEntity {
 
 export interface ProductSummary {
   id: string;
+  slug: string;
   name: string;
   price: number;
   originalPrice?: number;
