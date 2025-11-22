@@ -135,7 +135,11 @@ export class ApiService {
     options: RequestInit = {},
     retryCount: number = 0,
   ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
+    // Ensure endpoint starts with /
+    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    // Ensure baseURL doesn't end with /
+    const normalizedBaseURL = this.baseURL.endsWith('/') ? this.baseURL.slice(0, -1) : this.baseURL;
+    const url = `${normalizedBaseURL}${normalizedEndpoint}`;
 
     const headers: Record<string, string> = {
       ...defaultHeaders,

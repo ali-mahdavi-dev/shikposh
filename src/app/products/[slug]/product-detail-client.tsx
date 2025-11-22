@@ -25,7 +25,7 @@ import { motion } from 'framer-motion';
 import { ProductDetailProps } from './_types';
 import { ProductVariant } from '../_api';
 import { useProduct, useReviews, useProductsByCategory } from '../_api';
-import { useSellerByProductId } from '@/app/seller/_api';
+import { useSeller } from '@/app/seller/_api';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { addToCart } from '@/stores/slices/cartSlice';
 import { toggleWishlist } from '@/stores/slices/wishlistSlice';
@@ -52,12 +52,12 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
   const { data: productData, isLoading, error } = useProduct(productId);
   const { data: reviews = [] } = useReviews(productId);
 
-  // Get seller information from API
+  // Get seller information from API (only if product has sellerId)
   const {
     data: sellerData,
     isLoading: sellerLoading,
     error: sellerError,
-  } = useSellerByProductId(productId);
+  } = useSeller(productData?.sellerId || '');
 
   // Get related products from API based on product category
   const { data: relatedProductsData = [] } = useProductsByCategory(productData?.category || '');
@@ -100,6 +100,16 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
         stock: product.colors[firstColor]?.stock || 0,
         discount: product.discount || 0,
         images: [product.image],
+      });
+    } else if (product) {
+      // Final fallback: if product exists but has no variants or colors, create a default variant
+      setSelectedColor('default');
+      setSelectedSize(product.sizes?.[0] || 'M');
+      setCurrentVariant({
+        price: product.price,
+        stock: 0,
+        discount: product.discount || 0,
+        images: product.image ? [product.image] : [],
       });
     }
   }, [product]);

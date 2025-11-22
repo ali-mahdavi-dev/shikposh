@@ -21,7 +21,7 @@ export function getApiBaseUrl(): string {
     if (isDev) {
       baseUrl = 'http://localhost:8000';
       // Only log once per process (survives HMR in Next.js)
-      if (isServer && !global.__apiBaseUrlWarned) {
+      if (!global.__apiBaseUrlWarned) {
         global.__apiBaseUrlWarned = true;
         console.log(
           '[API Config] Using default API base URL: http://localhost:8000 (backend). ' +

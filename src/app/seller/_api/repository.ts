@@ -11,23 +11,28 @@ export interface SellerRepository {
 
 export class HttpSellerRepository implements SellerRepository {
   async getSellerById(id: string): Promise<SellerEntity> {
-    return apiService.get<SellerEntity>(`/sellers/${id}`);
+    return apiService.get<SellerEntity>(`/api/v1/public/sellers/${id}`);
   }
 
   async getAllSellers(): Promise<SellerSummary[]> {
-    return apiService.get<SellerSummary[]>('/sellers');
+    return apiService.get<SellerSummary[]>('/api/v1/public/sellers');
   }
 
   async getSellersByCategory(category: string): Promise<SellerSummary[]> {
-    return apiService.get<SellerSummary[]>(`/sellers`, { categories_like: category });
+    return apiService.get<SellerSummary[]>(`/api/v1/public/sellers`, { categories_like: category });
   }
 
   async searchSellers(query: string): Promise<SellerSummary[]> {
-    return apiService.get<SellerSummary[]>(`/sellers`, { q: query });
+    return apiService.get<SellerSummary[]>(`/api/v1/public/sellers`, { q: query });
   }
 
   async getSellerByProductId(productId: string): Promise<SellerEntity> {
-    const product = await apiService.get<{ sellerId: string }>(`/products/${productId}`);
+    const product = await apiService.get<{ sellerId?: string }>(
+      `/api/v1/public/products/${productId}`,
+    );
+    if (!product.sellerId) {
+      throw new Error('Product does not have a seller ID');
+    }
     return this.getSellerById(product.sellerId);
   }
 }
