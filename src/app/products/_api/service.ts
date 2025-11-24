@@ -88,24 +88,65 @@ export class ProductService {
   }
 
   private mapToProductSummary(products: ProductEntity[]): ProductSummary[] {
-    return products.map((product) => ({
-      id: product.id,
-      slug: product.slug,
-      name: product.name,
-      price: product.price,
-      originalPrice: product.originalPrice,
-      discount: product.discount,
-      rating: product.rating,
-      reviewCount: product.reviewCount,
-      image: product.image,
-      category: product.category,
-      isNew: product.isNew,
-      isFeatured: product.isFeatured,
-      colors: product.colors,
-      sizes: product.sizes,
-      brand: product.brand,
-      description: product.description,
-      tags: product.tags || [],
-    }));
+    return products.map((product) => {
+      // Extract prices from variants - find minimum price
+      let minPrice = Infinity;
+      let minOriginalPrice: number | undefined;
+      let maxDiscount = 0;
+      const sizesSet = new Set<string>();
+      const colorsMap: Record<string, { name: string; stock?: number; discount?: number }> = {};
+
+      // Process variants to extract price, discount, sizes, and colors
+      if (product.variants) {
+        Object.entries(product.variants).forEach(([colorName, sizeVariants]) => {
+          // Find color info from colors array
+          const colorInfo = product.colors?.find(
+            (c) => c.name.toLowerCase() === colorName.toLowerCase() || c.name === colorName,
+          );
+
+          if (colorInfo) {
+            colorsMap[colorName] = {
+              name: colorInfo.name,
+            };
+          }
+
+          Object.entries(sizeVariants).forEach(([size, variant]) => {
+            sizesSet.add(size);
+
+            if (variant.price < minPrice) {
+              minPrice = variant.price;
+              minOriginalPrice = variant.original_price;
+            }
+
+            if (variant.discount > maxDiscount) {
+              maxDiscount = variant.discount;
+            }
+          });
+        });
+      }
+
+      // Get first category name or default
+      const categoryName = product.categories?.[0]?.name || 'همه';
+
+      return {
+        id: product.id,
+        slug: product.slug,
+        name: product.title, // Map title to name
+        price: minPrice !== Infinity ? minPrice : 0,
+        originalPrice: minOriginalPrice,
+        discount: maxDiscount,
+        rating: product.rating || 0,
+        reviewCount: 0, // Not available in new API structure
+        image: product.thumbnail, // Map thumbnail to image
+        category: categoryName,
+        isNew: product.is_new || false,
+        isFeatured: product.is_featured || false,
+        colors: colorsMap,
+        sizes: Array.from(sizesSet),
+        brand: product.brand || '',
+        description: product.description || '',
+        tags: product.tags || [],
+      };
+    });
   }
 }

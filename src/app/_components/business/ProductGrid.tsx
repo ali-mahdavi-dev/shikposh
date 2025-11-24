@@ -56,7 +56,12 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   return (
     <Grid cols={cols} gap={gap} responsive={true} className={cn('w-full', className)}>
       {products.map((product, index) => (
-        <ProductCard key={product.id} product={product} index={index} onAddToCart={onAddToCart} />
+        <ProductCard
+          key={`${product.id}-${index}`}
+          product={product}
+          index={index}
+          onAddToCart={onAddToCart}
+        />
       ))}
     </Grid>
   );

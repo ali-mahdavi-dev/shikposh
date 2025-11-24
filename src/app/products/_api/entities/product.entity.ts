@@ -1,42 +1,52 @@
 export interface ProductVariant {
   price: number;
+  original_price: number;
   stock: number;
   discount: number;
   images: string[];
 }
 
 export interface ProductColor {
+  id: number;
   name: string;
-  stock?: number;
-  discount?: number;
+  hex: string;
 }
 
-export interface ProductSpecs {
-  [key: string]: string;
+export interface ProductCategory {
+  id: number;
+  name: string;
+}
+
+export interface ProductSpec {
+  key: string;
+  value: string;
 }
 
 export interface ProductEntity {
   id: string;
-  slug: string;
-  name: string;
+  seller_id: number;
   brand: string;
-  rating: number;
-  reviewCount: number;
+  title: string;
+  slug: string;
   description: string;
-  features: string[];
-  colors: Record<string, ProductColor>;
-  variants: Record<string, Record<string, ProductVariant>>;
-  specs: ProductSpecs;
-  category: string;
+  thumbnail: string;
+  categories: ProductCategory[];
+  rating: number;
+  is_featured: boolean;
+  is_new: boolean;
+  created_at: string;
+  colors: ProductColor[];
   tags: string[];
-  image: string;
-  price: number;
-  originalPrice?: number;
-  discount: number;
-  isNew: boolean;
-  isFeatured: boolean;
-  sizes: string[];
-  sellerId?: string;
+  features: string[];
+  specs: ProductSpec[];
+  variants: Record<string, Record<string, ProductVariant>>;
+}
+
+// Legacy ProductColor for backward compatibility
+export interface LegacyProductColor {
+  name: string;
+  stock?: number;
+  discount?: number;
 }
 
 export interface ProductSummary {
@@ -52,7 +62,7 @@ export interface ProductSummary {
   category: string;
   isNew: boolean;
   isFeatured: boolean;
-  colors: Record<string, ProductColor>;
+  colors: Record<string, LegacyProductColor>;
   sizes: string[];
   brand: string;
   description: string;

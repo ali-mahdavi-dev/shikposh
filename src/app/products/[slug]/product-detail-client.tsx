@@ -52,18 +52,16 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
   const { data: productData, isLoading, error } = useProduct(productId);
   const { data: reviews = [] } = useReviews(productId);
 
-  // Get seller information from API (only if product has sellerId)
+  // Get seller information from API (only if product has seller_id)
   const {
     data: sellerData,
     isLoading: sellerLoading,
     error: sellerError,
-  } = useSeller(productData?.sellerId || '');
+  } = useSeller(productData?.seller_id ? String(productData.seller_id) : '');
 
-  console.log('sellerData', sellerData);
-  console.log('productData.sellerId || ', productData?.sellerId || '');
-  
   // Get related products from API based on product category
-  const { data: relatedProductsData = [] } = useProductsByCategory(productData?.category || '');
+  const categoryName = productData?.categories?.[0]?.name || '';
+  const { data: relatedProductsData = [] } = useProductsByCategory(categoryName);
 
   // Use product data from React Query
   const product = productData;
@@ -89,30 +87,42 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
         setSelectedSize(firstSize);
         setCurrentVariant(product.variants[firstColor][firstSize]);
       }
-    } else if (product && product.colors && Object.keys(product.colors).length > 0) {
-      // Fallback: if no variants, use colors and sizes
-      const firstColor = Object.keys(product.colors)[0];
-      const firstSize = product.sizes?.[0] || 'M';
+    } else if (product && product.colors && product.colors.length > 0) {
+      // Fallback: if no variants, use colors
+      const firstColor = product.colors[0].name.toLowerCase();
+      const firstSize = 'M';
 
       setSelectedColor(firstColor);
       setSelectedSize(firstSize);
 
       // Create a default variant from product data
+      // Extract price from variants if available, otherwise use 0
+      const defaultPrice = product.variants?.[firstColor]?.[firstSize]?.price || 0;
+      const defaultOriginalPrice =
+        product.variants?.[firstColor]?.[firstSize]?.original_price || defaultPrice;
+      const defaultStock = product.variants?.[firstColor]?.[firstSize]?.stock || 0;
+      const defaultDiscount = product.variants?.[firstColor]?.[firstSize]?.discount || 0;
+      const defaultImages = product.variants?.[firstColor]?.[firstSize]?.images || [
+        product.thumbnail,
+      ];
+
       setCurrentVariant({
-        price: product.price,
-        stock: product.colors[firstColor]?.stock || 0,
-        discount: product.discount || 0,
-        images: [product.image],
+        price: defaultPrice,
+        original_price: defaultOriginalPrice,
+        stock: defaultStock,
+        discount: defaultDiscount,
+        images: defaultImages,
       });
     } else if (product) {
       // Final fallback: if product exists but has no variants or colors, create a default variant
       setSelectedColor('default');
-      setSelectedSize(product.sizes?.[0] || 'M');
+      setSelectedSize('M');
       setCurrentVariant({
-        price: product.price,
+        price: 0,
+        original_price: 0,
         stock: 0,
-        discount: product.discount || 0,
-        images: product.image ? [product.image] : [],
+        discount: 0,
+        images: product.thumbnail ? [product.thumbnail] : [],
       });
     }
   }, [product]);
@@ -135,11 +145,21 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
         }
       } else {
         // Fallback: create variant from product data
+        const fallbackPrice = product.variants?.[selectedColor]?.[selectedSize]?.price || 0;
+        const fallbackOriginalPrice =
+          product.variants?.[selectedColor]?.[selectedSize]?.original_price || fallbackPrice;
+        const fallbackStock = product.variants?.[selectedColor]?.[selectedSize]?.stock || 0;
+        const fallbackDiscount = product.variants?.[selectedColor]?.[selectedSize]?.discount || 0;
+        const fallbackImages = product.variants?.[selectedColor]?.[selectedSize]?.images || [
+          product.thumbnail,
+        ];
+
         setCurrentVariant({
-          price: product.price,
-          stock: product.colors?.[selectedColor]?.stock || 0,
-          discount: product.discount || 0,
-          images: [product.image],
+          price: fallbackPrice,
+          original_price: fallbackOriginalPrice,
+          stock: fallbackStock,
+          discount: fallbackDiscount,
+          images: fallbackImages,
         });
       }
     }
@@ -155,8 +175,8 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
           size: selectedSize,
           quantity: quantity,
           price: currentVariant.price,
-          name: product.name,
-          image: currentVariant.images[0] || product.image,
+          name: product.title,
+          image: currentVariant.images[0] || product.thumbnail,
         }),
       );
       message.success('به سبد خرید اضافه شد');
@@ -186,13 +206,13 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
         label: 'مشخصات فنی',
         children: (
           <div className="space-y-3">
-            {product && product.specs && Object.keys(product.specs).length > 0 ? (
-              Object.entries(product.specs).map(([key, value]) => (
-                <div key={key} className="flex justify-between border-b border-gray-100 py-2">
+            {product && product.specs && product.specs.length > 0 ? (
+              product.specs.map((spec, index) => (
+                <div key={index} className="flex justify-between border-b border-gray-100 py-2">
                   <Text strong className="text-gray-700">
-                    {key}:
+                    {spec.key}:
                   </Text>
-                  <Text className="text-gray-600">{value}</Text>
+                  <Text className="text-gray-600">{spec.value}</Text>
                 </div>
               ))
             ) : (
@@ -203,7 +223,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
       },
       {
         key: '2',
-        label: `نظرات کاربران (${reviews.length || product?.reviewCount || 0})`,
+        label: `نظرات کاربران (${reviews.length})`,
         children: (
           <ReviewSummary
             productId={productId}
@@ -277,10 +297,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
   }
 
   // Calculate values after early returns to ensure currentVariant is not null
-  const discountPrice =
-    currentVariant.discount && currentVariant.discount > 0
-      ? Math.round(currentVariant.price * (1 - currentVariant.discount / 100))
-      : currentVariant.price;
+  // Note: price is already the discounted price, original_price is the original price
 
   // Filter out current product from related products
   const relatedProducts = relatedProductsData.filter((p) => p.id !== productId);
@@ -304,7 +321,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                   >
                     <ProductImageGallery
                       images={currentVariant.images}
-                      productName={product.name}
+                      productName={product.title}
                     />
                   </Suspense>
                   <div className="mt-4">
@@ -330,7 +347,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                           reviewCount={sellerData?.stats?.totalReviews}
                         />
                       </Suspense>
-                    ) : product?.sellerId ? (
+                    ) : product?.seller_id ? (
                       <div className="p-8 text-center text-gray-500">
                         در حال بارگذاری اطلاعات فروشنده...
                       </div>
@@ -353,7 +370,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                       </Tag>
                     </div>
                     <Title level={2} className="mb-3 text-gray-800">
-                      {product.name}
+                      {product.title}
                       {currentVariant.discount && currentVariant.discount > 0 && (
                         <Badge.Ribbon text={`${currentVariant.discount}% تخفیف`} color="red">
                           <div></div>
@@ -363,9 +380,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
 
                     <div className="mb-4 flex items-center gap-3">
                       <Rate allowHalf disabled value={averageRating} className="text-sm" />
-                      <Text className="text-gray-500">
-                        ({reviews.length || product.reviewCount} نظر)
-                      </Text>
+                      <Text className="text-gray-500">({reviews.length} نظر)</Text>
                     </div>
                   </div>
 
@@ -401,7 +416,13 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                     fallback={<div className="h-16 animate-pulse rounded-lg bg-gray-200" />}
                   >
                     <ColorSelector
-                      colors={product.colors}
+                      colors={product.colors.reduce(
+                        (acc, color) => {
+                          acc[color.name.toLowerCase()] = { name: color.name };
+                          return acc;
+                        },
+                        {} as Record<string, { name: string }>,
+                      )}
                       selectedColor={selectedColor}
                       onColorChange={setSelectedColor}
                     />
@@ -415,7 +436,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                       sizes={
                         product.variants?.[selectedColor]
                           ? Object.keys(product.variants[selectedColor])
-                          : product.sizes || []
+                          : []
                       }
                       selectedSize={selectedSize}
                       onSizeChange={setSelectedSize}
@@ -429,13 +450,15 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                   <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg">
                     <div className="mb-4 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        {currentVariant.discount && currentVariant.discount > 0 ? (
+                        {currentVariant.discount &&
+                        currentVariant.discount > 0 &&
+                        currentVariant.original_price > currentVariant.price ? (
                           <>
                             <Text delete className="text-lg text-gray-400">
-                              {currentVariant.price.toLocaleString()} تومان
+                              {currentVariant.original_price.toLocaleString()} تومان
                             </Text>
                             <Text className="text-2xl font-bold text-red-600">
-                              {discountPrice.toLocaleString()} تومان
+                              {currentVariant.price.toLocaleString()} تومان
                             </Text>
                           </>
                         ) : (
