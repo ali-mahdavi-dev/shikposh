@@ -19,8 +19,4 @@ export class SellerService {
   async searchSellers(query: string): Promise<SellerSummary[]> {
     return this.sellerRepository.searchSellers(query);
   }
-
-  async getSellerByProductId(productId: string): Promise<SellerEntity> {
-    return this.sellerRepository.getSellerByProductId(productId);
-  }
 }

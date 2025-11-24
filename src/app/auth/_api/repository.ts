@@ -22,7 +22,6 @@ export interface AuthRepository {
   register(request: RegisterRequest): Promise<RegisterResponse>;
   login(request: LoginRequest): Promise<LoginResponse>;
   logout(): Promise<void>;
-  getCurrentUser(): Promise<User | null>;
 }
 
 export class HttpAuthRepository implements AuthRepository {
@@ -94,10 +93,5 @@ export class HttpAuthRepository implements AuthRepository {
 
   async logout(): Promise<void> {
     return apiService.post<void>('/api/v1/public/logout');
-  }
-
-  async getCurrentUser(): Promise<User | null> {
-    const backendUser = await apiService.get<UserBackend>('/api/v1/user/profile');
-    return (backendUser as User) || null;
   }
 }

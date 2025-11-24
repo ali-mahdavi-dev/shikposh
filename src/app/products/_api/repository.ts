@@ -47,6 +47,7 @@ export class HttpProductRepository implements ProductRepository {
   }
 
   async getProductById(id: string): Promise<ProductEntity> {
+    // id is actually slug in our system
     return apiService.get<ProductEntity>(`/api/v1/public/products/${id}`);
   }
 

@@ -39,12 +39,3 @@ export const useSearchSellers = (query: string) => {
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
-
-export const useSellerByProductId = (productId: string) => {
-  return useQuery<SellerEntity>({
-    queryKey: ['sellers', 'product', productId],
-    queryFn: () => sellerService.getSellerByProductId(productId),
-    enabled: !!productId && productId !== 'undefined',
-    staleTime: 5 * 60 * 1000,
-  });
-};

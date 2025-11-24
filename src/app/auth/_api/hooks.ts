@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AuthContainer } from './container';
 import type { SendOtpRequest, VerifyOtpRequest, RegisterRequest, LoginRequest } from './entities';
 import { useAppDispatch } from '@/stores/hooks';
@@ -85,14 +85,5 @@ export const useLogout = () => {
       dispatch(logout());
       queryClient.clear();
     },
-  });
-};
-
-export const useCurrentUser = () => {
-  return useQuery({
-    queryKey: ['auth', 'user'],
-    queryFn: () => authService.getCurrentUser(),
-    enabled: false, // Only fetch when explicitly called
-    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

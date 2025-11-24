@@ -6,7 +6,6 @@ export interface SellerRepository {
   getAllSellers(): Promise<SellerSummary[]>;
   getSellersByCategory(category: string): Promise<SellerSummary[]>;
   searchSellers(query: string): Promise<SellerSummary[]>;
-  getSellerByProductId(productId: string): Promise<SellerEntity>;
 }
 
 export class HttpSellerRepository implements SellerRepository {
@@ -24,15 +23,5 @@ export class HttpSellerRepository implements SellerRepository {
 
   async searchSellers(query: string): Promise<SellerSummary[]> {
     return apiService.get<SellerSummary[]>(`/api/v1/public/sellers`, { q: query });
-  }
-
-  async getSellerByProductId(productId: string): Promise<SellerEntity> {
-    const product = await apiService.get<{ sellerId?: string }>(
-      `/api/v1/public/products/${productId}`,
-    );
-    if (!product.sellerId) {
-      throw new Error('Product does not have a seller ID');
-    }
-    return this.getSellerById(product.sellerId);
   }
 }
