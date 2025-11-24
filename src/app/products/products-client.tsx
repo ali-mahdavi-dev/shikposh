@@ -163,12 +163,11 @@ export default function ProductsClient() {
     if (!product) return;
 
     const colors = product.colors ? Object.keys(product.colors) : [];
-    const sizes = product.sizes || [];
     dispatch(
       addToCart({
-        productId: product.id,
+        productId: String(product.id),
         color: colors[0] || 'default',
-        size: sizes[0] || 'default',
+        size: '', // No size in new structure
         quantity: 1,
         price: product.price,
         name: product.name,

@@ -23,7 +23,6 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { ProductDetailProps } from './_types';
-import { ProductVariant } from '../_api';
 import { useProduct, useReviews, useProductsByCategory } from '../_api';
 import { useSeller } from '@/app/seller/_api';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
@@ -33,7 +32,6 @@ import ReviewSummary from '@/app/_components/review-summary';
 
 // Lazy load components for better performance
 const ColorSelector = React.lazy(() => import('../_components/color-selector'));
-const SizeSelector = React.lazy(() => import('../_components/size-selector'));
 const QuantitySelector = React.lazy(() => import('../_components/quantity-selector'));
 const RelatedProducts = React.lazy(() => import('../_components/related-products'));
 const ProductImageGallery = React.lazy(() => import('../_components/product-image-gallery'));
@@ -67,125 +65,57 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
   const product = productData;
 
   // Initialize state with default values
-  const [selectedColor, setSelectedColor] = useState<string>('');
-  const [selectedSize, setSelectedSize] = useState<string>('');
-  const [currentVariant, setCurrentVariant] = useState<ProductVariant | null>(null);
+  const [selectedColorId, setSelectedColorId] = useState<string>('');
   const [quantity, setQuantity] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<string>('1');
 
   // Check if product is in wishlist using Redux state
-  const isWishlisted = product ? wishlistItems.includes(product.id) : false;
+  const isWishlisted = product ? wishlistItems.includes(String(product.id)) : false;
 
-  // Initialize state when product data is available
+  // Get current images based on selected color
+  const currentImages = useMemo(() => {
+    if (!product) return [];
+    if (selectedColorId && product.images?.[selectedColorId]) {
+      return product.images[selectedColorId];
+    }
+    // Fallback to first color's images or thumbnail
+    if (product.images && Object.keys(product.images).length > 0) {
+      const firstColorId = Object.keys(product.images)[0];
+      return product.images[firstColorId] || [];
+    }
+    return product.thumbnail ? [product.thumbnail] : [];
+  }, [product, selectedColorId]);
+
+  // Initialize selected color when product data is available
   React.useEffect(() => {
-    if (product && product.variants && Object.keys(product.variants).length > 0) {
-      const firstColor = Object.keys(product.variants)[0];
-      const firstSize = Object.keys(product.variants[firstColor])?.[0];
-
-      if (firstColor && firstSize) {
-        setSelectedColor(firstColor);
-        setSelectedSize(firstSize);
-        setCurrentVariant(product.variants[firstColor][firstSize]);
-      }
-    } else if (product && product.colors && product.colors.length > 0) {
-      // Fallback: if no variants, use colors
-      const firstColor = product.colors[0].name.toLowerCase();
-      const firstSize = 'M';
-
-      setSelectedColor(firstColor);
-      setSelectedSize(firstSize);
-
-      // Create a default variant from product data
-      // Extract price from variants if available, otherwise use 0
-      const defaultPrice = product.variants?.[firstColor]?.[firstSize]?.price || 0;
-      const defaultOriginalPrice =
-        product.variants?.[firstColor]?.[firstSize]?.original_price || defaultPrice;
-      const defaultStock = product.variants?.[firstColor]?.[firstSize]?.stock || 0;
-      const defaultDiscount = product.variants?.[firstColor]?.[firstSize]?.discount || 0;
-      const defaultImages = product.variants?.[firstColor]?.[firstSize]?.images || [
-        product.thumbnail,
-      ];
-
-      setCurrentVariant({
-        price: defaultPrice,
-        original_price: defaultOriginalPrice,
-        stock: defaultStock,
-        discount: defaultDiscount,
-        images: defaultImages,
-      });
-    } else if (product) {
-      // Final fallback: if product exists but has no variants or colors, create a default variant
-      setSelectedColor('default');
-      setSelectedSize('M');
-      setCurrentVariant({
-        price: 0,
-        original_price: 0,
-        stock: 0,
-        discount: 0,
-        images: product.thumbnail ? [product.thumbnail] : [],
-      });
+    if (product && product.colors && product.colors.length > 0) {
+      // Select first color by default
+      const firstColorId = product.colors[0].id.toString();
+      setSelectedColorId(firstColorId);
     }
   }, [product]);
 
-  // Update current variant when color or size changes
-  React.useEffect(() => {
-    if (product && selectedColor && selectedSize) {
-      if (product.variants && product.variants[selectedColor]?.[selectedSize]) {
-        const variant = product.variants[selectedColor][selectedSize];
-        setCurrentVariant(variant);
-      } else if (product.variants && product.variants[selectedColor]) {
-        // Only update if the size is actually different to prevent infinite loop
-        const availableSizes = Object.keys(product.variants[selectedColor] || {});
-        if (availableSizes.length > 0) {
-          const firstAvailableSize = availableSizes[0];
-          if (firstAvailableSize !== selectedSize) {
-            setSelectedSize(firstAvailableSize);
-            setCurrentVariant(product.variants[selectedColor][firstAvailableSize]);
-          }
-        }
-      } else {
-        // Fallback: create variant from product data
-        const fallbackPrice = product.variants?.[selectedColor]?.[selectedSize]?.price || 0;
-        const fallbackOriginalPrice =
-          product.variants?.[selectedColor]?.[selectedSize]?.original_price || fallbackPrice;
-        const fallbackStock = product.variants?.[selectedColor]?.[selectedSize]?.stock || 0;
-        const fallbackDiscount = product.variants?.[selectedColor]?.[selectedSize]?.discount || 0;
-        const fallbackImages = product.variants?.[selectedColor]?.[selectedSize]?.images || [
-          product.thumbnail,
-        ];
-
-        setCurrentVariant({
-          price: fallbackPrice,
-          original_price: fallbackOriginalPrice,
-          stock: fallbackStock,
-          discount: fallbackDiscount,
-          images: fallbackImages,
-        });
-      }
-    }
-  }, [product, selectedColor, selectedSize]);
-
   // Memoize callbacks to prevent unnecessary re-renders
   const handleAddToCart = useCallback(() => {
-    if (product && currentVariant) {
+    if (product) {
       dispatch(
         addToCart({
-          productId: product.id,
-          color: selectedColor,
-          size: selectedSize,
+          productId: String(product.id),
+          color: selectedColorId,
+          size: '', // No size in new structure
           quantity: quantity,
-          price: currentVariant.price,
+          price: product.price,
           name: product.title,
-          image: currentVariant.images[0] || product.thumbnail,
+          image: currentImages[0] || product.thumbnail,
         }),
       );
       message.success('به سبد خرید اضافه شد');
     }
-  }, [product, currentVariant, selectedColor, selectedSize, quantity, dispatch, message]);
+  }, [product, selectedColorId, quantity, currentImages, dispatch, message]);
 
   const handleWishlistToggle = useCallback(() => {
     if (product) {
-      dispatch(toggleWishlist(product.id));
+      dispatch(toggleWishlist(String(product.id)));
       message.success(isWishlisted ? 'از علاقه‌مندی‌ها حذف شد' : 'به علاقه‌مندی‌ها اضافه شد');
     }
   }, [product, dispatch, message, isWishlisted]);
@@ -285,22 +215,8 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
     );
   }
 
-  if (!currentVariant) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto h-32 w-32 animate-spin rounded-full border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-gray-600">در حال بارگذاری اطلاعات محصول...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Calculate values after early returns to ensure currentVariant is not null
-  // Note: price is already the discounted price, original_price is the original price
-
   // Filter out current product from related products
-  const relatedProducts = relatedProductsData.filter((p) => p.id !== productId);
+  const relatedProducts = relatedProductsData.filter((p) => p.id !== String(productId));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
@@ -319,10 +235,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                   <Suspense
                     fallback={<div className="h-96 animate-pulse rounded-lg bg-gray-200" />}
                   >
-                    <ProductImageGallery
-                      images={currentVariant.images}
-                      productName={product.title}
-                    />
+                    <ProductImageGallery images={currentImages} productName={product.title} />
                   </Suspense>
                   <div className="mt-4">
                     {sellerLoading ? (
@@ -371,8 +284,8 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                     </div>
                     <Title level={2} className="mb-3 text-gray-800">
                       {product.title}
-                      {currentVariant.discount && currentVariant.discount > 0 && (
-                        <Badge.Ribbon text={`${currentVariant.discount}% تخفیف`} color="red">
+                      {product.discount && product.discount > 0 && (
+                        <Badge.Ribbon text={`${product.discount}% تخفیف`} color="red">
                           <div></div>
                         </Badge.Ribbon>
                       )}
@@ -418,52 +331,37 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                     <ColorSelector
                       colors={product.colors.reduce(
                         (acc, color) => {
-                          acc[color.name.toLowerCase()] = { name: color.name };
+                          acc[color.id.toString()] = { name: color.name };
                           return acc;
                         },
                         {} as Record<string, { name: string }>,
                       )}
-                      selectedColor={selectedColor}
-                      onColorChange={setSelectedColor}
-                    />
-                  </Suspense>
-
-                  {/* Size Selection */}
-                  <Suspense
-                    fallback={<div className="h-16 animate-pulse rounded-lg bg-gray-200" />}
-                  >
-                    <SizeSelector
-                      sizes={
-                        product.variants?.[selectedColor]
-                          ? Object.keys(product.variants[selectedColor])
-                          : []
-                      }
-                      selectedSize={selectedSize}
-                      onSizeChange={setSelectedSize}
+                      selectedColor={selectedColorId}
+                      onColorChange={setSelectedColorId}
                     />
                   </Suspense>
 
                   {/* Stock Status */}
-                  <StockStatus stock={currentVariant.stock} />
+                  <StockStatus stock={product.stock} />
 
                   {/* Price and Actions */}
                   <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg">
                     <div className="mb-4 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        {currentVariant.discount &&
-                        currentVariant.discount > 0 &&
-                        currentVariant.original_price > currentVariant.price ? (
+                        {product.discount &&
+                        product.discount > 0 &&
+                        product.original_price > product.price ? (
                           <>
                             <Text delete className="text-lg text-gray-400">
-                              {currentVariant.original_price.toLocaleString()} تومان
+                              {product.original_price.toLocaleString()} تومان
                             </Text>
                             <Text className="text-2xl font-bold text-red-600">
-                              {currentVariant.price.toLocaleString()} تومان
+                              {product.price.toLocaleString()} تومان
                             </Text>
                           </>
                         ) : (
                           <Text className="text-2xl font-bold text-pink-600">
-                            {currentVariant.price.toLocaleString()} تومان
+                            {product.price.toLocaleString()} تومان
                           </Text>
                         )}
                       </div>
@@ -474,7 +372,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                         <QuantitySelector
                           quantity={quantity}
                           onQuantityChange={setQuantity}
-                          max={currentVariant.stock}
+                          max={product.stock}
                         />
                       </Suspense>
                     </div>
@@ -485,7 +383,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                         size="large"
                         icon={<ShoppingCartOutlined />}
                         onClick={handleAddToCart}
-                        disabled={currentVariant.stock === 0}
+                        disabled={product.stock === 0}
                         className="h-12 flex-1 rounded-xl border-0 bg-gradient-to-r from-pink-500 to-purple-600 font-semibold text-white transition-all duration-300 hover:from-pink-600 hover:to-purple-700"
                       >
                         افزودن به سبد خرید

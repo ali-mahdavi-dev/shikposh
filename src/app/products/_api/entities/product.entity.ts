@@ -1,11 +1,3 @@
-export interface ProductVariant {
-  price: number;
-  original_price: number;
-  stock: number;
-  discount: number;
-  images: string[];
-}
-
 export interface ProductColor {
   id: number;
   name: string;
@@ -23,7 +15,7 @@ export interface ProductSpec {
 }
 
 export interface ProductEntity {
-  id: string;
+  id: number | string;
   seller_id: number;
   brand: string;
   title: string;
@@ -31,6 +23,10 @@ export interface ProductEntity {
   description: string;
   thumbnail: string;
   categories: ProductCategory[];
+  discount: number;
+  stock: number;
+  original_price: number;
+  price: number;
   rating: number;
   is_featured: boolean;
   is_new: boolean;
@@ -39,7 +35,7 @@ export interface ProductEntity {
   tags: string[];
   features: string[];
   specs: ProductSpec[];
-  variants: Record<string, Record<string, ProductVariant>>;
+  images: Record<string, string[]>; // Key is color id as string, value is array of image URLs
 }
 
 // Legacy ProductColor for backward compatibility
@@ -50,7 +46,7 @@ export interface LegacyProductColor {
 }
 
 export interface ProductSummary {
-  id: string;
+  id: string | number;
   slug: string;
   name: string;
   price: number;
