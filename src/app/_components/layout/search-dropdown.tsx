@@ -375,7 +375,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                                         className="whitespace-nowrap text-gray-500"
                                         style={{ fontSize: isMobile ? '10px' : '11px' }}
                                       >
-                                        {product.rating.toFixed(1)} ({product.reviewCount})
+                                        {product.rating.toFixed(1)}
                                       </Text>
                                     </div>
                                   )}

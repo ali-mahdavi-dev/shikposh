@@ -6,6 +6,7 @@ import { BellOutlined, CheckOutlined, ShopOutlined, CalendarOutlined } from '@an
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import type { Seller } from '../_types';
+import { getValidImageSrc } from '@/shared/utils';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -16,15 +17,23 @@ export interface SellerHeaderProps {
   bannerImage?: string;
 }
 
-export function SellerHeader({ seller, isFollowing, onFollowToggle, bannerImage }: SellerHeaderProps) {
+export function SellerHeader({
+  seller,
+  isFollowing,
+  onFollowToggle,
+  bannerImage,
+}: SellerHeaderProps) {
+  const avatarSrc = getValidImageSrc(seller?.avatar);
+  const bannerSrc = bannerImage ? getValidImageSrc(bannerImage) : null;
+
   return (
     <>
       {/* Banner Section */}
       <div className="relative h-48 w-full overflow-hidden bg-gradient-to-r from-pink-500 via-purple-500 to-pink-600 sm:h-56 md:h-64 lg:h-72">
-        {bannerImage ? (
+        {bannerSrc ? (
           <div className="relative h-full w-full">
             <Image
-              src={bannerImage}
+              src={bannerSrc}
               alt={`${seller?.name || 'Seller'} Banner`}
               fill
               className="object-cover"
@@ -55,7 +64,7 @@ export function SellerHeader({ seller, isFollowing, onFollowToggle, bannerImage 
                     <div className="relative h-full w-full rounded-full bg-white p-1">
                       <div className="absolute inset-1 overflow-hidden rounded-full">
                         <Image
-                          src={seller?.avatar || '/images/default-avatar.jpg'}
+                          src={avatarSrc}
                           alt={seller?.name || 'Seller'}
                           fill
                           className="object-cover"

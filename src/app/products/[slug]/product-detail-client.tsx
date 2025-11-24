@@ -23,12 +23,12 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { ProductDetailProps } from './_types';
-import { useProduct, useReviews, useProductsByCategory } from '../_api';
+import { useProduct, useProductsByCategory } from '../_api';
 import { useSeller } from '@/app/seller/_api';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { addToCart } from '@/stores/slices/cartSlice';
 import { toggleWishlist } from '@/stores/slices/wishlistSlice';
-import ReviewSummary from '@/app/_components/review-summary';
+import { getValidImageSrc } from '@/shared/utils';
 
 // Lazy load components for better performance
 const ColorSelector = React.lazy(() => import('../_components/color-selector'));
@@ -48,7 +48,6 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
 
   // Use the new architecture hooks
   const { data: productData, isLoading, error } = useProduct(productId);
-  const { data: reviews = [] } = useReviews(productId);
 
   // Get seller information from API (only if product has seller_id)
   const {
@@ -122,11 +121,8 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
 
   // Memoize expensive calculations
   const averageRating = useMemo(() => {
-    if (reviews.length > 0) {
-      return reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
-    }
     return product?.rating || 0;
-  }, [reviews, product?.rating]);
+  }, [product?.rating]);
 
   // Memoize tab items to prevent recreation
   const tabItems = useMemo(
@@ -149,18 +145,6 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
               <Text className="text-gray-500">مشخصات فنی برای این محصول ثبت نشده است.</Text>
             )}
           </div>
-        ),
-      },
-      {
-        key: '2',
-        label: `نظرات کاربران (${reviews.length})`,
-        children: (
-          <ReviewSummary
-            productId={productId}
-            reviews={reviews}
-            averageRating={averageRating}
-            totalReviews={reviews.length}
-          />
         ),
       },
       {
@@ -201,7 +185,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
         ),
       },
     ],
-    [product, reviews, averageRating, productId],
+    [product, averageRating, productId],
   );
 
   // Loading and error states - moved after all hooks
@@ -250,7 +234,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                       >
                         <ProfileCard
                           name={sellerData?.name || 'فروشنده'}
-                          avatar={sellerData?.avatar || '/images/default-avatar.jpg'}
+                          avatar={getValidImageSrc(sellerData?.avatar)}
                           description={sellerData?.description || 'توضیحاتی در دسترس نیست'}
                           rating={sellerData?.rating || sellerData?.stats?.averageRating || 0}
                           totalProducts={sellerData?.totalProducts || 0}
@@ -293,7 +277,6 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
 
                     <div className="mb-4 flex items-center gap-3">
                       <Rate allowHalf disabled value={averageRating} className="text-sm" />
-                      <Text className="text-gray-500">({reviews.length} نظر)</Text>
                     </div>
                   </div>
 

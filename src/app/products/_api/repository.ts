@@ -3,8 +3,6 @@ import type {
   ProductEntity,
   ProductSummary,
   CategoryEntity,
-  ReviewEntity,
-  ReviewFormData,
 } from './entities';
 
 export interface ProductFilters {
@@ -35,9 +33,6 @@ export interface ProductRepository {
   searchProducts(query: string): Promise<ProductSummary[]>;
   getFilteredProducts(filters: ProductFilters): Promise<ProductSummary[]>;
   getAllCategories(): Promise<CategoryEntity[]>;
-  getReviewsByProductId(productId: string): Promise<ReviewEntity[]>;
-  createReview(review: ReviewFormData & { productId: string }): Promise<ReviewEntity>;
-  updateReviewHelpful(reviewId: number, type: 'helpful' | 'notHelpful'): Promise<ReviewEntity>;
   getProductsForCart(productIds: string[]): Promise<CartProduct[]>;
 }
 
@@ -96,33 +91,6 @@ export class HttpProductRepository implements ProductRepository {
 
   async getAllCategories(): Promise<CategoryEntity[]> {
     return apiService.get<CategoryEntity[]>('/api/v1/public/categories');
-  }
-
-  async getReviewsByProductId(productId: string): Promise<ReviewEntity[]> {
-    try {
-      const response = await apiService.get<PaginatedResponse<ReviewEntity>>(
-        `/api/v1/public/products/${productId}/reviews`,
-      );
-      return response.data || [];
-    } catch (_error) {
-      return apiService.get<ReviewEntity[]>(`/api/v1/public/reviews?productId=${productId}`);
-    }
-  }
-
-  async createReview(review: ReviewFormData & { productId: string }): Promise<ReviewEntity> {
-    const reviewData = {
-      rating: review.rating,
-      comment: review.comment,
-      productId: review.productId,
-    };
-    return apiService.post<ReviewEntity>('/api/v1/public/reviews', reviewData);
-  }
-
-  async updateReviewHelpful(
-    reviewId: number,
-    type: 'helpful' | 'notHelpful',
-  ): Promise<ReviewEntity> {
-    return apiService.patch<ReviewEntity>(`/api/v1/public/reviews/${reviewId}`, { type });
   }
 
   async getProductsForCart(productIds: string[]): Promise<CartProduct[]> {

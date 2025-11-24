@@ -1,30 +1,8 @@
 // Form types
-export interface ReviewFormData {
-  rating: number;
-  comment: string;
-}
-
 export interface ContactFormData {
   name: string;
   email: string;
   message: string;
-}
-
-// Review related types
-export interface Review {
-  id: number;
-  user: string;
-  rating: number;
-  date: string;
-  comment: string;
-  helpful: number;
-  notHelpful: number;
-  verified: boolean;
-}
-
-export interface CommentBoxProps {
-  productId?: string;
-  initialShowForm?: boolean;
 }
 
 export interface Category {

@@ -98,7 +98,6 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
                 className="text-base text-yellow-400"
               />
               <Text className="text-base font-bold text-gray-800">{rating.toFixed(1)}</Text>
-              <Text className="text-sm text-gray-500">({displayedReviewCount} نظر)</Text>
             </div>
 
             {/* Description */}

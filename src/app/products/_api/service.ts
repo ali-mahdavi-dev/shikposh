@@ -1,11 +1,5 @@
 import type { ProductRepository, ProductFilters } from './repository';
-import type {
-  ProductEntity,
-  ProductSummary,
-  CategoryEntity,
-  ReviewEntity,
-  ReviewFormData,
-} from './entities';
+import type { ProductEntity, ProductSummary, CategoryEntity } from './entities';
 import type { CartProduct } from './repository';
 
 export class ProductService {
@@ -47,37 +41,6 @@ export class ProductService {
 
   async getAllCategories(): Promise<CategoryEntity[]> {
     return this.productRepository.getAllCategories();
-  }
-
-  async getReviewsByProductId(productId: string): Promise<ReviewEntity[]> {
-    if (!productId) {
-      throw new Error('Product ID is required');
-    }
-    return this.productRepository.getReviewsByProductId(productId);
-  }
-
-  async createReview(reviewData: ReviewFormData & { productId: string }): Promise<ReviewEntity> {
-    if (!reviewData.productId) {
-      throw new Error('Product ID is required');
-    }
-    if (!reviewData.rating || reviewData.rating < 1 || reviewData.rating > 5) {
-      throw new Error('Rating must be between 1 and 5');
-    }
-    if (!reviewData.comment.trim()) {
-      throw new Error('Comment is required');
-    }
-
-    return this.productRepository.createReview(reviewData);
-  }
-
-  async updateReviewHelpful(
-    reviewId: number,
-    type: 'helpful' | 'notHelpful',
-  ): Promise<ReviewEntity> {
-    if (!reviewId) {
-      throw new Error('Review ID is required');
-    }
-    return this.productRepository.updateReviewHelpful(reviewId, type);
   }
 
   async getProductsForCart(productIds: string[]): Promise<CartProduct[]> {

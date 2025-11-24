@@ -1,13 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ProductContainer } from './container';
-import type {
-  ProductEntity,
-  ProductSummary,
-  CategoryEntity,
-  ReviewEntity,
-  ReviewFormData,
-} from './entities';
+import type { ProductEntity, ProductSummary, CategoryEntity } from './entities';
 import type { ProductFilters } from './repository';
 
 const productService = ProductContainer.getProductService();
@@ -87,47 +81,6 @@ export const useCategories = () => {
     queryKey: ['categories'],
     queryFn: () => productService.getAllCategories(),
     staleTime: 30 * 60 * 1000, // 30 minutes
-  });
-};
-
-// Reviews
-export const useReviews = (productId: string) => {
-  return useQuery<ReviewEntity[]>({
-    queryKey: ['reviews', productId],
-    queryFn: () => productService.getReviewsByProductId(productId),
-    enabled: !!productId,
-    staleTime: 5 * 60 * 1000,
-  });
-};
-
-export const useCreateReview = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (review: ReviewFormData & { productId: string }) =>
-      productService.createReview(review),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['reviews', variables.productId] });
-      queryClient.invalidateQueries({ queryKey: ['products', variables.productId] });
-    },
-    onError: (error) => {
-      console.error('Failed to create review:', error);
-    },
-  });
-};
-
-export const useUpdateReviewHelpful = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ reviewId, type }: { reviewId: number; type: 'helpful' | 'notHelpful' }) =>
-      productService.updateReviewHelpful(reviewId, type),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reviews'] });
-    },
-    onError: (error) => {
-      console.error('Failed to update review helpful:', error);
-    },
   });
 };
 

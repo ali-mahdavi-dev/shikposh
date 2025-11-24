@@ -76,7 +76,6 @@ const ProductCard: React.FC<ProductCardProps> = memo(({ product, index, onAddToC
 
             <div className="flex items-center gap-2">
               <Rate disabled value={product.rating} className="text-xs" />
-              <Text className="text-xs text-gray-500">({product.reviewCount})</Text>
             </div>
 
             <div className="flex items-center justify-between">
