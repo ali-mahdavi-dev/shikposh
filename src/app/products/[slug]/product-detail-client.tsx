@@ -59,6 +59,9 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
     error: sellerError,
   } = useSeller(productData?.sellerId || '');
 
+  console.log('sellerData', sellerData);
+  console.log('productData.sellerId || ', productData?.sellerId || '');
+  
   // Get related products from API based on product category
   const { data: relatedProductsData = [] } = useProductsByCategory(productData?.category || '');
 
