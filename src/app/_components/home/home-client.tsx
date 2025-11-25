@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useMemo, lazy, Suspense } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/stores/store';
 import { Typography, Carousel } from 'antd';
 import {
   RocketOutlined,
@@ -54,6 +56,8 @@ const features = [
 ];
 
 const HomeClient: React.FC<HomeClientProps> = () => {
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+
   const heroSlides = useMemo(
     () => [
       {
@@ -169,13 +173,15 @@ const HomeClient: React.FC<HomeClientProps> = () => {
                 همین الان ثبت‌نام کنید و از تخفیف ویژه بهره‌مند شوید
               </p>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row"> 
-              <Link
-                href="/auth/register"
-                className="!rounded-xl !bg-white/90 !px-8 !py-4 !text-center !font-bold !text-pink-500 !shadow-lg !transition-all !duration-300 hover:!-translate-y-1 hover:bg-white hover:!shadow-xl"
-              >
-                ثبت‌نام رایگان
-              </Link>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              {!isAuthenticated && (
+                <Link
+                  href="/auth"
+                  className="!rounded-xl !bg-white/90 !px-8 !py-4 !text-center !font-bold !text-pink-500 !shadow-lg !transition-all !duration-300 hover:!-translate-y-1 hover:bg-white hover:!shadow-xl"
+                >
+                  ثبت‌نام رایگان
+                </Link>
+              )}
               <Link
                 href="/products"
                 className="!rounded-xl !border-2 !border-white !bg-white/20 !px-8 !py-4 !text-center !font-bold !text-white !backdrop-blur-sm !transition-all !duration-300 hover:!bg-white/30"
