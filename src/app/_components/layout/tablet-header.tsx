@@ -123,36 +123,42 @@ export const TabletHeader: React.FC<TabletHeaderProps> = ({
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              {/* Search Button */}
-              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Button
-                  type="text"
-                  icon={<SearchOutlined />}
-                  onClick={() => {
-                    setMobileSearchOpen(true);
-                    setSearchDropdownVisible(true);
-                  }}
-                  className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
-                />
-              </motion.div>
+              {/* Action Buttons Group - Search, Cart */}
+              <div className="flex items-center gap-1 sm:gap-2">
+                {/* Search Button */}
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <Button
+                    type="text"
+                    icon={<SearchOutlined />}
+                    onClick={() => {
+                      setMobileSearchOpen(true);
+                      setSearchDropdownVisible(true);
+                    }}
+                    className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
+                  />
+                </motion.div>
 
-              {/* Shopping Cart */}
-              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Badge
-                  count={cartCount || 0}
-                  size="small"
-                  className="custom-badge"
-                  style={{ backgroundColor: '#ec4899' }}
-                >
-                  <Link href="/cart">
-                    <Button
-                      type="text"
-                      icon={<ShoppingCartOutlined />}
-                      className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
-                    />
-                  </Link>
-                </Badge>
-              </motion.div>
+                {/* Shopping Cart */}
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <Badge
+                    count={cartCount || 0}
+                    size="small"
+                    className="custom-badge"
+                    style={{ backgroundColor: '#ec4899' }}
+                  >
+                    <Link href="/cart">
+                      <Button
+                        type="text"
+                        icon={<ShoppingCartOutlined />}
+                        className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
+                      />
+                    </Link>
+                  </Badge>
+                </motion.div>
+              </div>
+
+              {/* Spacer between action buttons and auth button */}
+              <div className="mx-2 sm:mx-3" />
 
               {/* User Menu or Login Button */}
               {isAuthenticated ? (
@@ -244,7 +250,24 @@ export const TabletHeader: React.FC<TabletHeaderProps> = ({
 
         {/* Categories Dropdown */}
         <div className="mb-4">
-          <Dropdown menu={{ items: categoryMenuItems }} placement="topRight" trigger={['click']}>
+          <Dropdown
+            menu={{
+              items: categoryMenuItems?.map((item) => {
+                if (!item || item.type === 'divider') return item;
+                return {
+                  ...item,
+                  onClick: (info: any) => {
+                    onMenuToggle(false);
+                    if ('onClick' in item && item.onClick) {
+                      item.onClick(info);
+                    }
+                  },
+                };
+              }),
+            }}
+            placement="topRight"
+            trigger={['click']}
+          >
             <Button
               type="text"
               className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-right font-medium text-gray-700 transition-all hover:bg-pink-50 hover:text-pink-600"

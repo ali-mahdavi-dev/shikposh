@@ -31,8 +31,8 @@ export const DesktopHeader: React.FC<HeaderSharedProps> = ({
   navLinks,
   scrolled,
   hasAnimated,
-  onLogout,
-  logoutLoading,
+  onLogout: _onLogout,
+  logoutLoading: _logoutLoading,
 }) => {
   const [searchDropdownVisible, setSearchDropdownVisible] = useState<boolean>(false);
 
@@ -150,67 +150,73 @@ export const DesktopHeader: React.FC<HeaderSharedProps> = ({
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            {/* Notifications */}
-            <motion.div
-              className="hidden sm:block"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <Badge
-                count={notificationCount}
-                size="small"
-                className="custom-badge"
-                style={{ backgroundColor: '#ec4899' }}
+            {/* Action Buttons Group - Notifications, Wishlist, Cart */}
+            <div className="flex items-center gap-1 sm:gap-2">
+              {/* Notifications */}
+              <motion.div
+                className="hidden sm:block"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
               >
-                <Link href="/notification">
-                  <Button
-                    type="text"
-                    icon={<BellOutlined />}
-                    className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
-                  />
-                </Link>
-              </Badge>
-            </motion.div>
+                <Badge
+                  count={notificationCount}
+                  size="small"
+                  className="custom-badge"
+                  style={{ backgroundColor: '#ec4899' }}
+                >
+                  <Link href="/notification">
+                    <Button
+                      type="text"
+                      icon={<BellOutlined />}
+                      className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
+                    />
+                  </Link>
+                </Badge>
+              </motion.div>
 
-            {/* Wishlist */}
-            <motion.div
-              className="hidden sm:block"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <Badge
-                count={wishlistCount}
-                size="small"
-                className="custom-badge"
-                style={{ backgroundColor: '#ec4899' }}
+              {/* Wishlist */}
+              <motion.div
+                className="hidden sm:block"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
               >
-                <Link href="/wishlist">
-                  <Button
-                    type="text"
-                    icon={<HeartOutlined />}
-                    className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
-                  />
-                </Link>
-              </Badge>
-            </motion.div>
+                <Badge
+                  count={wishlistCount}
+                  size="small"
+                  className="custom-badge"
+                  style={{ backgroundColor: '#ec4899' }}
+                >
+                  <Link href="/wishlist">
+                    <Button
+                      type="text"
+                      icon={<HeartOutlined />}
+                      className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
+                    />
+                  </Link>
+                </Badge>
+              </motion.div>
 
-            {/* Shopping Cart */}
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-              <Badge
-                count={cartCount || 0}
-                size="small"
-                className="custom-badge"
-                style={{ backgroundColor: '#ec4899' }}
-              >
-                <Link href="/cart">
-                  <Button
-                    type="text"
-                    icon={<ShoppingCartOutlined />}
-                    className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
-                  />
-                </Link>
-              </Badge>
-            </motion.div>
+              {/* Shopping Cart */}
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Badge
+                  count={cartCount || 0}
+                  size="small"
+                  className="custom-badge"
+                  style={{ backgroundColor: '#ec4899' }}
+                >
+                  <Link href="/cart">
+                    <Button
+                      type="text"
+                      icon={<ShoppingCartOutlined />}
+                      className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
+                    />
+                  </Link>
+                </Badge>
+              </motion.div>
+            </div>
+
+            {/* Spacer between action buttons and auth button */}
+            <div className="mx-2 sm:mx-3 lg:mx-4" />
 
             {/* User Menu - Show if authenticated, otherwise show login/register buttons */}
             {isAuthenticated ? (

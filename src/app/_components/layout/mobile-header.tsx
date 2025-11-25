@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { Layout, Button, Badge, Drawer, Typography, Divider, Dropdown } from 'antd';
+import { Layout, Button, Badge, Drawer, Typography, Divider, Dropdown, Tooltip } from 'antd';
 import {
   ShoppingCartOutlined,
   HeartOutlined,
@@ -10,6 +10,7 @@ import {
   CloseOutlined,
   AppstoreOutlined,
   SearchOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -29,11 +30,11 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   wishlistCount,
   notificationCount,
   isAuthenticated,
-  user,
+  user: _user,
   searchValue,
   onSearchValueChange,
   onSearch,
-  userMenuItems,
+  userMenuItems: _userMenuItems,
   categoryMenuItems,
   navLinks,
   scrolled,
@@ -62,7 +63,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
       >
         <div className="mx-auto w-full max-w-7xl">
           <div className="flex h-20 items-center justify-between gap-2">
-            {/* Logo */}
+            {/* Logo - Right Side */}
             <motion.div
               className="flex w-auto flex-shrink-0 items-center gap-3"
               initial={hasAnimated ? false : { opacity: 0, x: -20 }}
@@ -80,62 +81,91 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
               </Link>
             </motion.div>
 
-            {/* Mobile Actions - Search, Products, Cart */}
+            {/* Center Actions - Products, Search, About */}
             <motion.div
-              className="flex w-auto flex-shrink-0 items-center gap-1"
+              className="flex flex-1 items-center justify-center gap-1 sm:gap-2"
+              initial={hasAnimated ? false : { opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              {/* Mobile Products Link */}
+              <Tooltip title="محصولات" placement="bottom">
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <Link href="/products">
+                    <Button
+                      type="text"
+                      icon={<AppstoreOutlined />}
+                      className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
+                    />
+                  </Link>
+                </motion.div>
+              </Tooltip>
+
+              {/* Mobile Search Button */}
+              <Tooltip title="جستجو" placement="bottom">
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <Button
+                    type="text"
+                    icon={<SearchOutlined />}
+                    onClick={() => {
+                      setMobileSearchOpen(true);
+                      setSearchDropdownVisible(true);
+                    }}
+                    className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
+                  />
+                </motion.div>
+              </Tooltip>
+
+              {/* About Link */}
+              <Tooltip title="درباره ما" placement="bottom">
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <Link href="/about">
+                    <Button
+                      type="text"
+                      icon={<InfoCircleOutlined />}
+                      className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
+                    />
+                  </Link>
+                </motion.div>
+              </Tooltip>
+            </motion.div>
+
+            {/* Left Actions - Cart, Menu */}
+            <motion.div
+              className="flex w-auto flex-shrink-0 items-center gap-2 sm:gap-3"
               initial={hasAnimated ? false : { opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              {/* Mobile Search Button */}
-              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Button
-                  type="text"
-                  icon={<SearchOutlined />}
-                  onClick={() => {
-                    setMobileSearchOpen(true);
-                    setSearchDropdownVisible(true);
-                  }}
-                  className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
-                />
-              </motion.div>
-
-              {/* Mobile Products Link */}
-              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Link href="/products">
-                  <Button
-                    type="text"
-                    icon={<AppstoreOutlined />}
-                    className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
-                  />
-                </Link>
-              </motion.div>
-
               {/* Mobile Shopping Cart */}
-              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Badge
-                  count={cartCount || 0}
-                  size="small"
-                  className="custom-badge"
-                  style={{ backgroundColor: '#ec4899' }}
-                >
-                  <Link href="/cart">
-                    <Button
-                      type="text"
-                      icon={<ShoppingCartOutlined />}
-                      className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
-                    />
-                  </Link>
-                </Badge>
-              </motion.div>
+              <Tooltip title="سبد خرید" placement="bottom">
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <Badge
+                    count={cartCount || 0}
+                    size="small"
+                    className="custom-badge"
+                    style={{ backgroundColor: '#ec4899' }}
+                  >
+                    <Link href="/cart">
+                      <Button
+                        type="text"
+                        icon={<ShoppingCartOutlined />}
+                        className="h-11 w-11 rounded-full text-gray-600 transition-all hover:bg-pink-50 hover:text-pink-600"
+                      />
+                    </Link>
+                  </Badge>
+                </motion.div>
+              </Tooltip>
 
               {/* Mobile Menu Button */}
-              <Button
-                type="text"
-                icon={<MenuOutlined />}
-                onClick={() => onMenuToggle(true)}
-                className="flex h-11 w-11 flex-shrink-0 rounded-full text-gray-600 hover:bg-pink-50"
-              />
+              <Tooltip title="منو" placement="bottom">
+                <Button
+                  type="text"
+                  icon={<MenuOutlined />}
+                  onClick={() => onMenuToggle(true)}
+                  className="flex h-11 w-11 flex-shrink-0 rounded-full text-gray-600 hover:bg-pink-50"
+                />
+              </Tooltip>
             </motion.div>
           </div>
         </div>
@@ -207,7 +237,24 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
             </motion.div>
           ))}
 
-          <Dropdown menu={{ items: categoryMenuItems }} placement="topRight" trigger={['click']}>
+          <Dropdown
+            menu={{
+              items: categoryMenuItems?.map((item) => {
+                if (!item || item.type === 'divider') return item;
+                return {
+                  ...item,
+                  onClick: (info: any) => {
+                    onMenuToggle(false);
+                    if ('onClick' in item && item.onClick) {
+                      item.onClick(info);
+                    }
+                  },
+                };
+              }),
+            }}
+            placement="topRight"
+            trigger={['click']}
+          >
             <Button
               type="text"
               className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-right font-medium text-gray-700 transition-all hover:bg-pink-50 hover:text-pink-600"
