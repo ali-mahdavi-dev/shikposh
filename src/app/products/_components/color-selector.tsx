@@ -8,7 +8,7 @@ import { ColorSelectorProps } from '../_types';
 
 const { Text } = Typography;
 
-type ColorValue = { name: string; stock?: number; discount?: number };
+type ColorValue = { name: string; hex?: string; stock?: number; discount?: number };
 
 const ColorSelector: React.FC<ColorSelectorProps> = ({ colors, selectedColor, onColorChange }) => {
   // If no colors available, don't render
@@ -43,18 +43,11 @@ const ColorSelector: React.FC<ColorSelectorProps> = ({ colors, selectedColor, on
             <motion.div
               className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-200 ${
                 colorKey === currentColorKey
-                  ? 'border-pink-500 shadow-md'
+                  ? 'border-pink-500 shadow-md outline-2 outline-offset-2 outline-pink-500'
                   : 'border-gray-300 hover:border-pink-300'
               } ${color.stock === 0 ? 'cursor-not-allowed opacity-50' : ''}`}
               style={{
-                backgroundColor:
-                  colorKey === 'red'
-                    ? '#ef4444'
-                    : colorKey === 'blue'
-                      ? '#3b82f6'
-                      : colorKey === 'black'
-                        ? '#1f2937'
-                        : '#d1d5db',
+                backgroundColor: color.hex || '#d1d5db',
               }}
               onClick={() => (color.stock === 0 ? undefined : onColorChange(colorKey))}
               whileHover={{ scale: 1.1 }}

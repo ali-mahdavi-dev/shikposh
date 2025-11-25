@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo, useCallback, Suspense } from 'react';
+import React, { useState, useMemo, useCallback, Suspense, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -86,6 +86,9 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
   const [quantity, setQuantity] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<string>('1');
 
+  // Track previous color to detect color changes
+  const prevColorIdRef = useRef<string>('');
+
   // Check if product is in wishlist using Redux state
   const isWishlisted = product ? wishlistItems.includes(String(product.id)) : false;
 
@@ -149,13 +152,47 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
     }
   }, [product]);
 
-  // Reset and select first available size when color changes
+  // Handle size selection when color changes
   React.useEffect(() => {
-    // Reset size when color changes
-    setSelectedSizeId('');
-  }, [selectedColorId]);
+    // Only run when color actually changes (not on initial load)
+    if (
+      !product ||
+      !selectedColorId ||
+      !product.variant ||
+      selectedColorId === prevColorIdRef.current
+    ) {
+      prevColorIdRef.current = selectedColorId;
+      return;
+    }
 
-  // Select first available size when sizes are available and no size is selected
+    prevColorIdRef.current = selectedColorId;
+
+    const colorVariants = product.variant[selectedColorId];
+    if (!colorVariants) {
+      setSelectedSizeId('');
+      return;
+    }
+
+    // Check if the currently selected size is available for the new color
+    // Use functional update to get the current selectedSizeId value
+    setSelectedSizeId((currentSizeId) => {
+      if (currentSizeId && colorVariants[currentSizeId]) {
+        // Keep the same size if it's available for the new color
+        return currentSizeId;
+      }
+
+      // If the current size is not available, select the first available size
+      const availableSizeIds = Object.keys(colorVariants);
+      if (availableSizeIds.length > 0) {
+        return availableSizeIds[0];
+      } else {
+        // No sizes available for this color
+        return '';
+      }
+    });
+  }, [selectedColorId, product]);
+
+  // Select first available size when sizes are available and no size is selected (initial load)
   React.useEffect(() => {
     if (availableSizes.length > 0 && selectedColorId && !selectedSizeId) {
       const firstSizeId = availableSizes[0].id;
@@ -393,10 +430,10 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                     <ColorSelector
                       colors={product.colors.reduce(
                         (acc, color) => {
-                          acc[color.id.toString()] = { name: color.name };
+                          acc[color.id.toString()] = { name: color.name, hex: color.hex };
                           return acc;
                         },
-                        {} as Record<string, { name: string }>,
+                        {} as Record<string, { name: string; hex?: string }>,
                       )}
                       selectedColor={selectedColorId}
                       onColorChange={setSelectedColorId}
@@ -433,9 +470,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                             <Text delete className="text-lg text-gray-400">
                               {formatIranianPrice(
                                 product.origin_price ||
-                                  Math.round(
-                                    product.price / (1 - (product.discount || 0) / 100),
-                                  ),
+                                  Math.round(product.price / (1 - (product.discount || 0) / 100)),
                               )}{' '}
                               تومان
                             </Text>

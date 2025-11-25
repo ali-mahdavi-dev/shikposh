@@ -9,7 +9,7 @@ export interface ProductImageGalleryProps {
 }
 
 export interface ColorSelectorProps {
-  colors: Record<string, { name: string }>; 
+  colors: Record<string, { name: string; hex?: string }>;
   selectedColor: string;
   onColorChange: (color: string) => void;
 }
@@ -52,4 +52,3 @@ export interface ProductFilters {
   sortBy?: 'price' | 'rating' | 'newest' | 'popular';
   sortOrder?: 'asc' | 'desc';
 }
-
