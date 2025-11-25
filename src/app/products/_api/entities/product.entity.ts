@@ -39,8 +39,8 @@ export interface ProductEntity {
   categories: ProductCategory[];
   discount: number;
   stock: number;
-  original_price: number;
   price: number;
+  origin_price?: number;
   rating: number;
   is_featured: boolean;
   is_new: boolean;
@@ -66,7 +66,7 @@ export interface ProductSummary {
   slug: string;
   name: string;
   price: number;
-  originalPrice?: number;
+  origin_price?: number;
   discount: number;
   rating: number;
   reviewCount: number;

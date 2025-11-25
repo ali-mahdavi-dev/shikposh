@@ -12,6 +12,7 @@ import {
   updateCartItemsWithProductData,
 } from '@/stores/slices/cartSlice';
 import { useProductsForCart } from '@/app/products/_api';
+import { formatIranianPrice } from '@/shared/utils';
 
 const { Title, Text } = Typography;
 
@@ -152,11 +153,9 @@ export default function CartClient() {
                       {item.discount && item.discount > 0 && item.price ? (
                         <div className="mt-1 flex flex-wrap items-center gap-2">
                           <Text className="text-sm whitespace-nowrap text-gray-400 line-through">
-                            {(
-                              (item.price +
-                                Math.round((item.price * item.discount) / (100 - item.discount))) *
-                              item.quantity
-                            ).toLocaleString('fa-IR')}{' '}
+                            {formatIranianPrice(
+                              Math.round(item.price / (1 - item.discount / 100)) * item.quantity,
+                            )}{' '}
                             تومان
                           </Text>
                           <Tag
@@ -188,16 +187,17 @@ export default function CartClient() {
                       {item.price ? (
                         <div className="flex flex-col items-end gap-1">
                           <Text className="text-base font-bold whitespace-nowrap text-pink-600 sm:text-lg">
-                            {(item.price * item.quantity).toLocaleString('fa-IR')} تومان
+                            {formatIranianPrice(item.price * item.quantity)} تومان
                           </Text>
                           {item.discount && item.discount > 0 ? (
                             <div className="flex items-center gap-1 rounded-lg bg-green-50 px-2 py-1">
                               <DollarOutlined className="flex-shrink-0 text-xs text-green-600" />
                               <Text className="text-xs font-semibold whitespace-nowrap text-green-600">
-                                {(
-                                  Math.round((item.price * item.discount) / (100 - item.discount)) *
-                                  item.quantity
-                                ).toLocaleString('fa-IR')}{' '}
+                                {formatIranianPrice(
+                                  (Math.round(item.price / (1 - item.discount / 100)) -
+                                    item.price) *
+                                    item.quantity,
+                                )}{' '}
                                 تومان صرفه‌جویی
                               </Text>
                             </div>
@@ -236,7 +236,7 @@ export default function CartClient() {
                   <div className="flex items-center justify-between">
                     <Text className="break-words text-gray-600">جمع جزء</Text>
                     <Text className="font-semibold whitespace-nowrap text-gray-800">
-                      {totals.subtotal.toLocaleString('fa-IR')} تومان
+                      {formatIranianPrice(totals.subtotal)} تومان
                     </Text>
                   </div>
                   {totals.totalDiscount > 0 && (
@@ -246,14 +246,14 @@ export default function CartClient() {
                         <Text className="font-medium text-gray-700">تخفیف</Text>
                       </div>
                       <Text className="font-bold whitespace-nowrap text-red-600">
-                        -{totals.totalDiscount.toLocaleString('fa-IR')} تومان
+                        -{formatIranianPrice(totals.totalDiscount)} تومان
                       </Text>
                     </div>
                   )}
                   <div className="flex items-center justify-between">
                     <Text className="break-words text-gray-600">مالیات (3%)</Text>
                     <Text className="font-semibold whitespace-nowrap text-gray-800">
-                      {totals.tax.toLocaleString('fa-IR')} تومان
+                      {formatIranianPrice(totals.tax)} تومان
                     </Text>
                   </div>
                   <div className="flex items-center justify-between">
@@ -261,7 +261,7 @@ export default function CartClient() {
                     <Text className="font-semibold whitespace-nowrap text-gray-800">
                       {totals.shipping === 0
                         ? 'رایگان'
-                        : `${totals.shipping.toLocaleString('fa-IR')} تومان`}
+                        : `${formatIranianPrice(totals.shipping)} تومان`}
                     </Text>
                   </div>
                   {totals.realSavings > 0 && (
@@ -273,7 +273,7 @@ export default function CartClient() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Text className="text-lg font-extrabold whitespace-nowrap text-green-600">
-                            {totals.realSavings.toLocaleString('fa-IR')} تومان
+                            {formatIranianPrice(totals.realSavings)} تومان
                           </Text>
                         </div>
                       </div>
@@ -284,7 +284,7 @@ export default function CartClient() {
                 <div className="mb-4 flex items-center justify-between text-base">
                   <Text className="text-gray-700">مبلغ قابل پرداخت</Text>
                   <Text className="text-xl font-extrabold text-pink-600">
-                    {totals.total.toLocaleString('fa-IR')} تومان
+                    {formatIranianPrice(totals.total)} تومان
                   </Text>
                 </div>
                 <div className="flex flex-col gap-2">

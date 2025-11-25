@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchProducts } from '@/app/products/_api/hooks';
 import { useDebounced } from '@/app/products/_api/hooks';
+import { formatIranianPrice } from '@/shared/utils';
 
 const { Text } = Typography;
 
@@ -346,25 +347,42 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                                 </div>
                                 <div className="ml-2 flex-shrink-0 text-left whitespace-nowrap">
                                   <div className="flex flex-col items-end gap-0.5 md:flex-row md:items-center md:gap-2">
-                                    {product.discount > 0 && (
+                                    {product.discount > 0 ? (
+                                      <>
+                                        <Text
+                                          delete
+                                          type="secondary"
+                                          className="text-[10px] whitespace-nowrap md:text-xs"
+                                        >
+                                          {formatIranianPrice(
+                                            Math.round(
+                                              product.price / (1 - product.discount / 100),
+                                            ),
+                                          )}
+                                        </Text>
+                                        <Text
+                                          strong
+                                          className="whitespace-nowrap text-pink-600"
+                                          style={{ fontSize: isMobile ? '13px' : '14px' }}
+                                        >
+                                          {formatIranianPrice(product.price)}{' '}
+                                          <span className="text-[10px] font-normal md:text-xs">
+                                            تومان
+                                          </span>
+                                        </Text>
+                                      </>
+                                    ) : (
                                       <Text
-                                        delete
-                                        type="secondary"
-                                        className="text-[10px] whitespace-nowrap md:text-xs"
+                                        strong
+                                        className="whitespace-nowrap text-pink-600"
+                                        style={{ fontSize: isMobile ? '13px' : '14px' }}
                                       >
-                                        {product.originalPrice?.toLocaleString('fa-IR')}
+                                        {formatIranianPrice(product.price)}{' '}
+                                        <span className="text-[10px] font-normal md:text-xs">
+                                          تومان
+                                        </span>
                                       </Text>
                                     )}
-                                    <Text
-                                      strong
-                                      className="whitespace-nowrap text-pink-600"
-                                      style={{ fontSize: isMobile ? '13px' : '14px' }}
-                                    >
-                                      {product.price.toLocaleString('fa-IR')}{' '}
-                                      <span className="text-[10px] font-normal md:text-xs">
-                                        تومان
-                                      </span>
-                                    </Text>
                                   </div>
                                   {product.rating > 0 && (
                                     <div className="mt-0.5 flex items-center gap-0.5 md:mt-1 md:gap-1">

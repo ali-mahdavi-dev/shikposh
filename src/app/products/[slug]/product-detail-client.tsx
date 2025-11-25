@@ -29,7 +29,7 @@ import { useSeller } from '@/app/seller/_api';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { addToCart } from '@/stores/slices/cartSlice';
 import { toggleWishlist } from '@/stores/slices/wishlistSlice';
-import { getValidImageSrc } from '@/shared/utils';
+import { getValidImageSrc, formatIranianPrice } from '@/shared/utils';
 
 // Lazy load components for better performance
 const ColorSelector = React.lazy(() => import('../_components/color-selector'));
@@ -149,10 +149,19 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
     }
   }, [product]);
 
-  // Reset selected size when color changes
+  // Reset and select first available size when color changes
   React.useEffect(() => {
+    // Reset size when color changes
     setSelectedSizeId('');
   }, [selectedColorId]);
+
+  // Select first available size when sizes are available and no size is selected
+  React.useEffect(() => {
+    if (availableSizes.length > 0 && selectedColorId && !selectedSizeId) {
+      const firstSizeId = availableSizes[0].id;
+      setSelectedSizeId(firstSizeId);
+    }
+  }, [availableSizes, selectedColorId, selectedSizeId]);
 
   // Memoize callbacks to prevent unnecessary re-renders
   const handleAddToCart = useCallback(() => {
@@ -419,20 +428,24 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                   <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg">
                     <div className="mb-4 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        {product.discount &&
-                        product.discount > 0 &&
-                        product.original_price > product.price ? (
+                        {(product.discount && product.discount > 0) || product.origin_price ? (
                           <>
                             <Text delete className="text-lg text-gray-400">
-                              {product.original_price.toLocaleString()} تومان
+                              {formatIranianPrice(
+                                product.origin_price ||
+                                  Math.round(
+                                    product.price / (1 - (product.discount || 0) / 100),
+                                  ),
+                              )}{' '}
+                              تومان
                             </Text>
                             <Text className="text-2xl font-bold text-red-600">
-                              {product.price.toLocaleString()} تومان
+                              {formatIranianPrice(product.price)} تومان
                             </Text>
                           </>
                         ) : (
                           <Text className="text-2xl font-bold text-pink-600">
-                            {product.price.toLocaleString()} تومان
+                            {formatIranianPrice(product.price)} تومان
                           </Text>
                         )}
                       </div>

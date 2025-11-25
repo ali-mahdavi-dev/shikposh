@@ -4,6 +4,7 @@ import React from 'react';
 import { Card, Button, Typography, Popconfirm } from 'antd';
 import Link from 'next/link';
 import Image from 'next/image';
+import { formatIranianPrice } from '@/shared/utils';
 
 const { Text } = Typography;
 
@@ -28,7 +29,7 @@ export function WishlistItem({ product, onMoveToCart, onRemove }: WishlistItemPr
           {product.image && <Image src={product.image} alt={product.name} fill className="object-cover" />}
         </div>
         <Text className="mb-2 block line-clamp-2 font-semibold text-gray-800">{product.name}</Text>
-        <Text className="mb-3 block text-pink-600">{product.price?.toLocaleString()} تومان</Text>
+        <Text className="mb-3 block text-pink-600">{formatIranianPrice(product.price || 0)} تومان</Text>
       </Link>
 
       <div className="flex gap-2">

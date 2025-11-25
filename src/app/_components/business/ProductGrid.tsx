@@ -11,7 +11,6 @@ export interface ProductGridProps {
     name: string;
     image?: string;
     price: number;
-    originalPrice?: number;
     discount?: number;
     rating: number;
     reviewCount: number;

@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge as BaseBadge } from '@/app/_components';
+import { formatIranianPrice } from '@/shared/utils';
 
 const { Text } = Typography;
 
@@ -17,7 +18,7 @@ export interface ProductCardProps {
     name: string;
     image?: string;
     price: number;
-    originalPrice?: number;
+    origin_price?: number;
     discount?: number;
     rating: number;
     reviewCount: number;
@@ -80,17 +81,25 @@ const ProductCard: React.FC<ProductCardProps> = memo(({ product, index, onAddToC
 
             <div className="flex items-center justify-between">
               <div className="flex flex-col">
-                {product.originalPrice &&
-                  product.price &&
-                  product.originalPrice > product.price && (
+                {(product.discount && product.discount > 0) || product.origin_price ? (
+                  <>
                     <Text delete className="text-sm text-gray-400">
-                      {product.originalPrice.toLocaleString()} تومان
+                      {formatIranianPrice(
+                        product.origin_price ||
+                          Math.round(product.price / (1 - (product.discount || 0) / 100)),
+                      )}{' '}
+                      تومان
                     </Text>
-                  )}
-                {product.price && (
-                  <Text className="text-lg font-bold text-pink-600">
-                    {product.price.toLocaleString()} تومان
-                  </Text>
+                    <Text className="text-lg font-bold text-pink-600">
+                      {formatIranianPrice(product.price)} تومان
+                    </Text>
+                  </>
+                ) : (
+                  product.price && (
+                    <Text className="text-lg font-bold text-pink-600">
+                      {formatIranianPrice(product.price)} تومان
+                    </Text>
+                  )
                 )}
               </div>
 

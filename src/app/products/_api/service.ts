@@ -80,7 +80,6 @@ export class ProductService {
         slug: product.slug,
         name: product.title,
         price: product.price || 0,
-        originalPrice: product.original_price,
         discount: product.discount || 0,
         rating: product.rating || 0,
         reviewCount: 0, // Not available in new API structure

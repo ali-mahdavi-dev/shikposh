@@ -1,9 +1,10 @@
 import React from 'react';
 import { cn } from '@/utils/cn';
+import { formatIranianPrice } from '@/shared/utils';
 
 export interface PriceDisplayProps {
   price: number;
-  originalPrice?: number;
+  discount?: number;
   currency?: string;
   locale?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -13,7 +14,7 @@ export interface PriceDisplayProps {
 
 export const PriceDisplay: React.FC<PriceDisplayProps> = ({
   price,
-  originalPrice,
+  discount = 0,
   currency = 'IRR',
   locale = 'fa-IR',
   size = 'md',
@@ -28,29 +29,23 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
   };
 
   const formatPrice = (amount: number) => {
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-    }).format(amount);
+    // Use formatIranianPrice to add 3 zeros at the beginning
+    return formatIranianPrice(amount);
   };
 
-  const calculateDiscount = () => {
-    if (originalPrice && originalPrice > price) {
-      return Math.round(((originalPrice - price) / originalPrice) * 100);
-    }
-    return 0;
+  // Calculate original price from current price and discount
+  const calculateOriginalPrice = (currentPrice: number, discountPercent: number): number => {
+    if (discountPercent <= 0 || discountPercent >= 100) return currentPrice;
+    return Math.round(currentPrice / (1 - discountPercent / 100));
   };
 
-  const discount = calculateDiscount();
+  const originalPrice = discount > 0 ? calculateOriginalPrice(price, discount) : null;
+  const hasDiscount = discount > 0 && originalPrice && originalPrice > price;
 
   return (
     <div className={cn('flex items-center gap-2', className)}>
-      {/* Current Price */}
-      <span className={cn('font-bold text-pink-600', priceSizes[size])}>{formatPrice(price)}</span>
-
-      {/* Original Price */}
-      {originalPrice && originalPrice > price && (
+      {/* Original Price (strikethrough) */}
+      {hasDiscount && (
         <span
           className={cn(
             'text-gray-400 line-through',
@@ -60,6 +55,9 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
           {formatPrice(originalPrice)}
         </span>
       )}
+
+      {/* Current Price */}
+      <span className={cn('font-bold text-pink-600', priceSizes[size])}>{formatPrice(price)}</span>
 
       {/* Discount Badge */}
       {showDiscount && discount > 0 && (

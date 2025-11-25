@@ -49,7 +49,6 @@ export interface Product {
   tags?: string[];
   image?: string;
   price?: number;
-  originalPrice?: number;
   discount?: number;
   isNew?: boolean;
   isFeatured?: boolean;

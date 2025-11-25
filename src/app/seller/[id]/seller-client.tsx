@@ -28,7 +28,6 @@ const convertToProductGridItem = (product: any): ProductGridProps['products'][nu
   slug: product.slug || String(product.id),
   name: product.name || product.title,
   price: product.price,
-  originalPrice: product.originalPrice,
   image: product.image,
   rating: product.rating,
   reviewCount: product.reviewCount,

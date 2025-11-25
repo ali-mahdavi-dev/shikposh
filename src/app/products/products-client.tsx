@@ -15,6 +15,7 @@ import { FilterOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icon
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/stores/hooks';
 import { addToCart } from '@/stores/slices/cartSlice';
+import { formatIranianPrice } from '@/shared/utils';
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -222,7 +223,9 @@ export default function ProductsClient() {
     if (selectedTags.length > 0) active.push(`تگ‌ها: ${selectedTags.join(', ')}`);
     if (onlyFeatured) active.push('ویژه');
     if (minPriceNum > 0 || maxPriceNum < 10_000_000) {
-      active.push(`قیمت: ${minPriceNum.toLocaleString()} - ${maxPriceNum.toLocaleString()} تومان`);
+      active.push(
+        `قیمت: ${formatIranianPrice(minPriceNum)} - ${formatIranianPrice(maxPriceNum)} تومان`,
+      );
     }
     if (minRating > 0) active.push(`حداقل امتیاز: ${minRating}`);
     if (sortBy !== 'relevance') {
@@ -319,14 +322,14 @@ export default function ProductsClient() {
                   <div className="flex flex-col gap-1">
                     <Text className="text-xs text-gray-500">حداقل قیمت</Text>
                     <Text className="text-base font-semibold text-gray-900">
-                      {priceRange[0].toLocaleString('fa-IR')} تومان
+                      {formatIranianPrice(priceRange[0])} تومان
                     </Text>
                   </div>
                   <div className="mx-2 text-gray-400">–</div>
                   <div className="flex flex-col gap-1">
                     <Text className="text-xs text-gray-500">حداکثر قیمت</Text>
                     <Text className="text-base font-semibold text-gray-900">
-                      {priceRange[1].toLocaleString('fa-IR')} تومان
+                      {formatIranianPrice(priceRange[1])} تومان
                     </Text>
                   </div>
                 </div>
@@ -338,7 +341,7 @@ export default function ProductsClient() {
                   value={priceRange}
                   onChange={(value) => setPriceRange(value as [number, number])}
                   tooltip={{
-                    formatter: (value) => `${value?.toLocaleString('fa-IR')} تومان`,
+                    formatter: (value) => `${formatIranianPrice(value || 0)} تومان`,
                   }}
                   className="!mb-0"
                 />
@@ -449,14 +452,14 @@ export default function ProductsClient() {
               <div className="flex flex-col gap-1">
                 <Text className="text-xs text-gray-500">حداقل قیمت</Text>
                 <Text className="text-base font-semibold text-gray-900">
-                  {priceRange[0].toLocaleString('fa-IR')} تومان
+                  {formatIranianPrice(priceRange[0])} تومان
                 </Text>
               </div>
               <div className="mx-2 text-gray-400">–</div>
               <div className="flex flex-col gap-1">
                 <Text className="text-xs text-gray-500">حداکثر قیمت</Text>
                 <Text className="text-base font-semibold text-gray-900">
-                  {priceRange[1].toLocaleString('fa-IR')} تومان
+                  {formatIranianPrice(priceRange[1])} تومان
                 </Text>
               </div>
             </div>

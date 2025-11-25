@@ -1,9 +1,5 @@
 import { apiService, PaginatedResponse } from '@/shared/services/api.service';
-import type {
-  ProductEntity,
-  ProductSummary,
-  CategoryEntity,
-} from './entities';
+import type { ProductEntity, ProductSummary, CategoryEntity } from './entities';
 
 export interface ProductFilters {
   q?: string;
@@ -131,7 +127,7 @@ export class HttpProductRepository implements ProductRepository {
         slug: product.slug,
         name: product.title,
         price: product.price || 0,
-        originalPrice: product.original_price,
+        origin_price: product.origin_price,
         discount: product.discount || 0,
         rating: product.rating || 0,
         reviewCount: 0, // Not available in new API structure
