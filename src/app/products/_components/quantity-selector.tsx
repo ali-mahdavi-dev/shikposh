@@ -56,7 +56,7 @@ const QuantitySelector: React.FC<QuantitySelectorProps> = ({
         </motion.div>
       </div>
 
-      {max < 10 && <Text className="text-xs text-gray-500">(حداکثر {max} عدد)</Text>}
+      {max < 4 && <Text className="text-xs text-gray-500">(حداکثر {max} عدد)</Text>}
     </div>
   );
 };

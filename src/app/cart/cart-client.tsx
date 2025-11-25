@@ -1,6 +1,7 @@
 'use client';
 import React, { useMemo, useEffect, useState } from 'react';
-import { Card, Button, Typography, InputNumber, Empty, Divider } from 'antd';
+import { Card, Button, Typography, InputNumber, Empty, Divider, Tag } from 'antd';
+import { GiftOutlined, DollarOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
@@ -44,9 +45,31 @@ export default function CartClient() {
       const price = item.price || 0;
       return sum + price * item.quantity;
     }, 0);
+
+    // Calculate total discount (savings)
+    // Formula: discount = price × discount% / (100 - discount%)
+    const totalDiscount = items.reduce((sum, item) => {
+      if (item.price && item.discount && item.discount > 0) {
+        // Calculate discount amount: price × discount / (100 - discount)
+        const discountAmount = Math.round((item.price * item.discount) / (100 - item.discount));
+        return sum + discountAmount * item.quantity;
+      }
+      return sum;
+    }, 0);
+
+    // Calculate tax (3% on subtotal)
+    const taxRate = 0.03; // 3%
+    const tax = Math.round(subtotal * taxRate);
+
+    // Calculate tax on discount (tax that would have been paid on the discount amount)
+    const taxOnDiscount = Math.round(totalDiscount * taxRate);
+
+    // Real savings = discount - tax on discount (rounded)
+    const realSavings = Math.round(totalDiscount - taxOnDiscount);
+
     const shipping = items.length > 0 ? 0 : 0;
-    const total = subtotal + shipping;
-    return { subtotal, shipping, total };
+    const total = subtotal + tax + shipping;
+    return { subtotal, shipping, total, totalDiscount, tax, realSavings };
   }, [items]);
 
   // During SSR and initial client render, show empty state to prevent hydration mismatch
@@ -88,8 +111,20 @@ export default function CartClient() {
                   key={`${item.productId}-${item.color}-${item.size}`}
                   className="!mt-4 rounded-2xl shadow-sm"
                 >
-                  <div className="flex items-center gap-4">
-                    {item.image && (
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                    {item.image && item.slug ? (
+                      <Link
+                        href={`/products/${item.slug}`}
+                        className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100"
+                      >
+                        <Image
+                          src={item.image}
+                          alt={item.name || 'محصول'}
+                          fill
+                          className="cursor-pointer object-cover transition-opacity hover:opacity-80"
+                        />
+                      </Link>
+                    ) : item.image ? (
                       <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
                         <Image
                           src={item.image}
@@ -98,16 +133,43 @@ export default function CartClient() {
                           className="object-cover"
                         />
                       </div>
-                    )}
+                    ) : null}
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
-                      <Text className="truncate font-semibold text-gray-800">
-                        {item.name || 'در حال بارگذاری...'}
-                      </Text>
-                      <Text className="text-sm text-gray-500">
+                      {item.slug ? (
+                        <Link href={`/products/${item.slug}`}>
+                          <Text className="cursor-pointer font-semibold break-words text-gray-800 transition-colors hover:text-pink-600">
+                            {item.name || 'در حال بارگذاری...'}
+                          </Text>
+                        </Link>
+                      ) : (
+                        <Text className="font-semibold break-words text-gray-800">
+                          {item.name || 'در حال بارگذاری...'}
+                        </Text>
+                      )}
+                      <Text className="text-sm break-words text-gray-500">
                         رنگ: {item.color} | سایز: {item.size}
                       </Text>
+                      {item.discount && item.discount > 0 && item.price ? (
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <Text className="text-sm whitespace-nowrap text-gray-400 line-through">
+                            {(
+                              (item.price +
+                                Math.round((item.price * item.discount) / (100 - item.discount))) *
+                              item.quantity
+                            ).toLocaleString('fa-IR')}{' '}
+                            تومان
+                          </Text>
+                          <Tag
+                            color="success"
+                            className="m-0 border-0 bg-gradient-to-r from-green-500 to-emerald-500 font-semibold text-white"
+                          >
+                            <GiftOutlined className="mr-1" />
+                            <span className="whitespace-nowrap">{item.discount}% تخفیف</span>
+                          </Tag>
+                        </div>
+                      ) : null}
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-end gap-3 sm:flex-row sm:items-center">
                       <InputNumber
                         min={1}
                         value={item.quantity}
@@ -121,13 +183,28 @@ export default function CartClient() {
                             }),
                           )
                         }
+                        className="w-full sm:w-auto"
                       />
                       {item.price ? (
-                        <Text className="w-24 text-left font-semibold text-pink-600">
-                          {(item.price * item.quantity).toLocaleString()} تومان
-                        </Text>
+                        <div className="flex flex-col items-end gap-1">
+                          <Text className="text-base font-bold whitespace-nowrap text-pink-600 sm:text-lg">
+                            {(item.price * item.quantity).toLocaleString('fa-IR')} تومان
+                          </Text>
+                          {item.discount && item.discount > 0 ? (
+                            <div className="flex items-center gap-1 rounded-lg bg-green-50 px-2 py-1">
+                              <DollarOutlined className="flex-shrink-0 text-xs text-green-600" />
+                              <Text className="text-xs font-semibold whitespace-nowrap text-green-600">
+                                {(
+                                  Math.round((item.price * item.discount) / (100 - item.discount)) *
+                                  item.quantity
+                                ).toLocaleString('fa-IR')}{' '}
+                                تومان صرفه‌جویی
+                              </Text>
+                            </div>
+                          ) : null}
+                        </div>
                       ) : (
-                        <Text className="w-24 text-left text-gray-400">در حال بارگذاری...</Text>
+                        <Text className="text-left text-gray-400 sm:w-24">در حال بارگذاری...</Text>
                       )}
                       <Button
                         danger
@@ -140,6 +217,7 @@ export default function CartClient() {
                             }),
                           )
                         }
+                        className="w-full sm:w-auto"
                       >
                         حذف
                       </Button>
@@ -154,25 +232,59 @@ export default function CartClient() {
                 <Title level={4} className="mb-4 text-gray-800">
                   خلاصه سفارش
                 </Title>
-                <div className="space-y-2 text-sm">
+                <div className="space-y-3 text-sm">
                   <div className="flex items-center justify-between">
-                    <Text className="text-gray-600">جمع جزء</Text>
-                    <Text className="font-semibold">{totals.subtotal.toLocaleString()} تومان</Text>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Text className="text-gray-600">هزینه ارسال</Text>
-                    <Text className="font-semibold">
-                      {totals.shipping === 0
-                        ? 'رایگان'
-                        : `${totals.shipping.toLocaleString()} تومان`}
+                    <Text className="break-words text-gray-600">جمع جزء</Text>
+                    <Text className="font-semibold whitespace-nowrap text-gray-800">
+                      {totals.subtotal.toLocaleString('fa-IR')} تومان
                     </Text>
                   </div>
+                  {totals.totalDiscount > 0 && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-red-50 p-2">
+                      <div className="flex items-center gap-2">
+                        <GiftOutlined className="flex-shrink-0 text-red-500" />
+                        <Text className="font-medium text-gray-700">تخفیف</Text>
+                      </div>
+                      <Text className="font-bold whitespace-nowrap text-red-600">
+                        -{totals.totalDiscount.toLocaleString('fa-IR')} تومان
+                      </Text>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <Text className="break-words text-gray-600">مالیات (3%)</Text>
+                    <Text className="font-semibold whitespace-nowrap text-gray-800">
+                      {totals.tax.toLocaleString('fa-IR')} تومان
+                    </Text>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Text className="break-words text-gray-600">هزینه ارسال</Text>
+                    <Text className="font-semibold whitespace-nowrap text-gray-800">
+                      {totals.shipping === 0
+                        ? 'رایگان'
+                        : `${totals.shipping.toLocaleString('fa-IR')} تومان`}
+                    </Text>
+                  </div>
+                  {totals.realSavings > 0 && (
+                    <div className="rounded-xl border-2 border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-3">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-2">
+                          <DollarOutlined className="flex-shrink-0 text-lg text-green-600" />
+                          <Text className="font-bold text-green-700">سود شما</Text>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Text className="text-lg font-extrabold whitespace-nowrap text-green-600">
+                            {totals.realSavings.toLocaleString('fa-IR')} تومان
+                          </Text>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <Divider className="my-4" />
                 <div className="mb-4 flex items-center justify-between text-base">
                   <Text className="text-gray-700">مبلغ قابل پرداخت</Text>
                   <Text className="text-xl font-extrabold text-pink-600">
-                    {totals.total.toLocaleString()} تومان
+                    {totals.total.toLocaleString('fa-IR')} تومان
                   </Text>
                 </div>
                 <div className="flex flex-col gap-2">

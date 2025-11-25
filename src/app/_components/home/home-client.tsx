@@ -92,15 +92,22 @@ const HomeClient: React.FC<HomeClientProps> = ({
       const product = featuredProducts.find((p: any) => String(p.id) === String(productId));
       if (!product) return;
 
-      const colors = product.colors ? Object.keys(product.colors) : [];
+      // Get color name from colors object (key is ID, value has name)
+      const colorKeys = product.colors ? Object.keys(product.colors) : [];
+      const firstColorId = colorKeys[0];
+      const colorName =
+        firstColorId && product.colors[firstColorId]
+          ? product.colors[firstColorId].name
+          : 'default';
+
+      // Sizes is already an array of names
       const sizes = product.sizes || [];
-      const firstColor = colors[0] || 'default';
-      const firstSize = sizes[0] || 'default';
+      const firstSize = sizes[0] || '';
 
       dispatch(
         addToCart({
           productId: String(product.id),
-          color: firstColor,
+          color: colorName,
           size: firstSize,
           quantity: 1,
           price: product.price,

@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useMemo, useCallback, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   Button,
@@ -23,7 +24,7 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { ProductDetailProps } from './_types';
-import { useProduct, useProductsByCategory } from '../_api';
+import { useProduct, useProductsByCategory, useCategories } from '../_api';
 import { useSeller } from '@/app/seller/_api';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { addToCart } from '@/stores/slices/cartSlice';
@@ -42,6 +43,9 @@ const ProfileCard = React.lazy(() => import('@/app/profile/_components/profile-c
 const { Title, Paragraph, Text } = Typography;
 
 export default function ProductDetailClient({ productId = '1' }: ProductDetailProps) {
+  // Next.js router for navigation
+  const router = useRouter();
+
   // Redux hooks
   const dispatch = useAppDispatch();
   const { message } = AntApp.useApp();
@@ -57,9 +61,21 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
     error: sellerError,
   } = useSeller(productData?.seller_id ? String(productData.seller_id) : '');
 
-  // Get related products from API based on product category
-  const categoryName = productData?.categories?.[0]?.name || '';
-  const { data: relatedProductsData = [] } = useProductsByCategory(categoryName);
+  // Get all categories to find category slug
+  const { data: categories = [] } = useCategories();
+
+  // Get category slug from product's category ID
+  const categorySlug = useMemo(() => {
+    if (!productData?.categories?.[0]?.id || !categories.length) {
+      return '';
+    }
+    const categoryId = productData.categories[0].id;
+    const category = categories.find((cat) => String(cat.id) === String(categoryId));
+    return category?.slug || '';
+  }, [productData?.categories, categories]);
+
+  // Get related products from API based on product category slug
+  const { data: relatedProductsData = [] } = useProductsByCategory(categorySlug);
 
   // Use product data from React Query
   const product = productData;
@@ -141,11 +157,19 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
   // Memoize callbacks to prevent unnecessary re-renders
   const handleAddToCart = useCallback(() => {
     if (product) {
+      // Get color name from color ID
+      const colorName =
+        product.colors?.find((c) => c.id.toString() === selectedColorId)?.name || selectedColorId;
+
+      // Get size name from size ID
+      const sizeName =
+        product.sizes?.find((s) => s.id.toString() === selectedSizeId)?.name || selectedSizeId;
+
       dispatch(
         addToCart({
           productId: String(product.id),
-          color: selectedColorId,
-          size: selectedSizeId,
+          color: colorName,
+          size: sizeName,
           quantity: quantity,
           price: product.price,
           name: product.title,
@@ -341,7 +365,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                           color="pink"
                           className="cursor-pointer transition-all hover:scale-105"
                           onClick={() => {
-                            window.location.href = `/products?tags=${encodeURIComponent(tag)}`;
+                            router.push(`/products?tags=${encodeURIComponent(tag)}`);
                           }}
                         >
                           {tag}

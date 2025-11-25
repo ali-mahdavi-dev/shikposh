@@ -112,7 +112,12 @@ export default function ProductsClient() {
   // Pagination
   const [visibleCount, setVisibleCount] = useState(24);
   const visibleProducts = useMemo(
-    () => filteredProducts.slice(0, visibleCount),
+    () =>
+      filteredProducts.slice(0, visibleCount).map((product) => ({
+        ...product,
+        id: String(product.id),
+        slug: product.slug || String(product.id),
+      })),
     [filteredProducts, visibleCount],
   );
 
@@ -162,16 +167,29 @@ export default function ProductsClient() {
     const product = allProducts.find((p: any) => String(p.id) === String(id));
     if (!product) return;
 
-    const colors = product.colors ? Object.keys(product.colors) : [];
+    // Get color name from colors array (ProductEntity has colors as array)
+    const colorName =
+      product.colors && product.colors.length > 0 ? product.colors[0].name : 'default';
+
+    // Get first image from images or use thumbnail
+    let productImage = product.thumbnail || '';
+    if (product.images && Object.keys(product.images).length > 0) {
+      const firstColorId = Object.keys(product.images)[0];
+      const firstColorImages = product.images[firstColorId];
+      if (firstColorImages && firstColorImages.length > 0) {
+        productImage = firstColorImages[0];
+      }
+    }
+
     dispatch(
       addToCart({
         productId: String(product.id),
-        color: colors[0] || 'default',
+        color: colorName,
         size: '', // No size in new structure
         quantity: 1,
         price: product.price,
-        name: product.name,
-        image: product.image,
+        name: product.title,
+        image: productImage,
       }),
     );
   };

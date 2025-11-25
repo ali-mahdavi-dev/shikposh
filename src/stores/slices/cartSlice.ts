@@ -18,6 +18,7 @@ export interface CartItem {
   name?: string;
   image?: string;
   discount?: number;
+  slug?: string;
 }
 
 interface CartState {
@@ -131,7 +132,7 @@ const cartSlice = createSlice({
     updateCartItemsWithProductData: (
       state,
       action: PayloadAction<
-        Array<{ id: string; name: string; image: string; price: number; discount: number }>
+        Array<{ id: string; name: string; image: string; price: number; discount: number; slug: string }>
       >,
     ) => {
       const productMap = new Map(action.payload.map((p) => [p.id, p]));
@@ -142,6 +143,7 @@ const cartSlice = createSlice({
           item.image = product.image;
           item.price = product.price;
           item.discount = product.discount;
+          item.slug = product.slug;
         }
       });
     },

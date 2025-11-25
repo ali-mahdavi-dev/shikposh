@@ -25,7 +25,8 @@ interface SellerClientProps {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const convertToProductGridItem = (product: any): ProductGridProps['products'][number] => ({
   id: product.id,
-  name: product.name,
+  slug: product.slug || String(product.id),
+  name: product.name || product.title,
   price: product.price,
   originalPrice: product.originalPrice,
   image: product.image,
@@ -129,21 +130,38 @@ export default function SellerClient({ sellerId }: SellerClientProps) {
                 products={sellerProducts}
                 cols={4}
                 onAddToCart={(id) => {
-                  const p = (products as any[]).find((sp) => sp.id === id);
+                  const p = (products as any[]).find((sp) => String(sp.id) === String(id));
                   if (!p) return;
-                  const colors = p.colors ? Object.keys(p.colors) : [];
-                  const sizes = p.sizes || [];
-                  const firstColor = colors[0] || 'default';
-                  const firstSize = sizes[0] || 'default';
+
+                  // Get color name from colors array (ProductEntity has colors as array)
+                  const colorName =
+                    p.colors && Array.isArray(p.colors) && p.colors.length > 0
+                      ? p.colors[0].name
+                      : 'default';
+
+                  // Get size name from sizes array (ProductEntity has sizes as array)
+                  const sizeName =
+                    p.sizes && Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes[0].name : '';
+
+                  // Get first image from images or use thumbnail
+                  let productImage = p.thumbnail || '';
+                  if (p.images && Object.keys(p.images).length > 0) {
+                    const firstColorId = Object.keys(p.images)[0];
+                    const firstColorImages = p.images[firstColorId];
+                    if (firstColorImages && firstColorImages.length > 0) {
+                      productImage = firstColorImages[0];
+                    }
+                  }
+
                   dispatch(
                     addToCart({
-                      productId: p.id,
-                      color: firstColor,
-                      size: firstSize,
+                      productId: String(p.id),
+                      color: colorName,
+                      size: sizeName,
                       quantity: 1,
                       price: p.price,
-                      name: p.name,
-                      image: p.image,
+                      name: p.title,
+                      image: productImage,
                     }),
                   );
                   message.success('به سبد خرید اضافه شد');
@@ -200,4 +218,3 @@ export default function SellerClient({ sellerId }: SellerClientProps) {
     </div>
   );
 }
-

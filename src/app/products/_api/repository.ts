@@ -23,6 +23,7 @@ export interface CartProduct {
   price: number;
   discount: number;
   hasDiscount: boolean;
+  slug: string;
 }
 
 export interface ProductRepository {
