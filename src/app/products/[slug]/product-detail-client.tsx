@@ -266,14 +266,16 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                         برند معتبر
                       </Tag>
                     </div>
-                    <Title level={2} className="mb-3 text-gray-800">
-                      {product.title}
+                    <div className="relative mb-3">
                       {product.discount && product.discount > 0 && (
                         <Badge.Ribbon text={`${product.discount}% تخفیف`} color="red">
-                          <div></div>
+                          <div />
                         </Badge.Ribbon>
                       )}
-                    </Title>
+                      <Title level={2} className="mb-0 text-gray-800">
+                        {product.title}
+                      </Title>
+                    </div>
 
                     <div className="mb-4 flex items-center gap-3">
                       <Rate allowHalf disabled value={averageRating} className="text-sm" />

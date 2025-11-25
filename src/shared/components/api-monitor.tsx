@@ -16,6 +16,17 @@ interface ApiMonitorProps {
   refreshInterval?: number;
 }
 
+// Format date consistently to avoid hydration mismatch
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}/${month}/${day} ${hours}:${minutes}`;
+}
+
 export const ApiMonitor: React.FC<ApiMonitorProps> = ({
   showDetails = false,
   autoRefresh = true,
@@ -23,6 +34,7 @@ export const ApiMonitor: React.FC<ApiMonitorProps> = ({
 }) => {
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   const checkHealth = async () => {
     setLoading(true);
@@ -37,6 +49,7 @@ export const ApiMonitor: React.FC<ApiMonitorProps> = ({
   };
 
   useEffect(() => {
+    setIsMounted(true);
     checkHealth();
 
     if (autoRefresh) {
@@ -142,7 +155,10 @@ export const ApiMonitor: React.FC<ApiMonitorProps> = ({
             </div>
 
             <div className="text-center text-xs text-gray-500">
-              آخرین بررسی: {new Date(healthStatus.timestamp).toLocaleString('fa-IR')}
+              آخرین بررسی:{' '}
+              {isMounted
+                ? new Date(healthStatus.timestamp).toLocaleString('fa-IR')
+                : formatDate(healthStatus.timestamp)}
             </div>
           </>
         )}

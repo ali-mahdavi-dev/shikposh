@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout, Typography, Row, Col, Button, Divider, Input } from 'antd';
 import {
   InstagramOutlined,
@@ -25,7 +25,11 @@ const { Footer: AntFooter } = Layout;
 const { Title, Text, Paragraph } = Typography;
 
 const Footer: React.FC = () => {
-  const currentYear = new Date().getFullYear();
+  const [currentYear, setCurrentYear] = useState(2024);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
   const { message } = AntApp.useApp();
   const [email, setEmail] = useState('');
 
