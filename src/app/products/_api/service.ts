@@ -21,10 +21,6 @@ export class ProductService {
   }
 
   async getProductsByCategory(category: string): Promise<ProductSummary[]> {
-    if (category === 'all') {
-      const allProducts = await this.productRepository.getAllProducts();
-      return this.mapToProductSummary(allProducts);
-    }
     return this.productRepository.getProductsByCategory(category);
   }
 
@@ -41,6 +37,13 @@ export class ProductService {
 
   async getAllCategories(): Promise<CategoryEntity[]> {
     return this.productRepository.getAllCategories();
+  }
+
+  async getCategoryBySlug(slug: string): Promise<CategoryEntity> {
+    if (!slug) {
+      throw new Error('Category slug is required');
+    }
+    return this.productRepository.getCategoryBySlug(slug);
   }
 
   async getProductsForCart(productIds: string[]): Promise<CartProduct[]> {

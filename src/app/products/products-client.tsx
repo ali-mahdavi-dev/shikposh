@@ -89,12 +89,15 @@ export default function ProductsClient() {
   // Fetch filtered products from API
   const { data: filteredProducts = [], isLoading, error } = useFilteredProducts(filters);
 
-  // Extract unique categories
-  const categoryNames = useMemo(() => {
+  // Extract unique categories with slug for filtering
+  const categoryOptions = useMemo(() => {
     const seen = new Set<string>();
-    return (categories as any[])
-      .map((c) => (c?.name ?? '').toString().trim())
-      .filter((n) => n && n !== 'همه' && !seen.has(n) && (seen.add(n), true));
+    return categories
+      .filter((c) => c?.slug && !seen.has(c.slug) && (seen.add(c.slug), true))
+      .map((c) => ({
+        slug: c.slug,
+        name: c.name,
+      }));
   }, [categories]);
 
   // Extract unique tags from all products (for filter options)
@@ -309,9 +312,9 @@ export default function ProductsClient() {
                 <Text className="text-sm text-gray-600">دسته‌بندی</Text>
                 <Select value={category} onChange={setCategory} className="w-full">
                   <Option value="all">همه</Option>
-                  {categoryNames.map((name) => (
-                    <Option key={name} value={name}>
-                      {name}
+                  {categoryOptions.map((cat) => (
+                    <Option key={cat.slug} value={cat.slug}>
+                      {cat.name}
                     </Option>
                   ))}
                 </Select>
@@ -439,9 +442,9 @@ export default function ProductsClient() {
             <Text className="text-sm text-gray-600">دسته‌بندی</Text>
             <Select value={category} onChange={setCategory} className="w-full">
               <Option value="all">همه</Option>
-              {categoryNames.map((name) => (
-                <Option key={name} value={name}>
-                  {name}
+              {categoryOptions.map((cat) => (
+                <Option key={cat.slug} value={cat.slug}>
+                  {cat.name}
                 </Option>
               ))}
             </Select>

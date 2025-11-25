@@ -138,7 +138,6 @@ export default function RootLayout({
                         </div>
                       )}
 
-
                       {/* Header with Suspense */}
                       <Suspense fallback={<LayoutLoading />}>
                         <Header />

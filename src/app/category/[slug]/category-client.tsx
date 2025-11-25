@@ -13,17 +13,22 @@ const { Option } = Select;
 
 interface CategoryClientProps {
   categoryName: string;
+  categorySlug: string;
 }
 
-export default function CategoryClient({ categoryName }: CategoryClientProps) {
+export default function CategoryClient({ categoryName, categorySlug }: CategoryClientProps) {
   const dispatch = useAppDispatch();
   const [sortBy, setSortBy] = useState('relevance');
 
   // Get all products for add to cart (need full product data)
   const { data: allProducts = [] } = useProducts();
 
-  // Fetch products by category
-  const { data: categoryProducts = [], isLoading, error } = useProductsByCategory(categoryName);
+  // Fetch products by category (use slug for API)
+  const {
+    data: categoryProducts = [],
+    isLoading,
+    error,
+  } = useProductsByCategory(categorySlug === 'all' ? 'all' : categorySlug);
 
   // Sort products
   const sortedProducts = useMemo(() => {
@@ -51,15 +56,24 @@ export default function CategoryClient({ categoryName }: CategoryClientProps) {
 
   // Pagination
   const [visibleCount, setVisibleCount] = useState(24);
-  const visibleProducts = useMemo(
-    () =>
-      sortedProducts.slice(0, visibleCount).map((product) => ({
-        ...product,
+  const visibleProducts = useMemo(() => {
+    return sortedProducts.slice(0, visibleCount).map((product) => {
+      // Ensure all required fields are present
+      return {
         id: String(product.id),
         slug: product.slug || String(product.id),
-      })),
-    [sortedProducts, visibleCount],
-  );
+        name: product.name || '',
+        image: product.image || '',
+        price: product.price || 0,
+        discount: product.discount || 0,
+        rating: product.rating || 0,
+        reviewCount: product.reviewCount || 0,
+        isNew: product.isNew || false,
+        isFeatured: product.isFeatured || false,
+        origin_price: product.origin_price,
+      };
+    });
+  }, [sortedProducts, visibleCount]);
 
   // Reset pagination when sort changes
   React.useEffect(() => {

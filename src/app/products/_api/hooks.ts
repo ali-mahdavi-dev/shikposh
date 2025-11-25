@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { ProductContainer } from './container';
 import type { ProductEntity, ProductSummary, CategoryEntity } from './entities';
 import type { ProductFilters } from './repository';
@@ -80,6 +80,15 @@ export const useCategories = () => {
   return useQuery<CategoryEntity[]>({
     queryKey: ['categories'],
     queryFn: () => productService.getAllCategories(),
+    staleTime: 30 * 60 * 1000, // 30 minutes
+  });
+};
+
+export const useCategoryBySlug = (slug: string) => {
+  return useQuery<CategoryEntity>({
+    queryKey: ['categories', slug],
+    queryFn: () => productService.getCategoryBySlug(slug),
+    enabled: !!slug,
     staleTime: 30 * 60 * 1000, // 30 minutes
   });
 };

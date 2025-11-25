@@ -1,6 +1,7 @@
 import React from 'react';
 import { Metadata } from 'next';
 import CategoryClient from './category-client';
+import { ProductContainer } from '@/app/products/_api/container';
 
 interface CategoryPageProps {
   params: Promise<{
@@ -8,18 +9,20 @@ interface CategoryPageProps {
   }>;
 }
 
-// Mapping between slug and category name
-const categoryMapping: Record<string, string> = {
-  dresses: 'پیراهن و لباس مجلسی',
-  tops: 'بلوز و تاپ',
-  skirts: 'دامن',
-  pants: 'شلوار',
-  accessories: 'اکسسوری',
-};
+async function getCategoryName(slug: string): Promise<string> {
+  try {
+    const productService = ProductContainer.getProductService();
+    const category = await productService.getCategoryBySlug(slug);
+    return category?.name || slug;
+  } catch (error) {
+    console.error('Error fetching category:', error);
+    return slug;
+  }
+}
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const categoryName = categoryMapping[slug] || slug;
+  const categoryName = await getCategoryName(slug);
 
   return {
     title: `${categoryName} | شیک‌پوشان`,
@@ -29,7 +32,7 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
-  const categoryName = categoryMapping[slug] || slug;
+  const categoryName = await getCategoryName(slug);
 
-  return <CategoryClient categoryName={categoryName} />;
+  return <CategoryClient categoryName={categoryName} categorySlug={slug} />;
 }

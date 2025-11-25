@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/stores/hooks';
 import { useLogout } from '@/app/auth/_api';
+import { useCategories } from '@/app/products/_api';
 import { MobileHeader } from './mobile-header';
 import { TabletHeader } from './tablet-header';
 import { DesktopHeader } from './desktop-header';
@@ -44,6 +45,7 @@ const Header: React.FC<HeaderProps> = ({ wishlistCount = 5 }) => {
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const user = useAppSelector((state) => state.auth.user);
   const logoutMutation = useLogout();
+  const { data: categories = [] } = useCategories();
   const [searchValue, setSearchValue] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
@@ -136,79 +138,22 @@ const Header: React.FC<HeaderProps> = ({ wishlistCount = 5 }) => {
   );
 
   const categoryMenuItems: MenuProps['items'] = useMemo(
-    () => [
-      {
-        key: 'dresses',
+    () =>
+      categories.map((category) => ({
+        key: category.slug || category.id,
         label: (
           <Link
-            href="/category/dresses"
+            href={`/category/${category.slug}`}
             className="block rounded-lg px-4 py-2 transition-colors hover:bg-pink-50"
           >
             <span className="flex items-center gap-2">
               <FireOutlined className="text-pink-500" />
-              پیراهن و لباس مجلسی
+              {category.name}
             </span>
           </Link>
         ),
-      },
-      {
-        key: 'tops',
-        label: (
-          <Link
-            href="/category/tops"
-            className="block rounded-lg px-4 py-2 transition-colors hover:bg-pink-50"
-          >
-            <span className="flex items-center gap-2">
-              <FireOutlined className="text-pink-500" />
-              بلوز و تاپ
-            </span>
-          </Link>
-        ),
-      },
-      {
-        key: 'skirts',
-        label: (
-          <Link
-            href="/category/skirts"
-            className="block rounded-lg px-4 py-2 transition-colors hover:bg-pink-50"
-          >
-            <span className="flex items-center gap-2">
-              <FireOutlined className="text-pink-500" />
-              دامن
-            </span>
-          </Link>
-        ),
-      },
-      {
-        key: 'pants',
-        label: (
-          <Link
-            href="/category/pants"
-            className="block rounded-lg px-4 py-2 transition-colors hover:bg-pink-50"
-          >
-            <span className="flex items-center gap-2">
-              <FireOutlined className="text-pink-500" />
-              شلوار
-            </span>
-          </Link>
-        ),
-      },
-      {
-        key: 'accessories',
-        label: (
-          <Link
-            href="/category/accessories"
-            className="block rounded-lg px-4 py-2 transition-colors hover:bg-pink-50"
-          >
-            <span className="flex items-center gap-2">
-              <FireOutlined className="text-pink-500" />
-              اکسسوری
-            </span>
-          </Link>
-        ),
-      },
-    ],
-    [],
+      })),
+    [categories],
   );
 
   const handleSearch = (value: string) => {

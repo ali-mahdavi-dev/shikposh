@@ -30,6 +30,7 @@ export interface ProductRepository {
   searchProducts(query: string): Promise<ProductSummary[]>;
   getFilteredProducts(filters: ProductFilters): Promise<ProductSummary[]>;
   getAllCategories(): Promise<CategoryEntity[]>;
+  getCategoryBySlug(slug: string): Promise<CategoryEntity>;
   getProductsForCart(productIds: string[]): Promise<CartProduct[]>;
 }
 
@@ -87,7 +88,23 @@ export class HttpProductRepository implements ProductRepository {
   }
 
   async getAllCategories(): Promise<CategoryEntity[]> {
-    return apiService.get<CategoryEntity[]>('/api/v1/public/categories');
+    const categories = await apiService.get<CategoryEntity[]>('/api/v1/public/categories');
+    // Ensure all IDs are strings and map parent_id correctly
+    return categories.map((category) => ({
+      ...category,
+      id: String(category.id),
+      parentId: category.parentId ? String(category.parentId) : undefined,
+    }));
+  }
+
+  async getCategoryBySlug(slug: string): Promise<CategoryEntity> {
+    const category = await apiService.get<CategoryEntity>(`/api/v1/public/categories/${slug}`);
+    // Ensure ID is string and map parent_id correctly
+    return {
+      ...category,
+      id: String(category.id),
+      parentId: category.parentId ? String(category.parentId) : undefined,
+    };
   }
 
   async getProductsForCart(productIds: string[]): Promise<CartProduct[]> {

@@ -6,6 +6,7 @@ import { App as AntApp } from 'antd';
 import { useAppDispatch } from '@/stores/hooks';
 import { addToCart } from '@/stores/slices/cartSlice';
 import { useFeaturedProducts, useCategories } from '@/app/products/_api';
+import type { CategoryEntity } from '@/app/products/_api/entities/category.entity';
 import { ProductCard, CategoryCard } from '@/app/_components/business';
 import { HomeSkeleton } from '@/app/_components/skeleton';
 
@@ -21,7 +22,7 @@ const categoryImages = [
 ];
 
 interface HomeClientProps {
-  initialCategories?: any[];
+  initialCategories?: CategoryEntity[];
   initialProducts?: any[];
 }
 
@@ -173,19 +174,18 @@ const HomeClient: React.FC<HomeClientProps> = ({
           <Text className="text-gray-600">محصولات برتر را در دسته‌بندی مورد نظر خود پیدا کنید</Text>
         </div>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {categories.map((category: any, index: number) => {
-            // Ensure categoryId is always a string and unique
-            const categoryId = String(category.id || category.slug || `category-${index}`);
-            const isSelected = selectedCategory === categoryId;
+          {categories.map((category, index: number) => {
+            // Use slug as the identifier for filtering
+            const categorySlug = category.slug || String(category.id);
+            const isSelected = selectedCategory === categorySlug;
 
             return (
               <CategoryCard
-                key={categoryId}
+                key={categorySlug}
                 category={{
-                  id: categoryId,
+                  id: categorySlug,
                   name: category.name,
                   count: category.productCount || 0,
-                  color: category.color,
                   image: category.image || categoryImages[index % categoryImages.length],
                 }}
                 index={index}
