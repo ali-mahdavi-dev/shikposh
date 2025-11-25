@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { useSearchProducts } from '@/app/products/_api/hooks';
 import { useDebounced } from '@/app/products/_api/hooks';
 import { formatIranianPrice } from '@/shared/utils';
+import { DEFAULT_IMAGES } from '@/shared/utils/image';
 
 const { Text } = Typography;
 
@@ -309,11 +310,15 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                               className={`relative ${isMobile ? 'h-14 w-14' : 'h-20 w-20'} flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 md:rounded-xl`}
                             >
                               <Image
-                                src={product.image || '/placeholder-product.jpg'}
+                                src={product.image || DEFAULT_IMAGES.product}
                                 alt={product.name}
                                 fill
                                 className="object-cover"
                                 sizes={isMobile ? '56px' : '80px'}
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = DEFAULT_IMAGES.product;
+                                }}
                               />
                               {product.isNew && (
                                 <div className="absolute top-0.5 left-0.5 rounded bg-green-500 px-1 py-0.5 text-[10px] text-white md:top-1 md:left-1 md:px-1.5 md:py-0.5 md:text-xs">

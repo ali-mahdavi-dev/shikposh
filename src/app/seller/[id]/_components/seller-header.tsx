@@ -6,7 +6,7 @@ import { BellOutlined, CheckOutlined, ShopOutlined, CalendarOutlined } from '@an
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import type { Seller } from '../_types';
-import { getValidImageSrc } from '@/shared/utils';
+import { getValidImageSrc, DEFAULT_IMAGES } from '@/shared/utils/image';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -38,6 +38,10 @@ export function SellerHeader({
               fill
               className="object-cover"
               priority
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = DEFAULT_IMAGES.banner;
+              }}
             />
           </div>
         ) : (
@@ -69,6 +73,10 @@ export function SellerHeader({
                           fill
                           className="object-cover"
                           sizes="(max-width: 640px) 112px, (max-width: 1024px) 128px, 144px"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = DEFAULT_IMAGES.avatar;
+                          }}
                         />
                       </div>
                     </div>

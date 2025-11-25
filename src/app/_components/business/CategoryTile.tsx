@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Typography } from 'antd';
 import { AppstoreOutlined, RightOutlined } from '@ant-design/icons';
+import { getValidImageSrc, DEFAULT_IMAGES } from '@/shared/utils/image';
 
 const { Title } = Typography;
 
@@ -25,17 +26,26 @@ export const CategoryTile: React.FC<CategoryTileProps> = ({
   icon,
   countSuffix = 'محصول',
 }) => {
+  const [imageSrc, setImageSrc] = useState(() =>
+    getValidImageSrc(thumbnail, DEFAULT_IMAGES.category),
+  );
+
+  const handleImageError = () => {
+    setImageSrc(DEFAULT_IMAGES.category);
+  };
+
   const content = (
     <div className="group h-full cursor-pointer">
       <div className="relative flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
         {/* Thumbnail */}
         <div className="relative aspect-[4/3] w-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-pink-100 to-purple-100">
           <Image
-            src={thumbnail}
+            src={imageSrc}
             alt={name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover transition-transform duration-500 group-hover:scale-110"
+            onError={handleImageError}
           />
 
           {/* Gradient Overlay */}

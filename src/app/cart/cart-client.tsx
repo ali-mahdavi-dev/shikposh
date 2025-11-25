@@ -13,6 +13,7 @@ import {
 } from '@/stores/slices/cartSlice';
 import { useProductsForCart } from '@/app/products/_api';
 import { formatIranianPrice } from '@/shared/utils';
+import { getValidImageSrc, DEFAULT_IMAGES } from '@/shared/utils/image';
 
 const { Title, Text } = Typography;
 
@@ -113,28 +114,39 @@ export default function CartClient() {
                   className="!mt-4 rounded-2xl shadow-sm"
                 >
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                    {item.image && item.slug ? (
-                      <Link
-                        href={`/products/${item.slug}`}
-                        className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100"
-                      >
+                    {(() => {
+                      const imageSrc = getValidImageSrc(item.image, DEFAULT_IMAGES.product);
+                      const imageElement = (
                         <Image
-                          src={item.image}
-                          alt={item.name || 'محصول'}
-                          fill
-                          className="cursor-pointer object-cover transition-opacity hover:opacity-80"
-                        />
-                      </Link>
-                    ) : item.image ? (
-                      <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
-                        <Image
-                          src={item.image}
+                          src={imageSrc}
                           alt={item.name || 'محصول'}
                           fill
                           className="object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            if (target.src !== DEFAULT_IMAGES.product) {
+                              target.src = DEFAULT_IMAGES.product;
+                            }
+                          }}
                         />
-                      </div>
-                    ) : null}
+                      );
+
+                      if (item.slug) {
+                        return (
+                          <Link
+                            href={`/products/${item.slug}`}
+                            className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100"
+                          >
+                            {imageElement}
+                          </Link>
+                        );
+                      }
+                      return (
+                        <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
+                          {imageElement}
+                        </div>
+                      );
+                    })()}
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
                       {item.slug ? (
                         <Link href={`/products/${item.slug}`}>

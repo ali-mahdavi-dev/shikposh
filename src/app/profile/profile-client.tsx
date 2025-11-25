@@ -21,6 +21,7 @@ import { PostCard, PlaylistCard } from './_components';
 import { ProductGridSkeleton } from '@/app/_components/skeleton';
 import type { Playlist } from './_types';
 import { Badge as AntBadge } from 'antd';
+import { DEFAULT_IMAGES, getValidImageSrc } from '@/shared/utils/image';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -123,7 +124,17 @@ export default function ProfileClient() {
       <div className="relative h-48 w-full overflow-hidden bg-gradient-to-r from-pink-500 via-purple-500 to-pink-600 sm:h-56 md:h-64 lg:h-72">
         {bannerImage ? (
           <div className="relative h-full w-full">
-            <Image src={bannerImage} alt="Profile Banner" fill className="object-cover" priority />
+            <Image
+              src={bannerImage}
+              alt="Profile Banner"
+              fill
+              className="object-cover"
+              priority
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = DEFAULT_IMAGES.banner;
+              }}
+            />
           </div>
         ) : (
           <div className="relative h-full w-full">
@@ -149,11 +160,15 @@ export default function ProfileClient() {
                     <div className="relative h-full w-full rounded-full bg-white p-1">
                       <div className="absolute inset-1 overflow-hidden rounded-full">
                         <Image
-                          src="/images/suit-Top.jpg"
+                          src={getValidImageSrc('/images/suit-Top.jpg', DEFAULT_IMAGES.avatar)}
                           alt="فروشنده تست"
                           fill
                           className="object-cover"
                           sizes="(max-width: 640px) 112px, (max-width: 1024px) 128px, 144px"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = DEFAULT_IMAGES.avatar;
+                          }}
                         />
                       </div>
                     </div>
@@ -276,11 +291,18 @@ export default function ProfileClient() {
                     <div className="relative aspect-video min-h-[300px] w-full lg:aspect-auto lg:h-full">
                       <Link href={`/products/${featuredPost.id}`}>
                         <Image
-                          src={featuredPost.thumbnail || featuredPost.image}
+                          src={getValidImageSrc(
+                            featuredPost.thumbnail || featuredPost.image,
+                            DEFAULT_IMAGES.post,
+                          )}
                           alt={featuredPost.title}
                           fill
                           className="object-cover transition-transform duration-300 hover:scale-105"
                           sizes="(max-width: 1024px) 100vw, 50vw"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = DEFAULT_IMAGES.post;
+                          }}
                         />
 
                         {/* Post Badges - Top Left */}

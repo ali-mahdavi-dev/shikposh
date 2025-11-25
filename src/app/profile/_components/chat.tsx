@@ -6,6 +6,7 @@ import { ContentLoading } from '@/shared/components/loading';
 import Title from 'antd/es/typography/Title';
 import React from 'react';
 import { useChatUsers } from '../_api/chat';
+import { DEFAULT_IMAGES, getValidImageSrc } from '@/shared/utils/image';
 
 export interface ChatUser {
   id: string;
@@ -45,7 +46,12 @@ const ChatFixed: React.FC<ChatFixedProps> = ({ users: propUsers }) => {
                 />
                 <div className="flex items-center">
                   <div className="ml-1 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 p-[0.5px]">
-                    <Avatar className="w-24" src={user.avatar} alt={user.name} />
+                    <Avatar
+                      className="w-24"
+                      src={getValidImageSrc(user.avatar, DEFAULT_IMAGES.avatar)}
+                      alt={user.name}
+                      onError={() => true}
+                    />
                   </div>
                   <Title className="ml-1" level={5}>
                     {user.name}

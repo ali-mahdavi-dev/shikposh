@@ -1,18 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Typography } from 'antd';
-import {
-  CalendarOutlined,
-  EyeOutlined,
-  LikeOutlined,
-  MessageOutlined,
-} from '@ant-design/icons';
+import { CalendarOutlined, EyeOutlined, LikeOutlined, MessageOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/app/_components';
 import type { Post } from '@/types';
+import { getValidImageSrc, DEFAULT_IMAGES } from '@/shared/utils/image';
 
 const { Title } = Typography;
 
@@ -41,6 +37,14 @@ const formatDate = (dateString: string): string => {
 };
 
 export function PostCard({ post }: { post: Post }) {
+  const [imageSrc, setImageSrc] = useState(() =>
+    getValidImageSrc(post.thumbnail, DEFAULT_IMAGES.post),
+  );
+
+  const handleImageError = () => {
+    setImageSrc(DEFAULT_IMAGES.post);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -53,11 +57,12 @@ export function PostCard({ post }: { post: Post }) {
         <div className="flex h-full flex-col overflow-hidden rounded-xl bg-white shadow-md transition-all duration-300 hover:shadow-xl">
           <div className="relative aspect-video w-full flex-shrink-0 overflow-hidden bg-gray-100">
             <Image
-              src={post.thumbnail}
+              src={imageSrc}
               alt={post.title}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
               className="object-cover transition-transform duration-300 hover:scale-110"
+              onError={handleImageError}
             />
 
             {post.badges && post.badges.length > 0 && (

@@ -6,6 +6,7 @@ import { Typography } from 'antd';
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { DEFAULT_IMAGES, getValidImageSrc } from '@/shared/utils/image';
 
 const { Title, Text } = Typography;
 
@@ -55,7 +56,16 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           <div className="relative flex flex-shrink-0 justify-center sm:justify-start">
             <div className="relative">
               <div className="rounded-full bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 p-1">
-                <Avatar size={140} src={avatar} alt={name} className="border-4 border-white" />
+                <Avatar
+                  size={140}
+                  src={getValidImageSrc(avatar, DEFAULT_IMAGES.avatar)}
+                  alt={name}
+                  className="border-4 border-white"
+                  onError={() => {
+                    // Avatar component handles error internally, but we can set a fallback
+                    return true; // Prevent default error behavior
+                  }}
+                />
               </div>
               {verified && (
                 <div className="absolute -right-1 -bottom-1 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg">

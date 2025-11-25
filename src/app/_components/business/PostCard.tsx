@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, MotionProps } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { BaseCard } from '@/app/_components/ui';
 import { Badge as BaseBadge } from '@/app/_components';
 import { cn } from '@/utils/cn';
+import { getValidImageSrc, DEFAULT_IMAGES } from '@/shared/utils/image';
 
 export interface PostCardProps {
   title?: string;
@@ -33,10 +34,18 @@ export const PostCard: React.FC<PostCardProps> = ({
   className,
   onClick,
 }) => {
+  const [imageSrc, setImageSrc] = useState(() =>
+    getValidImageSrc(image, DEFAULT_IMAGES.post),
+  );
+
   const cardClasses = cn('group relative overflow-hidden cursor-pointer', className);
 
   const calculateDiscount = () => {
     return discount;
+  };
+
+  const handleImageError = () => {
+    setImageSrc(DEFAULT_IMAGES.post);
   };
 
   const content = animation ? (
@@ -53,11 +62,12 @@ export const PostCard: React.FC<PostCardProps> = ({
         {/* Image Container */}
         <div className="relative aspect-square w-full overflow-hidden">
           <Image
-            src={image}
+            src={imageSrc}
             alt={title || 'Post'}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="object-cover transition-transform duration-500 group-hover:scale-110"
+            onError={handleImageError}
           />
 
           {/* Badges - Top Right */}
@@ -89,11 +99,12 @@ export const PostCard: React.FC<PostCardProps> = ({
         {/* Image Container */}
         <div className="relative aspect-square w-full overflow-hidden">
           <Image
-            src={image}
+            src={imageSrc}
             alt={title || 'Post'}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="object-cover transition-transform duration-500 group-hover:scale-110"
+            onError={handleImageError}
           />
 
           {/* Badges - Top Right */}

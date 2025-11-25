@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { Card, Button, Rate, Typography } from 'antd';
 import { ShoppingCartOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Badge as BaseBadge } from '@/app/_components';
 import { formatIranianPrice } from '@/shared/utils';
+import { getValidImageSrc, DEFAULT_IMAGES } from '@/shared/utils/image';
 
 const { Text } = Typography;
 
@@ -30,10 +31,18 @@ export interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = memo(({ product, index, onAddToCart }) => {
+  const [imageSrc, setImageSrc] = useState(() =>
+    getValidImageSrc(product.image, DEFAULT_IMAGES.product),
+  );
+
   const handleAddToCart = () => {
     if (onAddToCart) {
       onAddToCart(product.id);
     }
+  };
+
+  const handleImageError = () => {
+    setImageSrc(DEFAULT_IMAGES.product);
   };
 
   return (
@@ -49,16 +58,15 @@ const ProductCard: React.FC<ProductCardProps> = memo(({ product, index, onAddToC
       >
         <Link href={`/products/${product.slug}`} className="block">
           <div className="relative overflow-hidden">
-            {product.image && (
-              <Image
-                src={product.image}
-                alt={product.name}
-                width={200}
-                height={200}
-                className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                priority={index < 4} // Prioritize first 4 images
-              />
-            )}
+            <Image
+              src={imageSrc}
+              alt={product.name}
+              width={200}
+              height={200}
+              className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-110"
+              priority={index < 4} // Prioritize first 4 images
+              onError={handleImageError}
+            />
 
             {/* Badges */}
             <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ShopOutlined, RightOutlined } from '@ant-design/icons';
 import type { Category } from '@/types';
+import { getValidImageSrc, DEFAULT_IMAGES } from '@/shared/utils/image';
 
 const { Title, Text } = Typography;
 
@@ -41,7 +42,10 @@ export const CategoriesGrid: React.FC<CategoriesGridProps> = ({ categories }) =>
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
       {categories.map((category, index) => {
-        const imageUrl = categoryImages[index % categoryImages.length];
+        const imageUrl = getValidImageSrc(
+          categoryImages[index % categoryImages.length],
+          DEFAULT_IMAGES.category,
+        );
         const gradientColor = categoryColors[index % categoryColors.length];
         const href = `/products?category=${encodeURIComponent(category.name)}`;
 
@@ -59,6 +63,10 @@ export const CategoriesGrid: React.FC<CategoriesGridProps> = ({ categories }) =>
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
                     className="object-cover opacity-30 transition-transform duration-500 group-hover:scale-110"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = DEFAULT_IMAGES.category;
+                    }}
                   />
 
                   {/* Gradient Overlay */}

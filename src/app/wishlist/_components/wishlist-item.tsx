@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, Button, Typography, Popconfirm } from 'antd';
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatIranianPrice } from '@/shared/utils';
+import { getValidImageSrc, DEFAULT_IMAGES } from '@/shared/utils/image';
 
 const { Text } = Typography;
 
@@ -22,11 +23,25 @@ export interface WishlistItemProps {
 }
 
 export function WishlistItem({ product, onMoveToCart, onRemove }: WishlistItemProps) {
+  const [imageSrc, setImageSrc] = useState(() =>
+    getValidImageSrc(product.image, DEFAULT_IMAGES.product),
+  );
+
+  const handleImageError = () => {
+    setImageSrc(DEFAULT_IMAGES.product);
+  };
+
   return (
     <Card className="h-full rounded-2xl shadow-md">
       <Link href={`/products/${product.id}`} className="block">
         <div className="relative mb-3 h-48 w-full overflow-hidden rounded-xl bg-gray-100">
-          {product.image && <Image src={product.image} alt={product.name} fill className="object-cover" />}
+          <Image
+            src={imageSrc}
+            alt={product.name}
+            fill
+            className="object-cover"
+            onError={handleImageError}
+          />
         </div>
         <Text className="mb-2 block line-clamp-2 font-semibold text-gray-800">{product.name}</Text>
         <Text className="mb-3 block text-pink-600">{formatIranianPrice(product.price || 0)} تومان</Text>
