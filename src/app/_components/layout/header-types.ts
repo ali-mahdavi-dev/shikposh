@@ -1,4 +1,5 @@
 import { MenuProps } from 'antd';
+import { CategoryEntity } from '@/app/products/_api/entities/category.entity';
 
 export interface HeaderSharedProps {
   cartCount: number;
@@ -16,6 +17,7 @@ export interface HeaderSharedProps {
   onSearch: (value: string) => void;
   userMenuItems: MenuProps['items'];
   categoryMenuItems: MenuProps['items'];
+  categories: CategoryEntity[];
   navLinks: Array<{
     href: string;
     label: string;

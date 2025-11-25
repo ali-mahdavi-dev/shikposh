@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { Layout, Button, Badge, Drawer, Typography, Divider, Dropdown, Tooltip } from 'antd';
+import { Layout, Button, Badge, Drawer, Typography, Divider, Tooltip } from 'antd';
 import {
   ShoppingCartOutlined,
   HeartOutlined,
@@ -16,6 +16,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { SearchDropdown } from './search-dropdown';
 import { HeaderSharedProps } from './header-types';
+import { MobileMegaMenu } from './mobile-mega-menu';
 
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
@@ -35,7 +36,8 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   onSearchValueChange,
   onSearch,
   userMenuItems: _userMenuItems,
-  categoryMenuItems,
+  categoryMenuItems: _categoryMenuItems,
+  categories,
   navLinks,
   scrolled,
   hasAnimated,
@@ -219,53 +221,30 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
 
         {/* Mobile Navigation Links */}
         <div className="flex flex-col gap-2">
-          {navLinks.map((link, index) => (
-            <motion.div
-              key={link.href}
-              initial={hasAnimated ? false : { opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-            >
-              <Link
-                href={link.href}
-                onClick={() => onMenuToggle(false)}
-                className="flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-gray-700 transition-all hover:bg-pink-50 hover:text-pink-600"
+          {navLinks
+            .filter((link) => link.href !== '/about' && link.href !== '/contact')
+            .map((link, index) => (
+              <motion.div
+                key={link.href}
+                initial={hasAnimated ? false : { opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
               >
-                <span className="text-lg">{link.icon}</span>
-                {link.label}
-              </Link>
-            </motion.div>
-          ))}
+                <Link
+                  href={link.href}
+                  onClick={() => onMenuToggle(false)}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 font-medium !text-gray-700 no-underline transition-all hover:bg-pink-50 hover:!text-pink-600"
+                >
+                  <span className="text-lg">{link.icon}</span>
+                  {link.label}
+                </Link>
+              </motion.div>
+            ))}
 
-          <Dropdown
-            menu={{
-              items: categoryMenuItems?.map((item) => {
-                if (!item || item.type === 'divider') return item;
-                return {
-                  ...item,
-                  onClick: (info: any) => {
-                    onMenuToggle(false);
-                    if ('onClick' in item && item.onClick) {
-                      item.onClick(info);
-                    }
-                  },
-                };
-              }),
-            }}
-            placement="topRight"
-            trigger={['click']}
-          >
-            <Button
-              type="text"
-              className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-right font-medium text-gray-700 transition-all hover:bg-pink-50 hover:text-pink-600"
-              block
-            >
-              <span className="flex items-center gap-3">
-                <AppstoreOutlined className="text-lg" />
-                دسته‌بندی‌ها
-              </span>
-            </Button>
-          </Dropdown>
+          {/* Mobile Mega Menu */}
+          <div className="w-full">
+            <MobileMegaMenu categories={categories} onClose={() => onMenuToggle(false)} />
+          </div>
         </div>
 
         <Divider />
@@ -275,7 +254,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
           <Link
             href="/wishlist"
             onClick={() => onMenuToggle(false)}
-            className="flex items-center justify-between rounded-xl px-4 py-3 text-gray-700 transition-all hover:bg-pink-50 hover:text-pink-600"
+            className="flex items-center justify-between rounded-xl px-4 py-3 !text-gray-700 no-underline transition-all hover:bg-pink-50 hover:!text-pink-600"
           >
             <span className="flex items-center gap-3">
               <HeartOutlined className="text-lg" />
@@ -287,7 +266,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
           <Link
             href="/cart"
             onClick={() => onMenuToggle(false)}
-            className="flex items-center justify-between rounded-xl px-4 py-3 text-gray-700 transition-all hover:bg-pink-50 hover:text-pink-600"
+            className="flex items-center justify-between rounded-xl px-4 py-3 !text-gray-700 no-underline transition-all hover:bg-pink-50 hover:!text-pink-600"
           >
             <span className="flex items-center gap-3">
               <ShoppingCartOutlined className="text-lg" />
@@ -299,7 +278,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
           <Link
             href="/notification"
             onClick={() => onMenuToggle(false)}
-            className="flex items-center justify-between rounded-xl px-4 py-3 text-gray-700 transition-all hover:bg-pink-50 hover:text-pink-600"
+            className="flex items-center justify-between rounded-xl px-4 py-3 !text-gray-700 no-underline transition-all hover:bg-pink-50 hover:!text-pink-600"
           >
             <span className="flex items-center gap-3">
               <BellOutlined className="text-lg" />
@@ -317,7 +296,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
             <Link
               href="/profile"
               onClick={() => onMenuToggle(false)}
-              className="flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-gray-700 transition-all hover:bg-pink-50 hover:text-pink-600"
+              className="flex items-center gap-3 rounded-xl px-4 py-3 font-medium !text-gray-700 no-underline transition-all hover:bg-pink-50 hover:!text-pink-600"
             >
               <UserOutlined className="text-lg" />
               <span>پروفایل کاربری</span>
@@ -346,6 +325,31 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
             </Button>
           </Link>
         )}
+
+        <Divider />
+
+        {/* About Us and Contact Us - Bottom Section */}
+        <div className="flex flex-col gap-2">
+          {navLinks
+            .filter((link) => link.href === '/about' || link.href === '/contact')
+            .map((link, index) => (
+              <motion.div
+                key={link.href}
+                initial={hasAnimated ? false : { opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                <Link
+                  href={link.href}
+                  onClick={() => onMenuToggle(false)}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 font-medium !text-gray-700 no-underline transition-all hover:bg-pink-50 hover:!text-pink-600"
+                >
+                  <span className="text-lg">{link.icon}</span>
+                  {link.label}
+                </Link>
+              </motion.div>
+            ))}
+        </div>
       </Drawer>
 
       {/* Mobile Search Overlay */}

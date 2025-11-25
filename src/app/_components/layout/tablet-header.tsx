@@ -16,6 +16,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { SearchDropdown } from './search-dropdown';
 import { HeaderSharedProps } from './header-types';
+import { MobileMegaMenu } from './mobile-mega-menu';
 
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
@@ -35,7 +36,8 @@ export const TabletHeader: React.FC<TabletHeaderProps> = ({
   onSearchValueChange,
   onSearch,
   userMenuItems,
-  categoryMenuItems,
+  categoryMenuItems: _categoryMenuItems,
+  categories,
   navLinks,
   scrolled,
   hasAnimated,
@@ -248,38 +250,9 @@ export const TabletHeader: React.FC<TabletHeaderProps> = ({
 
         <Divider />
 
-        {/* Categories Dropdown */}
+        {/* Tablet Mega Menu */}
         <div className="mb-4">
-          <Dropdown
-            menu={{
-              items: categoryMenuItems?.map((item) => {
-                if (!item || item.type === 'divider') return item;
-                return {
-                  ...item,
-                  onClick: (info: any) => {
-                    onMenuToggle(false);
-                    if ('onClick' in item && item.onClick) {
-                      item.onClick(info);
-                    }
-                  },
-                };
-              }),
-            }}
-            placement="topRight"
-            trigger={['click']}
-          >
-            <Button
-              type="text"
-              className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-right font-medium text-gray-700 transition-all hover:bg-pink-50 hover:text-pink-600"
-              block
-            >
-              <span className="flex items-center gap-3">
-                <AppstoreOutlined className="text-lg" />
-                دسته‌بندی‌ها
-              </span>
-              <DownOutlined />
-            </Button>
-          </Dropdown>
+          <MobileMegaMenu categories={categories} onClose={() => onMenuToggle(false)} />
         </div>
 
         <Divider />

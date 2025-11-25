@@ -183,6 +183,7 @@ const Header: React.FC<HeaderProps> = ({ wishlistCount = 5 }) => {
     onSearch: handleSearch,
     userMenuItems,
     categoryMenuItems,
+    categories,
     navLinks,
     scrolled,
     hasAnimated,
@@ -222,6 +223,34 @@ const Header: React.FC<HeaderProps> = ({ wishlistCount = 5 }) => {
             rgba(139, 92, 246, 0.1)
           ) !important;
           transform: translateX(-4px);
+        }
+        /* Mega Menu Popover Styles */
+        .mega-menu-popover .ant-popover-inner {
+          padding: 0 !important;
+          border-radius: 16px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+          overflow: hidden;
+        }
+        .mega-menu-popover .ant-popover-inner-content {
+          padding: 0 !important;
+        }
+        .mega-menu-popover .ant-popover-arrow {
+          display: none;
+        }
+        .mega-menu-container {
+          max-width: 1200px;
+          min-width: 800px;
+        }
+        @media (max-width: 1024px) {
+          .mega-menu-container {
+            min-width: 600px;
+          }
+        }
+        @media (max-width: 768px) {
+          .mega-menu-container {
+            min-width: 100%;
+            max-width: 100%;
+          }
         }
         .mobile-menu-drawer .ant-drawer-header {
           border-bottom: 1px solid rgba(236, 72, 153, 0.1);

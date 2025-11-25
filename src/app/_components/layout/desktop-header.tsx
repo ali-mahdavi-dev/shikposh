@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { Layout, Button, Badge, Dropdown, Avatar, Typography } from 'antd';
+import { Layout, Button, Badge, Dropdown, Avatar, Typography, Popover } from 'antd';
 import {
   ShoppingCartOutlined,
   HeartOutlined,
@@ -13,6 +13,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { SearchDropdown } from './search-dropdown';
 import { HeaderSharedProps } from './header-types';
+import { MegaMenu } from './mega-menu';
 
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
@@ -27,7 +28,8 @@ export const DesktopHeader: React.FC<HeaderSharedProps> = ({
   onSearchValueChange,
   onSearch,
   userMenuItems,
-  categoryMenuItems,
+  categoryMenuItems: _categoryMenuItems,
+  categories,
   navLinks,
   scrolled,
   hasAnimated,
@@ -35,6 +37,7 @@ export const DesktopHeader: React.FC<HeaderSharedProps> = ({
   logoutLoading: _logoutLoading,
 }) => {
   const [searchDropdownVisible, setSearchDropdownVisible] = useState<boolean>(false);
+  const [megaMenuVisible, setMegaMenuVisible] = useState<boolean>(false);
 
   const handleSearch = (value: string) => {
     onSearch(value);
@@ -102,10 +105,17 @@ export const DesktopHeader: React.FC<HeaderSharedProps> = ({
               </motion.div>
             ))}
 
-            <Dropdown
-              menu={{ items: categoryMenuItems }}
+            <Popover
+              content={
+                <MegaMenu categories={categories} onClose={() => setMegaMenuVisible(false)} />
+              }
+              trigger="hover"
               placement="bottom"
-              overlayClassName="custom-dropdown"
+              open={megaMenuVisible}
+              onOpenChange={setMegaMenuVisible}
+              overlayClassName="mega-menu-popover"
+              overlayStyle={{ padding: 0 }}
+              arrow={false}
             >
               <motion.div
                 whileHover={{ scale: 1.05 }}
@@ -115,13 +125,14 @@ export const DesktopHeader: React.FC<HeaderSharedProps> = ({
                 <Button
                   type="text"
                   className="nav-trigger relative flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap text-gray-900 hover:text-pink-600"
+                  onMouseEnter={() => setMegaMenuVisible(true)}
                 >
                   <AppstoreOutlined className="text-base" />
                   دسته‌بندی‌ها
                   <DownOutlined className="text-xs" />
                 </Button>
               </motion.div>
-            </Dropdown>
+            </Popover>
           </motion.nav>
 
           {/* Search Bar - Desktop - Takes remaining space */}
