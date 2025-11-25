@@ -2,10 +2,12 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface WishlistState {
   productIds: string[];
+  synced: boolean;
 }
 
 const initialState: WishlistState = {
   productIds: [],
+  synced: false,
 };
 
 const wishlistSlice = createSlice({
@@ -28,8 +30,26 @@ const wishlistSlice = createSlice({
         state.productIds.splice(index, 1);
       }
     },
+    setWishlist: (state, action: PayloadAction<string[]>) => {
+      state.productIds = action.payload;
+      state.synced = true;
+    },
+    setSynced: (state, action: PayloadAction<boolean>) => {
+      state.synced = action.payload;
+    },
+    clearWishlist: (state) => {
+      state.productIds = [];
+      state.synced = false;
+    },
   },
 });
 
-export const { addToWishlist, removeFromWishlist, toggleWishlist } = wishlistSlice.actions;
+export const {
+  addToWishlist,
+  removeFromWishlist,
+  toggleWishlist,
+  setWishlist,
+  setSynced,
+  clearWishlist,
+} = wishlistSlice.actions;
 export default wishlistSlice.reducer;
