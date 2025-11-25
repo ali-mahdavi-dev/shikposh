@@ -23,8 +23,8 @@ export function SellerHeader({
   onFollowToggle,
   bannerImage,
 }: SellerHeaderProps) {
-  const avatarSrc = getValidImageSrc(seller?.avatar);
-  const bannerSrc = bannerImage ? getValidImageSrc(bannerImage) : null;
+  const avatarSrc = getValidImageSrc(seller?.avatar, DEFAULT_IMAGES.seller);
+  const bannerSrc = bannerImage ? getValidImageSrc(bannerImage, DEFAULT_IMAGES.banner) : null;
 
   return (
     <>
@@ -40,7 +40,9 @@ export function SellerHeader({
               priority
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
-                target.src = DEFAULT_IMAGES.banner;
+                if (target.src !== DEFAULT_IMAGES.banner) {
+                  target.src = DEFAULT_IMAGES.banner;
+                }
               }}
             />
           </div>
@@ -75,7 +77,7 @@ export function SellerHeader({
                           sizes="(max-width: 640px) 112px, (max-width: 1024px) 128px, 144px"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            target.src = DEFAULT_IMAGES.avatar;
+                            target.src = DEFAULT_IMAGES.seller;
                           }}
                         />
                       </div>
