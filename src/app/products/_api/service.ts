@@ -89,7 +89,7 @@ export class ProductService {
         isNew: product.is_new || false,
         isFeatured: product.is_featured || false,
         colors: colorsMap,
-        sizes: [], // Sizes are no longer in the new structure
+        sizes: product.sizes?.map((s) => s.name) || [],
         brand: product.brand || '',
         description: product.description || '',
         tags: product.tags || [],

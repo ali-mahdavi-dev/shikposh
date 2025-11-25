@@ -32,6 +32,7 @@ import { getValidImageSrc } from '@/shared/utils';
 
 // Lazy load components for better performance
 const ColorSelector = React.lazy(() => import('../_components/color-selector'));
+const SizeSelector = React.lazy(() => import('../_components/size-selector'));
 const QuantitySelector = React.lazy(() => import('../_components/quantity-selector'));
 const RelatedProducts = React.lazy(() => import('../_components/related-products'));
 const ProductImageGallery = React.lazy(() => import('../_components/product-image-gallery'));
@@ -65,6 +66,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
 
   // Initialize state with default values
   const [selectedColorId, setSelectedColorId] = useState<string>('');
+  const [selectedSizeId, setSelectedSizeId] = useState<string>('');
   const [quantity, setQuantity] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<string>('1');
 
@@ -85,6 +87,43 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
     return product.thumbnail ? [product.thumbnail] : [];
   }, [product, selectedColorId]);
 
+  // Get available sizes for selected color from variant
+  const availableSizes = useMemo(() => {
+    if (!product || !selectedColorId || !product.variant) return [];
+
+    const colorVariants = product.variant[selectedColorId];
+    if (!colorVariants) return [];
+
+    // Get all size IDs that have stock for this color
+    return Object.keys(colorVariants)
+      .map((sizeId) => {
+        const size = product.sizes?.find((s) => s.id.toString() === sizeId);
+        return size ? { id: sizeId, name: size.name } : null;
+      })
+      .filter((size): size is { id: string; name: string } => size !== null);
+  }, [product, selectedColorId]);
+
+  // Get current stock from variant based on selected color and size
+  const currentStock = useMemo(() => {
+    if (!product || !selectedColorId || !product.variant) {
+      return product?.stock || 0;
+    }
+
+    const colorVariants = product.variant[selectedColorId];
+    if (!colorVariants) return 0;
+
+    if (selectedSizeId) {
+      const sizeVariant = colorVariants[selectedSizeId];
+      return sizeVariant?.stock || 0;
+    }
+
+    // If no size selected, return sum of all sizes for this color
+    return Object.values(colorVariants).reduce(
+      (sum, sizeVariant) => sum + (sizeVariant?.stock || 0),
+      0,
+    );
+  }, [product, selectedColorId, selectedSizeId]);
+
   // Initialize selected color when product data is available
   React.useEffect(() => {
     if (product && product.colors && product.colors.length > 0) {
@@ -94,6 +133,11 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
     }
   }, [product]);
 
+  // Reset selected size when color changes
+  React.useEffect(() => {
+    setSelectedSizeId('');
+  }, [selectedColorId]);
+
   // Memoize callbacks to prevent unnecessary re-renders
   const handleAddToCart = useCallback(() => {
     if (product) {
@@ -101,7 +145,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
         addToCart({
           productId: String(product.id),
           color: selectedColorId,
-          size: '', // No size in new structure
+          size: selectedSizeId,
           quantity: quantity,
           price: product.price,
           name: product.title,
@@ -110,7 +154,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
       );
       message.success('به سبد خرید اضافه شد');
     }
-  }, [product, selectedColorId, quantity, currentImages, dispatch, message]);
+  }, [product, selectedColorId, selectedSizeId, quantity, currentImages, dispatch, message]);
 
   const handleWishlistToggle = useCallback(() => {
     if (product) {
@@ -326,8 +370,26 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                     />
                   </Suspense>
 
+                  {/* Size Selection */}
+                  {product.sizes && product.sizes.length > 0 && availableSizes.length > 0 && (
+                    <Suspense
+                      fallback={<div className="h-16 animate-pulse rounded-lg bg-gray-200" />}
+                    >
+                      <SizeSelector
+                        sizes={availableSizes.map((s) => s.name)}
+                        selectedSize={
+                          availableSizes.find((s) => s.id === selectedSizeId)?.name || ''
+                        }
+                        onSizeChange={(sizeName) => {
+                          const size = availableSizes.find((s) => s.name === sizeName);
+                          setSelectedSizeId(size?.id || '');
+                        }}
+                      />
+                    </Suspense>
+                  )}
+
                   {/* Stock Status */}
-                  <StockStatus stock={product.stock} />
+                  <StockStatus stock={currentStock} />
 
                   {/* Price and Actions */}
                   <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg">
@@ -357,7 +419,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                         <QuantitySelector
                           quantity={quantity}
                           onQuantityChange={setQuantity}
-                          max={product.stock}
+                          max={currentStock}
                         />
                       </Suspense>
                     </div>
@@ -368,7 +430,7 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
                         size="large"
                         icon={<ShoppingCartOutlined />}
                         onClick={handleAddToCart}
-                        disabled={product.stock === 0}
+                        disabled={currentStock === 0}
                         className="h-12 flex-1 rounded-xl border-0 bg-gradient-to-r from-pink-500 to-purple-600 font-semibold text-white transition-all duration-300 hover:from-pink-600 hover:to-purple-700"
                       >
                         افزودن به سبد خرید

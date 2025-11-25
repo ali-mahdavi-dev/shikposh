@@ -14,6 +14,20 @@ export interface ProductSpec {
   value: string;
 }
 
+export interface ProductSize {
+  id: number;
+  name: string;
+}
+
+export interface ProductVariant {
+  // Nested structure: { "colorId": { "sizeId": { "stock": number } } }
+  [colorId: string]: {
+    [sizeId: string]: {
+      stock: number;
+    };
+  };
+}
+
 export interface ProductEntity {
   id: number | string;
   seller_id: number;
@@ -32,6 +46,8 @@ export interface ProductEntity {
   is_new: boolean;
   created_at: string;
   colors: ProductColor[];
+  sizes: ProductSize[];
+  variant: ProductVariant;
   tags: string[];
   features: string[];
   specs: ProductSpec[];
