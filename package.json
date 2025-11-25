@@ -22,7 +22,7 @@
     "dev:full": "yarn cleanup-ports && node scripts/dev.mjs"
   },
   "dependencies": {
-    "@ant-design/icons": "^6.0.2",
+    "@ant-design/icons": "^5.5.2",
     "@ant-design/nextjs-registry": "^1.1.0",
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@heroicons/react": "^2.2.0",

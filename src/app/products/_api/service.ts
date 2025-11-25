@@ -53,6 +53,18 @@ export class ProductService {
     return this.productRepository.getProductsForCart(productIds);
   }
 
+  async getMostDiscountedProducts(limit?: number): Promise<ProductSummary[]> {
+    return this.productRepository.getMostDiscountedProducts(limit);
+  }
+
+  async getBestSellingProducts(limit?: number): Promise<ProductSummary[]> {
+    return this.productRepository.getBestSellingProducts(limit);
+  }
+
+  async getNewArrivals(limit?: number): Promise<ProductSummary[]> {
+    return this.productRepository.getNewArrivals(limit);
+  }
+
   private mapToProductSummary(products: ProductEntity[]): ProductSummary[] {
     return products.map((product) => {
       // Build colors map from colors array

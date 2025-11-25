@@ -32,6 +32,9 @@ export interface ProductRepository {
   getAllCategories(): Promise<CategoryEntity[]>;
   getCategoryBySlug(slug: string): Promise<CategoryEntity>;
   getProductsForCart(productIds: string[]): Promise<CartProduct[]>;
+  getMostDiscountedProducts(limit?: number): Promise<ProductSummary[]>;
+  getBestSellingProducts(limit?: number): Promise<ProductSummary[]>;
+  getNewArrivals(limit?: number): Promise<ProductSummary[]>;
 }
 
 export class HttpProductRepository implements ProductRepository {
@@ -112,6 +115,36 @@ export class HttpProductRepository implements ProductRepository {
       return [];
     }
     return apiService.post<CartProduct[]>('/api/v1/public/products/cart', productIds);
+  }
+
+  async getMostDiscountedProducts(limit: number = 12): Promise<ProductSummary[]> {
+    const params = new URLSearchParams();
+    params.set('sort', 'discount_desc');
+    params.set('limit', String(limit));
+    const products = await apiService.get<ProductEntity[]>(
+      `/api/v1/public/products?${params.toString()}`,
+    );
+    return this.mapToProductSummary(products);
+  }
+
+  async getBestSellingProducts(limit: number = 12): Promise<ProductSummary[]> {
+    const params = new URLSearchParams();
+    params.set('sort', 'rating');
+    params.set('limit', String(limit));
+    const products = await apiService.get<ProductEntity[]>(
+      `/api/v1/public/products?${params.toString()}`,
+    );
+    return this.mapToProductSummary(products);
+  }
+
+  async getNewArrivals(limit: number = 12): Promise<ProductSummary[]> {
+    const params = new URLSearchParams();
+    params.set('sort', 'newest');
+    params.set('limit', String(limit));
+    const products = await apiService.get<ProductEntity[]>(
+      `/api/v1/public/products?${params.toString()}`,
+    );
+    return this.mapToProductSummary(products);
   }
 
   private mapToProductSummary(products: ProductEntity[]): ProductSummary[] {

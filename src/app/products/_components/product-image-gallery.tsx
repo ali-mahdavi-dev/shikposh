@@ -67,7 +67,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >
-        <LeftOutlined className="text-lg text-gray-700" />
+        <RightOutlined className="text-lg text-gray-700" />
       </motion.button>
       <motion.button
         className="absolute top-1/2 left-2 z-10 -translate-y-1/2 rounded-full bg-white/50 p-2 shadow-md backdrop-blur-sm transition-colors hover:bg-white/70"
@@ -75,7 +75,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >
-        <RightOutlined className="text-lg text-gray-700" />
+        <LeftOutlined className="text-lg text-gray-700" />
       </motion.button>
 
       <motion.button
@@ -131,4 +131,3 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
 };
 
 export default ProductImageGallery;
-

@@ -23,7 +23,7 @@ const badgeStyles = {
   default: 'bg-black/75 backdrop-blur-sm text-white shadow-md border border-white/20',
 };
 
-const getVariant = (badgeText: string): keyof typeof badgeStyles => {
+const getVariant = (badgeText: string): string => {
   if (badgeText.includes('جدید') || badgeText.toLowerCase().includes('new')) return 'new';
   if (
     badgeText.includes('ویژه') ||
@@ -66,4 +66,3 @@ export const Badge: React.FC<BadgeProps> = ({ text, variant, className }) => {
 };
 
 export default Badge;
-

@@ -103,3 +103,33 @@ export const useProductsForCart = (productIds: string[]) => {
     retryOnMount: false, // Don't retry on mount if query failed
   });
 };
+
+// Most Discounted Products (sorted by discount descending)
+export const useMostDiscountedProducts = (enabled: boolean = true) => {
+  return useQuery<ProductSummary[]>({
+    queryKey: ['products', 'most-discounted'],
+    queryFn: () => productService.getMostDiscountedProducts(),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    enabled,
+  });
+};
+
+// Best Selling Products (sorted by rating as proxy for popularity)
+export const useBestSellingProducts = (enabled: boolean = true) => {
+  return useQuery<ProductSummary[]>({
+    queryKey: ['products', 'best-selling'],
+    queryFn: () => productService.getBestSellingProducts(),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    enabled,
+  });
+};
+
+// New Arrivals (sorted by newest)
+export const useNewArrivals = (enabled: boolean = true) => {
+  return useQuery<ProductSummary[]>({
+    queryKey: ['products', 'new-arrivals'],
+    queryFn: () => productService.getNewArrivals(),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    enabled,
+  });
+};

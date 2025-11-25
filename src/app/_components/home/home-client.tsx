@@ -1,63 +1,59 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useMemo, lazy, Suspense } from 'react';
 import { Typography, Carousel } from 'antd';
-import { App as AntApp } from 'antd';
-import { useAppDispatch } from '@/stores/hooks';
-import { addToCart } from '@/stores/slices/cartSlice';
-import { useFeaturedProducts, useCategories } from '@/app/products/_api';
-import type { CategoryEntity } from '@/app/products/_api/entities/category.entity';
-import { ProductCard, CategoryCard } from '@/app/_components/business';
-import { HomeSkeleton } from '@/app/_components/skeleton';
+import {
+  RocketOutlined,
+  SafetyCertificateOutlined,
+  CustomerServiceOutlined,
+  SyncOutlined,
+  GiftOutlined,
+} from '@ant-design/icons';
+import Link from 'next/link';
 
-const { Title, Text, Paragraph } = Typography;
+const DiscountedProductsSlider = lazy(() => import('./discounted-products-slider'));
+const BestSellingProductsSlider = lazy(() => import('./bestselling-products-slider'));
+const NewArrivalsSlider = lazy(() => import('./new-arrivals-slider'));
 
-const categoryImages = [
-  '/images/dress-main.jpg',
-  '/images/handbag.jpg',
-  '/images/shoes.jpg',
-  '/images/jewelry.jpg',
-  '/images/dress-alt1.jpg',
-  '/images/dress-alt2.jpeg',
-];
+const { Title, Paragraph } = Typography;
 
 interface HomeClientProps {
-  initialCategories?: CategoryEntity[];
+  initialCategories?: any[];
   initialProducts?: any[];
 }
 
-const HomeClient: React.FC<HomeClientProps> = ({
-  initialCategories = [],
-  initialProducts = [],
-}) => {
-  const dispatch = useAppDispatch();
-  const { message } = AntApp.useApp();
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+const features = [
+  {
+    icon: RocketOutlined,
+    title: 'ارسال رایگان',
+    description: 'برای سفارش‌های بالای ۵۰۰ هزار تومان',
+    color: 'text-blue-500',
+    bg: 'bg-blue-50',
+  },
+  {
+    icon: SafetyCertificateOutlined,
+    title: 'ضمانت اصالت',
+    description: '۱۰۰٪ اصل با گارانتی معتبر',
+    color: 'text-emerald-500',
+    bg: 'bg-emerald-50',
+  },
+  {
+    icon: CustomerServiceOutlined,
+    title: 'پشتیبانی ۲۴/۷',
+    description: 'پاسخگویی در تمام ساعات شبانه‌روز',
+    color: 'text-amber-500',
+    bg: 'bg-amber-50',
+  },
+  {
+    icon: SyncOutlined,
+    title: 'بازگشت آسان',
+    description: '۷ روز ضمانت بازگشت کالا',
+    color: 'text-rose-500',
+    bg: 'bg-rose-50',
+  },
+];
 
-  // Use the new architecture hooks
-  const {
-    data: categories = initialCategories,
-    isLoading: categoriesLoading,
-    error: categoriesError,
-  } = useCategories();
-  const {
-    data: featuredProducts = initialProducts,
-    isLoading: productsLoading,
-    error: productsError,
-  } = useFeaturedProducts();
-
-  // Memoize expensive calculations
-  const filteredProducts = useMemo(() => {
-    if (selectedCategory === 'all') return featuredProducts;
-    return featuredProducts.filter((product) => product.category === selectedCategory);
-  }, [featuredProducts, selectedCategory]);
-
-  // Memoize callbacks to prevent unnecessary re-renders
-  const handleCategoryChange = useCallback((categoryId: string) => {
-    setSelectedCategory(String(categoryId));
-  }, []);
-
-  // Memoize hero slides to prevent recreation on every render
+const HomeClient: React.FC<HomeClientProps> = () => {
   const heroSlides = useMemo(
     () => [
       {
@@ -66,7 +62,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
         subtitle: 'تا ۵۰٪ تخفیف روی محصولات منتخب',
         image: '/images/daman.jpeg',
         buttonText: 'مشاهده کلکسیون',
-        link: '/category/spring-collection',
+        link: '/products',
       },
       {
         id: 2,
@@ -74,7 +70,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
         subtitle: 'برای مهمانی‌های خاص شما',
         image: '/images/carousel-homepage-one.jpg',
         buttonText: 'خرید کنید',
-        link: '/category/formal',
+        link: '/products',
       },
       {
         id: 3,
@@ -87,51 +83,6 @@ const HomeClient: React.FC<HomeClientProps> = ({
     ],
     [],
   );
-
-  const handleAddToCart = useCallback(
-    (productId: string | number) => {
-      const product = featuredProducts.find((p: any) => String(p.id) === String(productId));
-      if (!product) return;
-
-      // Get color name from colors object (key is ID, value has name)
-      const colorKeys = product.colors ? Object.keys(product.colors) : [];
-      const firstColorId = colorKeys[0];
-      const colorName =
-        firstColorId && product.colors[firstColorId]
-          ? product.colors[firstColorId].name
-          : 'default';
-
-      // Sizes is already an array of names
-      const sizes = product.sizes || [];
-      const firstSize = sizes[0] || '';
-
-      dispatch(
-        addToCart({
-          productId: String(product.id),
-          color: colorName,
-          size: firstSize,
-          quantity: 1,
-          price: product.price,
-          name: product.name,
-          image: product.image,
-        }),
-      );
-      message.success('به سبد خرید اضافه شد');
-    },
-    [dispatch, message, featuredProducts],
-  );
-
-  if (categoriesLoading || productsLoading) {
-    return <HomeSkeleton />;
-  }
-
-  if (categoriesError || productsError) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center text-red-500">
-        خطا در بارگذاری داده‌ها
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-12">
@@ -151,12 +102,12 @@ const HomeClient: React.FC<HomeClientProps> = ({
                       {slide.title}
                     </Title>
                     <Paragraph className="mb-6 text-lg !text-white">{slide.subtitle}</Paragraph>
-                    <a
+                    <Link
                       href={slide.link}
                       className="inline-block rounded-lg bg-pink-500 px-6 py-3 font-semibold text-white transition-colors hover:bg-pink-600"
                     >
                       {slide.buttonText}
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -165,52 +116,74 @@ const HomeClient: React.FC<HomeClientProps> = ({
         </Carousel>
       </section>
 
-      {/* Categories Section */}
-      <section className="container mx-auto px-4 py-12">
-        <div className="mb-8 text-center">
-          <Title level={2} className="mb-2 text-gray-800">
-            دسته‌بندی‌های محبوب
-          </Title>
-          <Text className="text-gray-600">محصولات برتر را در دسته‌بندی مورد نظر خود پیدا کنید</Text>
-        </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {categories.map((category, index: number) => {
-            // Use slug as the identifier for filtering
-            const categorySlug = category.slug || String(category.id);
-            const isSelected = selectedCategory === categorySlug;
-
-            return (
-              <CategoryCard
-                key={categorySlug}
-                category={{
-                  id: categorySlug,
-                  name: category.name,
-                  count: category.productCount || 0,
-                  image: category.image || categoryImages[index % categoryImages.length],
-                }}
-                index={index}
-                isSelected={isSelected}
-                onSelect={handleCategoryChange}
-              />
-            );
-          })}
+      {/* Features Section */}
+      <section className="container mx-auto px-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+          {features.map((feature, index) => (
+            <div
+              key={index}
+              className={`${feature.bg} group cursor-default rounded-2xl p-6 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg`}
+            >
+              <div
+                className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-md transition-transform duration-300 group-hover:rotate-12`}
+              >
+                <feature.icon className={`text-2xl ${feature.color}`} />
+              </div>
+              <h3 className="mb-2 text-lg font-bold text-gray-800">{feature.title}</h3>
+              <p className="text-sm text-gray-600">{feature.description}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Featured Products */}
+      {/* Most Discounted Products Slider */}
+      <Suspense fallback={<div className="min-h-[300px]" />}>
+        <DiscountedProductsSlider />
+      </Suspense>
+
+      {/* Best Selling Products Slider */}
+      <Suspense fallback={<div className="min-h-[300px]" />}>
+        <BestSellingProductsSlider />
+      </Suspense>
+
+      {/* New Arrivals Slider */}
+      <Suspense fallback={<div className="min-h-[300px]" />}>
+        <NewArrivalsSlider />
+      </Suspense>
+
+      {/* CTA Section */}
       <section className="container mx-auto px-4">
-        <Title level={2} className="mb-6 text-center">
-          محصولات برتر
-        </Title>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {filteredProducts.slice(0, 8).map((product: any, index: number) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              index={index}
-              onAddToCart={() => handleAddToCart(product.id)}
-            />
-          ))}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-pink-400 via-rose-400 to-purple-400 p-8 md:p-12">
+          <div className="absolute -top-20 -left-20 h-64 w-64 rounded-full bg-white/20 blur-3xl" />
+          <div className="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-white/20 blur-3xl" />
+          <div className="relative z-10 flex flex-col items-center justify-between gap-6 md:flex-row">
+            <div className="text-center md:text-right">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/30 px-4 py-2 backdrop-blur-sm">
+                <GiftOutlined className="text-lg text-white" />
+                <span className="text-sm font-medium text-white">پیشنهاد ویژه</span>
+              </div>
+              <h2 className="mb-3 text-3xl font-bold text-white md:text-4xl">
+                ۱۵٪ تخفیف اولین خرید
+              </h2>
+              <p className="text-lg text-white/90">
+                همین الان ثبت‌نام کنید و از تخفیف ویژه بهره‌مند شوید
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row"> 
+              <Link
+                href="/auth/register"
+                className="!rounded-xl !bg-white/90 !px-8 !py-4 !text-center !font-bold !text-pink-500 !shadow-lg !transition-all !duration-300 hover:!-translate-y-1 hover:bg-white hover:!shadow-xl"
+              >
+                ثبت‌نام رایگان
+              </Link>
+              <Link
+                href="/products"
+                className="!rounded-xl !border-2 !border-white !bg-white/20 !px-8 !py-4 !text-center !font-bold !text-white !backdrop-blur-sm !transition-all !duration-300 hover:!bg-white/30"
+              >
+                مشاهده محصولات
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </div>

@@ -1,12 +1,11 @@
 'use client';
 
 import React, { memo, useState } from 'react';
-import { Card, Button, Rate, Typography } from 'antd';
+import { Card, Button, Rate, Typography, Badge } from 'antd';
 import { ShoppingCartOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Badge as BaseBadge } from '@/app/_components';
 import { formatIranianPrice } from '@/shared/utils';
 import { getValidImageSrc, DEFAULT_IMAGES } from '@/shared/utils/image';
 
@@ -53,9 +52,44 @@ const ProductCard: React.FC<ProductCardProps> = memo(({ product, index, onAddToC
       whileHover={{ y: -5 }}
     >
       <Card
-        className="group h-full overflow-hidden rounded-2xl border-0 shadow-lg transition-all duration-300 hover:shadow-2xl"
+        className="group h-full rounded-2xl border-0 shadow-lg transition-all duration-300 hover:shadow-2xl"
         style={{ padding: 0 }}
       >
+        {/* Badges */}
+        <div className="absolute top-3 right-0 z-10 flex flex-col gap-4">
+          {/* Badges */}
+          {product.isNew && (
+            <Badge.Ribbon text="جدید" color="#10b981" placement="start">
+              <div />
+            </Badge.Ribbon>
+          )}
+          {product.isFeatured && (
+            <Badge.Ribbon
+              text="ویژه"
+              color="#ec4899"
+              placement="start"
+              className={product.isNew ? '!top-5' : ''}
+            >
+              <div />
+            </Badge.Ribbon>
+          )}
+          {product.discount && product.discount > 0 && (
+            <Badge.Ribbon
+              text={`${product.discount}% تخفیف`}
+              color="#ef4444"
+              placement="start"
+              className={
+                product.isNew && product.isFeatured
+                  ? '!top-[11px]'
+                  : product.isNew || product.isFeatured
+                    ? '!top-5'
+                    : ''
+              }
+            >
+              <div />
+            </Badge.Ribbon>
+          )}
+        </div>
         <Link href={`/products/${product.slug}`} className="block">
           <div className="relative overflow-hidden">
             <Image
@@ -67,15 +101,6 @@ const ProductCard: React.FC<ProductCardProps> = memo(({ product, index, onAddToC
               priority={index < 4} // Prioritize first 4 images
               onError={handleImageError}
             />
-
-            {/* Badges */}
-            <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
-              {product.isNew && <BaseBadge text="جدید" variant="new" />}
-              {product.isFeatured && <BaseBadge text="ویژه" variant="featured" />}
-              {product.discount && product.discount > 0 && (
-                <BaseBadge text={`${product.discount}% تخفیف`} variant="discount" />
-              )}
-            </div>
           </div>
 
           <div className="space-y-3 p-4">

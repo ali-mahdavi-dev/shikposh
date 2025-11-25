@@ -34,9 +34,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   className,
   onClick,
 }) => {
-  const [imageSrc, setImageSrc] = useState(() =>
-    getValidImageSrc(image, DEFAULT_IMAGES.post),
-  );
+  const [imageSrc, setImageSrc] = useState(() => getValidImageSrc(image, DEFAULT_IMAGES.post));
 
   const cardClasses = cn('group relative overflow-hidden cursor-pointer', className);
 
@@ -107,7 +105,7 @@ export const PostCard: React.FC<PostCardProps> = ({
             onError={handleImageError}
           />
 
-          {/* Badges - Top Right */}
+          {/* Badges */}
           <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
             {isNew && <BaseBadge text="جدید" variant="new" />}
             {isFeatured && <BaseBadge text="ویژه" variant="featured" />}

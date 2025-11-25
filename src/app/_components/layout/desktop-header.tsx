@@ -113,8 +113,8 @@ export const DesktopHeader: React.FC<HeaderSharedProps> = ({
               placement="bottom"
               open={megaMenuVisible}
               onOpenChange={setMegaMenuVisible}
-              overlayClassName="mega-menu-popover"
-              overlayStyle={{ padding: 0 }}
+              classNames={{ root: 'mega-menu-popover' }}
+              styles={{ root: { padding: 0 } }}
               arrow={false}
             >
               <motion.div
