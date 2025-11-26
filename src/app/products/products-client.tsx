@@ -66,7 +66,7 @@ export default function ProductsClient() {
   const filters: ProductFilters = useMemo(
     () => ({
       q: debouncedSearchQuery.trim() || undefined,
-      category: category !== 'all' ? category : undefined,
+      category_name: category !== 'all' ? category : undefined,
       min: minPriceNum > 0 ? minPriceNum : undefined,
       max: maxPriceNum < 10_000_000 ? maxPriceNum : undefined,
       rating: minRating > 0 ? minRating : undefined,
@@ -143,7 +143,7 @@ export default function ProductsClient() {
   useEffect(() => {
     const params = new URLSearchParams();
     if (debouncedSearchQuery) params.set('q', debouncedSearchQuery);
-    if (category !== 'all') params.set('category', category);
+    if (category !== 'all') params.set('category_name', category);
     if (sortBy !== 'relevance') params.set('sort', sortBy);
     if (minPriceNum > 0) params.set('min', String(minPriceNum));
     if (maxPriceNum < 10_000_000) params.set('max', String(maxPriceNum));
@@ -310,10 +310,21 @@ export default function ProductsClient() {
 
               <div className="flex flex-col gap-2">
                 <Text className="text-sm text-gray-600">دسته‌بندی</Text>
-                <Select value={category} onChange={setCategory} className="w-full">
+                <Select
+                  value={category}
+                  onChange={setCategory}
+                  className="w-full"
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.children as unknown as string)
+                      ?.toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                >
                   <Option value="all">همه</Option>
                   {categoryOptions.map((cat) => (
-                    <Option key={cat.slug} value={cat.slug}>
+                    <Option key={cat.slug} value={cat.name}>
                       {cat.name}
                     </Option>
                   ))}
