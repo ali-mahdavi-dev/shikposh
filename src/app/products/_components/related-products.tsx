@@ -17,6 +17,11 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ products }) => {
   // Limit to 10 products
   const limitedProducts = products.slice(0, 10);
 
+  // Don't render if no products
+  if (!products || products.length === 0) {
+    return null;
+  }
+
   const scroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
       const scrollAmount = 300;
