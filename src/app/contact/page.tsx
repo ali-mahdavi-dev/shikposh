@@ -2,6 +2,8 @@ import React from 'react';
 import type { Metadata } from 'next';
 import ContactClient from './contact-client';
 
+export const dynamic = 'force-static';
+
 export const metadata: Metadata = {
   title: 'تماس با ما | شیک‌پوشان',
   description: 'با تیم شیک‌پوشان تماس بگیرید. فرم تماس، ایمیل و اطلاعات ارتباطی برای پشتیبانی سریع.',

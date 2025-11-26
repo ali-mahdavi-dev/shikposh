@@ -67,11 +67,12 @@ export const useSearchProducts = (query: string) => {
   });
 };
 
-export const useFilteredProducts = (filters: ProductFilters) => {
+export const useFilteredProducts = (filters: ProductFilters, options?: { enabled?: boolean }) => {
   return useQuery<ProductSummary[]>({
     queryKey: ['products', 'filtered', filters],
     queryFn: () => productService.getFilteredProducts(filters),
     staleTime: 2 * 60 * 1000, // 2 minutes
+    enabled: options?.enabled ?? true,
   });
 };
 

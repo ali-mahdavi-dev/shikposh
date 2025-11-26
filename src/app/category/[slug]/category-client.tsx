@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { useProductsByCategory, useProducts } from '@/app/products/_api';
 import { ProductGrid } from '@/app/products/_components';
-import { ProductGridSkeleton } from '@/app/_components/skeleton';
 import { Typography, Button, Select } from 'antd';
 import { useAppDispatch } from '@/stores/hooks';
 import { addToCart } from '@/stores/slices/cartSlice';
+import type { ProductEntity, ProductSummary } from '@/app/products/_api/entities';
 
 const { Text, Title } = Typography;
 const { Option } = Select;
@@ -14,21 +13,63 @@ const { Option } = Select;
 interface CategoryClientProps {
   categoryName: string;
   categorySlug: string;
+  initialProducts?: ProductEntity[];
+  initialAllProducts?: ProductEntity[];
 }
 
-export default function CategoryClient({ categoryName, categorySlug }: CategoryClientProps) {
+// Helper to map ProductEntity to ProductSummary
+function mapToProductSummary(products: ProductEntity[]): ProductSummary[] {
+  return products.map((product) => {
+    const colorsMap: Record<string, { name: string }> = {};
+    if (product.colors) {
+      product.colors.forEach((color) => {
+        colorsMap[color.id.toString()] = { name: color.name };
+      });
+    }
+
+    let firstImage = product.thumbnail;
+    if (product.images && Object.keys(product.images).length > 0) {
+      const firstColorId = Object.keys(product.images)[0];
+      const firstColorImages = product.images[firstColorId];
+      if (firstColorImages?.length > 0) {
+        firstImage = firstColorImages[0];
+      }
+    }
+
+    return {
+      id: String(product.id),
+      slug: product.slug,
+      name: product.title,
+      price: product.price || 0,
+      origin_price: product.origin_price,
+      discount: product.discount || 0,
+      rating: product.rating || 0,
+      reviewCount: 0,
+      image: firstImage,
+      category: product.categories?.[0]?.name || 'همه',
+      isNew: product.is_new || false,
+      isFeatured: product.is_featured || false,
+      colors: colorsMap,
+      sizes: product.sizes?.map((s) => s.name) || [],
+      brand: product.brand || '',
+      description: product.description || '',
+      tags: product.tags || [],
+    };
+  });
+}
+
+export default function CategoryClient({
+  categoryName,
+  categorySlug,
+  initialProducts = [],
+  initialAllProducts = [],
+}: CategoryClientProps) {
   const dispatch = useAppDispatch();
   const [sortBy, setSortBy] = useState('relevance');
 
-  // Get all products for add to cart (need full product data)
-  const { data: allProducts = [] } = useProducts();
-
-  // Fetch products by category (use slug for API)
-  const {
-    data: categoryProducts = [],
-    isLoading,
-    error,
-  } = useProductsByCategory(categorySlug === 'all' ? 'all' : categorySlug);
+  // Use server-provided data
+  const allProducts = initialAllProducts;
+  const categoryProducts = useMemo(() => mapToProductSummary(initialProducts), [initialProducts]);
 
   // Sort products
   const sortedProducts = useMemo(() => {
@@ -121,9 +162,7 @@ export default function CategoryClient({ categoryName, categorySlug }: CategoryC
             {categoryName}
           </Title>
           <Text className="text-sm text-gray-500">
-            {isLoading
-              ? 'در حال بارگذاری...'
-              : `تعداد محصولات: ${categoryProducts.length.toLocaleString('fa-IR')}`}
+            {`تعداد محصولات: ${categoryProducts.length.toLocaleString('fa-IR')}`}
           </Text>
         </div>
 
@@ -141,39 +180,26 @@ export default function CategoryClient({ categoryName, categorySlug }: CategoryC
 
       {/* Products Grid */}
       <section className="category-page">
-        {isLoading ? (
-          <ProductGridSkeleton count={12} cols={3} />
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <Text type="danger" className="text-lg">
-              خطا در بارگذاری محصولات
-            </Text>
-            <Text className="mt-2 text-gray-500">
-              {(error as any)?.message || 'لطفاً دوباره تلاش کنید'}
-            </Text>
-          </div>
-        ) : (
-          <>
-            <ProductGrid
-              products={visibleProducts}
-              loading={false}
-              error={undefined}
-              cols={3}
-              gap="lg"
-              emptyMessage={`هیچ محصولی در دسته‌بندی ${categoryName} یافت نشد`}
-              onAddToCart={handleAddToCart}
-            />
+        <>
+          <ProductGrid
+            products={visibleProducts}
+            loading={false}
+            error={undefined}
+            cols={3}
+            gap="lg"
+            emptyMessage={`هیچ محصولی در دسته‌بندی ${categoryName} یافت نشد`}
+            onAddToCart={handleAddToCart}
+          />
 
-            {/* Load more */}
-            {visibleProducts.length < sortedProducts.length && (
-              <div className="mt-6 flex justify-center">
-                <Button onClick={() => setVisibleCount((c) => c + 24)} size="large">
-                  نمایش موارد بیشتر
-                </Button>
-              </div>
-            )}
-          </>
-        )}
+          {/* Load more */}
+          {visibleProducts.length < sortedProducts.length && (
+            <div className="mt-6 flex justify-center">
+              <Button onClick={() => setVisibleCount((c) => c + 24)} size="large">
+                نمایش موارد بیشتر
+              </Button>
+            </div>
+          )}
+        </>
       </section>
 
       <style jsx global>{`

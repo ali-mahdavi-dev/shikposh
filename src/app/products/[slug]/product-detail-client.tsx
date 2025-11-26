@@ -13,9 +13,8 @@ import {
   Badge,
   App as AntApp,
 } from 'antd';
-import { ErrorState, ContentLoading } from '@/shared/components/loading';
+import { ContentLoading } from '@/shared/components/loading';
 import { FeaturesList, ShippingInfo, StockStatus } from './_components';
-import { ProductDetailSkeleton } from '@/app/_components/skeleton';
 import {
   ShoppingCartOutlined,
   ShareAltOutlined,
@@ -23,13 +22,12 @@ import {
   HeartFilled,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import { ProductDetailProps } from './_types';
-import { useProduct, useProductsByCategory, useCategories } from '../_api';
 import { useSeller } from '@/app/seller/_api';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { addToCart } from '@/stores/slices/cartSlice';
 import { toggleWishlist } from '@/stores/slices/wishlistSlice';
 import { getValidImageSrc, formatIranianPrice } from '@/shared/utils';
+import type { ProductEntity, ProductSummary } from '../_api/entities';
 
 // Lazy load components for better performance
 const ColorSelector = React.lazy(() => import('../_components/color-selector'));
@@ -42,7 +40,56 @@ const ProfileCard = React.lazy(() => import('@/app/profile/_components/profile-c
 
 const { Title, Paragraph, Text } = Typography;
 
-export default function ProductDetailClient({ productId = '1' }: ProductDetailProps) {
+interface ProductDetailClientProps {
+  initialProduct: ProductEntity;
+  initialRelatedProducts?: ProductEntity[];
+}
+
+// Helper to map ProductEntity to ProductSummary
+function mapToProductSummary(products: ProductEntity[]): ProductSummary[] {
+  return products.map((product) => {
+    const colorsMap: Record<string, { name: string }> = {};
+    if (product.colors) {
+      product.colors.forEach((color) => {
+        colorsMap[color.id.toString()] = { name: color.name };
+      });
+    }
+
+    let firstImage = product.thumbnail;
+    if (product.images && Object.keys(product.images).length > 0) {
+      const firstColorId = Object.keys(product.images)[0];
+      const firstColorImages = product.images[firstColorId];
+      if (firstColorImages?.length > 0) {
+        firstImage = firstColorImages[0];
+      }
+    }
+
+    return {
+      id: product.id,
+      slug: product.slug,
+      name: product.title,
+      price: product.price || 0,
+      origin_price: product.origin_price,
+      discount: product.discount || 0,
+      rating: product.rating || 0,
+      reviewCount: 0,
+      image: firstImage,
+      category: product.categories?.[0]?.name || 'همه',
+      isNew: product.is_new || false,
+      isFeatured: product.is_featured || false,
+      colors: colorsMap,
+      sizes: product.sizes?.map((s) => s.name) || [],
+      brand: product.brand || '',
+      description: product.description || '',
+      tags: product.tags || [],
+    };
+  });
+}
+
+export default function ProductDetailClient({
+  initialProduct,
+  initialRelatedProducts = [],
+}: ProductDetailClientProps) {
   // Next.js router for navigation
   const router = useRouter();
 
@@ -51,34 +98,22 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
   const { message } = AntApp.useApp();
   const wishlistItems = useAppSelector((state) => state.wishlist.productIds);
 
-  // Use the new architecture hooks
-  const { data: productData, isLoading, error } = useProduct(productId);
+  // Use server-provided data
+  const product = initialProduct;
+  const productId = String(product.id);
 
   // Get seller information from API (only if product has seller_id)
   const {
     data: sellerData,
     isLoading: sellerLoading,
     error: sellerError,
-  } = useSeller(productData?.seller_id ? String(productData.seller_id) : '');
+  } = useSeller(product?.seller_id ? String(product.seller_id) : '');
 
-  // Get all categories to find category slug
-  const { data: categories = [] } = useCategories();
-
-  // Get category slug from product's category ID
-  const categorySlug = useMemo(() => {
-    if (!productData?.categories?.[0]?.id || !categories.length) {
-      return '';
-    }
-    const categoryId = productData.categories[0].id;
-    const category = categories.find((cat) => String(cat.id) === String(categoryId));
-    return category?.slug || '';
-  }, [productData?.categories, categories]);
-
-  // Get related products from API based on product category slug
-  const { data: relatedProductsData = [] } = useProductsByCategory(categorySlug);
-
-  // Use product data from React Query
-  const product = productData;
+  // Map related products to summary format
+  const relatedProductsData = useMemo(
+    () => mapToProductSummary(initialRelatedProducts),
+    [initialRelatedProducts],
+  );
 
   // Initialize state with default values
   const [selectedColorId, setSelectedColorId] = useState<string>('');
@@ -302,19 +337,8 @@ export default function ProductDetailClient({ productId = '1' }: ProductDetailPr
     [product, averageRating, productId],
   );
 
-  // Loading and error states - moved after all hooks
-  if (isLoading) {
-    return <ProductDetailSkeleton />;
-  }
-
-  if (error || !product) {
-    return (
-      <ErrorState message="خطا در بارگذاری محصول" description="متأسفانه محصول مورد نظر یافت نشد." />
-    );
-  }
-
   // Filter out current product from related products
-  const relatedProducts = relatedProductsData.filter((p) => p.id !== String(productId));
+  const relatedProducts = relatedProductsData.filter((p) => String(p.id) !== productId);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">

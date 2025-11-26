@@ -1,13 +1,7 @@
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
-import {
-  useFilteredProducts,
-  useCategories,
-  useProducts,
-  useDebounced,
-  type ProductFilters,
-} from './_api';
+import { useFilteredProducts, useDebounced, type ProductFilters } from './_api';
 import { ProductGrid } from './_components';
 import { ProductGridSkeleton } from '@/app/_components/skeleton';
 import { Input, Select, Rate, Button, Drawer, Typography, Tag, Slider } from 'antd';
@@ -16,18 +10,27 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/stores/hooks';
 import { addToCart } from '@/stores/slices/cartSlice';
 import { formatIranianPrice } from '@/shared/utils';
+import type { ProductEntity, CategoryEntity } from './_api/entities';
 
 const { Text } = Typography;
 const { Option } = Select;
 
-export default function ProductsClient() {
+interface ProductsClientProps {
+  initialProducts?: ProductEntity[];
+  initialCategories?: CategoryEntity[];
+}
+
+export default function ProductsClient({
+  initialProducts = [],
+  initialCategories = [],
+}: ProductsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
 
-  // Get all products for add to cart (need full product data)
-  const { data: allProducts = [] } = useProducts();
-  const { data: categories = [] } = useCategories();
+  // Use initial server data
+  const allProducts = initialProducts;
+  const categories = initialCategories;
 
   // Initialize filters from URL or defaults
   const getUrlParam = (key: string, defaultValue: string) => searchParams.get(key) || defaultValue;
@@ -66,7 +69,7 @@ export default function ProductsClient() {
   const filters: ProductFilters = useMemo(
     () => ({
       q: debouncedSearchQuery.trim() || undefined,
-      category_name: category !== 'all' ? category : undefined,
+      category: category !== 'all' ? category : undefined,
       min: minPriceNum > 0 ? minPriceNum : undefined,
       max: maxPriceNum < 10_000_000 ? maxPriceNum : undefined,
       rating: minRating > 0 ? minRating : undefined,
@@ -86,8 +89,59 @@ export default function ProductsClient() {
     ],
   );
 
-  // Fetch filtered products from API
-  const { data: filteredProducts = [], isLoading, error } = useFilteredProducts(filters);
+  // Check if any filter is active
+  const hasActiveFilters = useMemo(() => {
+    return !!(
+      filters.q ||
+      filters.category ||
+      filters.min ||
+      filters.max ||
+      filters.rating ||
+      filters.featured ||
+      filters.tags?.length ||
+      filters.sort
+    );
+  }, [filters]);
+
+  // Only fetch from API when filters are active, otherwise use SSG data
+  const {
+    data: apiFilteredProducts = [],
+    isLoading,
+    error,
+  } = useFilteredProducts(hasActiveFilters ? filters : {}, { enabled: hasActiveFilters });
+
+  // Use SSG data when no filters, API data when filters are active
+  const filteredProducts = useMemo(() => {
+    if (!hasActiveFilters) {
+      // Map initial products to ProductSummary format for display
+      return allProducts.map((product) => {
+        let firstImage = product.thumbnail;
+        if (product.images && Object.keys(product.images).length > 0) {
+          const firstColorId = Object.keys(product.images)[0];
+          const firstColorImages = product.images[firstColorId];
+          if (firstColorImages?.length > 0) {
+            firstImage = firstColorImages[0];
+          }
+        }
+
+        return {
+          id: String(product.id),
+          slug: product.slug,
+          name: product.title,
+          price: product.price || 0,
+          origin_price: product.origin_price,
+          discount: product.discount || 0,
+          rating: product.rating || 0,
+          reviewCount: 0,
+          image: firstImage,
+          category: product.categories?.[0]?.name || 'همه',
+          isNew: product.is_new || false,
+          isFeatured: product.is_featured || false,
+        };
+      });
+    }
+    return apiFilteredProducts;
+  }, [hasActiveFilters, allProducts, apiFilteredProducts]);
 
   // Extract unique categories with slug for filtering
   const categoryOptions = useMemo(() => {
@@ -324,7 +378,7 @@ export default function ProductsClient() {
                 >
                   <Option value="all">همه</Option>
                   {categoryOptions.map((cat) => (
-                    <Option key={cat.slug} value={cat.name}>
+                    <Option key={cat.slug} value={cat.slug}>
                       {cat.name}
                     </Option>
                   ))}

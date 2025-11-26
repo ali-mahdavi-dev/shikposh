@@ -2,6 +2,8 @@ import React from 'react';
 import type { Metadata } from 'next';
 import AboutClient from './about-client';
 
+export const dynamic = 'force-static';
+
 export const metadata: Metadata = {
   title: 'درباره ما | شیک‌پوشان',
   description: 'آشنایی با فروشگاه شیک‌پوشان، ماموریت، ارزش‌ها و تیم ما. خرید آنلاین پوشاک زنانه با بهترین کیفیت و تجربه کاربری.',

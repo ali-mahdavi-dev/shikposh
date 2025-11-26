@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { Result, Button } from 'antd';
 
+export const dynamic = 'force-static';
+
 export default function Custom404() {
   return (
     <Result
