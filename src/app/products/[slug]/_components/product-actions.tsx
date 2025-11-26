@@ -16,6 +16,7 @@ import type { ProductEntity } from '../../_api/entities';
 import ColorSelector from '../../_components/color-selector';
 import SizeSelector from '../../_components/size-selector';
 import QuantitySelector from '../../_components/quantity-selector';
+import { useToggleWishlistMutation } from '@/app/wishlist/_api/hooks';
 
 interface ProductActionsProps {
   product: ProductEntity;
@@ -128,10 +129,24 @@ export default function ProductActions({ product }: ProductActionsProps) {
     message.success('به سبد خرید اضافه شد');
   }, [product, selectedColorId, selectedSizeId, quantity, currentImages, dispatch, message]);
 
+  const toggleWishlistMutation = useToggleWishlistMutation();
+
   const handleWishlistToggle = useCallback(() => {
+    // Update local state immediately for optimistic UI
     dispatch(toggleWishlist(String(product.id)));
-    message.success(isWishlisted ? 'از علاقه‌مندی‌ها حذف شد' : 'به علاقه‌مندی‌ها اضافه شد');
-  }, [product, dispatch, message, isWishlisted]);
+
+    // Call API to persist in database
+    toggleWishlistMutation.mutate(Number(product.id), {
+      onSuccess: (response) => {
+        message.success(response.added ? 'به علاقه‌مندی‌ها اضافه شد' : 'از علاقه‌مندی‌ها حذف شد');
+      },
+      onError: () => {
+        // Revert on error
+        dispatch(toggleWishlist(String(product.id)));
+        message.error('خطا در ذخیره‌سازی');
+      },
+    });
+  }, [product, dispatch, message, toggleWishlistMutation]);
 
   return (
     <div className="space-y-6">
@@ -161,8 +176,17 @@ export default function ProductActions({ product }: ProductActionsProps) {
       )}
 
       {/* Stock Status */}
-      <div className={`text-sm ${currentStock > 0 ? 'text-green-600' : 'text-red-600'}`}>
-        {currentStock > 0 ? `${currentStock} عدد موجود` : 'ناموجود'}
+      <div
+        className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${
+          currentStock > 0
+            ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+            : 'bg-red-50 text-red-600 ring-1 ring-red-200'
+        }`}
+      >
+        <span
+          className={`h-2 w-2 rounded-full ${currentStock > 0 ? 'animate-pulse bg-emerald-500' : 'bg-red-500'}`}
+        />
+        {currentStock > 0 ? `${currentStock} عدد موجود در انبار` : 'ناموجود'}
       </div>
 
       {/* Price and Actions */}
