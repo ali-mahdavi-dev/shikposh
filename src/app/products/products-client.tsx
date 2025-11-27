@@ -197,7 +197,7 @@ export default function ProductsClient({
   useEffect(() => {
     const params = new URLSearchParams();
     if (debouncedSearchQuery) params.set('q', debouncedSearchQuery);
-    if (category !== 'all') params.set('category_name', category);
+    if (category !== 'all') params.set('category', category);
     if (sortBy !== 'relevance') params.set('sort', sortBy);
     if (minPriceNum > 0) params.set('min', String(minPriceNum));
     if (maxPriceNum < 10_000_000) params.set('max', String(maxPriceNum));

@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion, MotionProps } from 'framer-motion';
 import { cn } from '@/utils/cn';
 
 export interface GridProps {
@@ -7,7 +6,6 @@ export interface GridProps {
   gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   responsive?: boolean;
   animation?: boolean;
-  motionProps?: MotionProps;
   className?: string;
   children: React.ReactNode;
 }
@@ -45,7 +43,6 @@ export const Grid: React.FC<GridProps> = ({
   gap = 'md',
   responsive = true,
   animation = true,
-  motionProps,
   className,
   children,
 }) => {
@@ -53,22 +50,11 @@ export const Grid: React.FC<GridProps> = ({
     'grid',
     responsive ? responsiveGrid[cols] : gridCols[cols],
     gridGaps[gap],
+    animation && 'animate-fade-in',
     className,
   );
 
-  const GridComponent = animation ? motion.div : 'div';
-
-  const gridProps = {
-    className: gridClasses,
-    ...(animation && {
-      initial: { opacity: 0 },
-      animate: { opacity: 1 },
-      transition: { duration: 0.3, staggerChildren: 0.1 },
-      ...motionProps,
-    }),
-  };
-
-  return <GridComponent {...gridProps}>{children}</GridComponent>;
+  return <div className={gridClasses}>{children}</div>;
 };
 
 export default Grid;

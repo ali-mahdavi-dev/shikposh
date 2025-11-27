@@ -4,7 +4,6 @@ import type { ProductEntity, ProductSummary, CategoryEntity } from './entities';
 export interface ProductFilters {
   q?: string;
   category?: string;
-  category_name?: string;
   min?: number;
   max?: number;
   rating?: number;
@@ -76,8 +75,6 @@ export class HttpProductRepository implements ProductRepository {
     const params = new URLSearchParams();
     if (filters.q) params.set('q', filters.q);
     if (filters.category && filters.category !== 'all') params.set('category', filters.category);
-    if (filters.category_name && filters.category_name !== 'all')
-      params.set('category_name', filters.category_name);
     if (filters.min !== undefined && filters.min > 0) params.set('min', String(filters.min));
     if (filters.max !== undefined && filters.max < 10_000_000)
       params.set('max', String(filters.max));

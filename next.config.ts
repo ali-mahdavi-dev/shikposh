@@ -64,39 +64,6 @@ const nextConfig: NextConfig = {
   // Prefer SWC minify and disable prod source maps by default for perf
   productionBrowserSourceMaps: false,
 
-  // Webpack optimizations
-  webpack: (config, { dev, isServer }) => {
-    // Optimize bundle splitting
-    if (!dev && !isServer) {
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-            priority: 10,
-          },
-          antd: {
-            test: /[\\/]node_modules[\\/](antd|@ant-design)[\\/]/,
-            name: 'antd',
-            chunks: 'all',
-            priority: 20,
-          },
-          common: {
-            name: 'common',
-            minChunks: 2,
-            chunks: 'all',
-            priority: 5,
-            reuseExistingChunk: true,
-          },
-        },
-      };
-    }
-
-    return config;
-  },
-
   // Better error reporting
   onDemandEntries: {
     // period (in ms) where the server will keep pages in the buffer

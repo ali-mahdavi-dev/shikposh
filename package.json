@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "predev": "echo 'Skipping prettier for now'",
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "prebuild": "prettier . --write",
     "build": "next build",
     "start": "next start",

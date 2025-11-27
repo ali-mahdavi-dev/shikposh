@@ -51,7 +51,6 @@ export default function AuthClient() {
 
       const result = await sendOtpMutation.mutateAsync({
         phone,
-        type: 'login', // Always use 'login' type for initial OTP
       });
 
       if (result.success) {
@@ -74,7 +73,6 @@ export default function AuthClient() {
       const verifyResult = await verifyOtpMutation.mutateAsync({
         phone,
         otp,
-        type: 'login',
       });
 
       console.log('verifyResult', verifyResult);
@@ -130,7 +128,7 @@ export default function AuthClient() {
       const values = await form.validateFields(['firstName', 'lastName']);
 
       // Register user
-      await registerMutation.mutateAsync({
+      const result = await registerMutation.mutateAsync({
         phone,
         firstName: values.firstName,
         lastName: values.lastName,
@@ -138,12 +136,35 @@ export default function AuthClient() {
         avatarIdentifier: phone,
       });
 
-      message.success('ثبت نام با موفقیت انجام شد. لطفاً وارد شوید');
-      // Reset form and go back to phone step
-      setCurrentStep('phone');
-      setPhone('');
-      setOtp('');
-      form.resetFields();
+      // If registration returns token, log user in automatically
+      if (result.token && result.user) {
+        const backendUser = result.user;
+        const normalizedUser = {
+          id: String(backendUser.id),
+          first_name: backendUser.first_name || '',
+          last_name: backendUser.last_name || '',
+          email: backendUser.email || '',
+          phone: backendUser.phone || phone,
+          avatar: backendUser.avatar,
+        };
+
+        dispatch(
+          setCredentials({
+            user: normalizedUser,
+            token: result.token,
+            refreshToken: result.refresh_token,
+          }),
+        );
+        message.success('ثبت نام با موفقیت انجام شد');
+        router.push('/');
+      } else {
+        message.success('ثبت نام با موفقیت انجام شد. لطفاً وارد شوید');
+        // Reset form and go back to phone step
+        setCurrentStep('phone');
+        setPhone('');
+        setOtp('');
+        form.resetFields();
+      }
     } catch (error: any) {
       message.error(error?.message || 'خطا در ثبت نام');
     }
@@ -158,7 +179,6 @@ export default function AuthClient() {
     try {
       await sendOtpMutation.mutateAsync({
         phone,
-        type: 'login',
       });
 
       message.success('کد جدید ارسال شد');

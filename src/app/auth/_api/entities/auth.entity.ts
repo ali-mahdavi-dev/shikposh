@@ -1,13 +1,11 @@
 // Request interfaces (camelCase - for sending to backend)
 export interface SendOtpRequest {
   phone: string;
-  type: 'login' | 'register';
 }
 
 export interface VerifyOtpRequest {
   phone: string;
   otp: string;
-  type: 'login' | 'register';
 }
 
 export interface RegisterRequest {
@@ -41,6 +39,9 @@ export interface VerifyOtpResponseBackend {
 export interface RegisterResponseBackend {
   success: boolean;
   message?: string;
+  token?: string;
+  refresh_token?: string;
+  user?: UserBackend;
 }
 
 export interface LoginResponseBackend {
@@ -83,6 +84,9 @@ export interface VerifyOtpResponse {
 export interface RegisterResponse {
   success: boolean;
   message?: string;
+  token?: string;
+  refresh_token?: string;
+  user?: User;
 }
 
 export interface LoginResponse {
