@@ -1,17 +1,45 @@
-import React from 'react';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 import { serverFetch } from '@/shared/services/server-fetch';
 import type { ProductEntity, ProductSummary } from './products/_api/entities';
-import HeroCarousel from './_components/home/hero-carousel';
-import FeaturesSection from './_components/home/features-section';
-import ProductSlider from './_components/home/product-slider';
-import CtaSection from './_components/home/cta-section';
+
+const HeroCarousel = dynamic(() => import('./_components/home/hero-carousel'));
+const FeaturesSection = dynamic(() => import('./_components/home/features-section'));
+const ProductSlider = dynamic(() => import('./_components/home/product-slider'));
+const CtaSection = dynamic(() => import('./_components/home/cta-section'));
+const LazySection = dynamic(() => import('./_components/common/lazy-section'));
 
 export const revalidate = 3600; // ISR: revalidate every hour
 
 export const metadata: Metadata = {
-  title: 'صفحه اصلی',
-  description: 'فروشگاه آنلاین شیک‌پوشان - بهترین محصولات مد و پوشاک',
+  title: 'شیک‌پوشان | فروشگاه آنلاین مد و پوشاک زنانه با بهترین قیمت',
+  description:
+    'خرید آنلاین لباس زنانه، مانتو، شال و روسری، کیف و کفش با تخفیف‌های ویژه. ارسال رایگان، ضمانت بازگشت کالا و پشتیبانی ۲۴ ساعته در فروشگاه شیک‌پوشان.',
+  keywords: [
+    'فروشگاه آنلاین لباس زنانه',
+    'خرید مانتو',
+    'خرید شال و روسری',
+    'پوشاک زنانه',
+    'مد و فشن',
+    'لباس با تخفیف',
+    'شیک‌پوشان',
+    'خرید اینترنتی لباس',
+  ],
+  alternates: { canonical: '/' },
+  openGraph: {
+    title: 'شیک‌پوشان | فروشگاه آنلاین مد و پوشاک زنانه',
+    description:
+      'بهترین محصولات مد و پوشاک زنانه با کیفیت بالا، قیمت مناسب و ارسال سریع. همین حالا خرید کنید!',
+    url: '/',
+    siteName: 'شیک‌پوشان',
+    type: 'website',
+    locale: 'fa_IR',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'شیک‌پوشان | فروشگاه آنلاین مد و پوشاک زنانه',
+    description: 'خرید آنلاین لباس زنانه با بهترین قیمت و کیفیت',
+  },
 };
 
 // Helper to map ProductEntity to ProductSummary format
@@ -81,39 +109,47 @@ export default async function Page() {
       {/* Features - SSG */}
       <FeaturesSection />
 
-      {/* Product Sliders - Client (for addToCart) */}
+      {/* Product Sliders - Lazy loaded on scroll */}
       {mappedDiscounted.length > 0 && (
-        <ProductSlider
-          title="پرتخفیف‌ترین محصولات"
-          description="بهترین فرصت برای خرید با تخفیف‌های ویژه و استثنایی"
-          products={mappedDiscounted}
-          icon="discount"
-          accentColor="orange"
-        />
+        <LazySection>
+          <ProductSlider
+            title="پرتخفیف‌ترین محصولات"
+            description="بهترین فرصت برای خرید با تخفیف‌های ویژه و استثنایی"
+            products={mappedDiscounted}
+            icon="discount"
+            accentColor="orange"
+          />
+        </LazySection>
       )}
 
       {mappedBestSelling.length > 0 && (
-        <ProductSlider
-          title="پرفروش‌ترین محصولات"
-          description="محبوب‌ترین انتخاب‌های مشتریان ما را کشف کنید"
-          products={mappedBestSelling}
-          icon="fire"
-          accentColor="pink"
-        />
+        <LazySection>
+          <ProductSlider
+            title="پرفروش‌ترین محصولات"
+            description="محبوب‌ترین انتخاب‌های مشتریان ما را کشف کنید"
+            products={mappedBestSelling}
+            icon="fire"
+            accentColor="pink"
+          />
+        </LazySection>
       )}
 
       {mappedNewArrivals.length > 0 && (
-        <ProductSlider
-          title="جدیدترین محصولات"
-          description="آخرین محصولات اضافه شده به فروشگاه را ببینید"
-          products={mappedNewArrivals}
-          icon="star"
-          accentColor="purple"
-        />
+        <LazySection>
+          <ProductSlider
+            title="جدیدترین محصولات"
+            description="آخرین محصولات اضافه شده به فروشگاه را ببینید"
+            products={mappedNewArrivals}
+            icon="star"
+            accentColor="purple"
+          />
+        </LazySection>
       )}
 
-      {/* CTA - Client (for auth check) */}
-      <CtaSection />
+      {/* CTA - Lazy loaded on scroll */}
+      <LazySection>
+        <CtaSection />
+      </LazySection>
     </div>
   );
 }

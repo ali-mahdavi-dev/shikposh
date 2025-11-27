@@ -1,10 +1,11 @@
-import React from 'react';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
-import SellerClient from './seller-client';
 import { serverFetch } from '@/shared/services/server-fetch';
 import type { SellerEntity, SellerSummary } from '../_api/entities';
 import type { ProductEntity } from '@/app/products/_api/entities';
+
+const SellerClient = dynamic(() => import('./seller-client'));
 
 export const revalidate = 3600; // ISR: revalidate every hour
 
@@ -34,16 +35,23 @@ export async function generateMetadata({ params }: SellerPageProps): Promise<Met
   if (!seller) {
     return {
       title: 'فروشنده یافت نشد | شیک‌پوشان',
+      description: 'متاسفانه فروشنده مورد نظر یافت نشد.',
     };
   }
 
   return {
-    title: `${seller.name} | شیک‌پوشان`,
-    description: seller.description || 'صفحه فروشنده در فروشگاه شیک‌پوشان',
+    title: `فروشگاه ${seller.name} | محصولات و اطلاعات فروشنده`,
+    description:
+      seller.description ||
+      `مشاهده محصولات و اطلاعات فروشنده ${seller.name} در شیک‌پوشان. خرید مستقیم از فروشنده معتبر با ضمانت کیفیت.`,
+    alternates: { canonical: `/seller/${id}` },
     openGraph: {
-      title: seller.name,
-      description: seller.description,
-      images: seller.avatar ? [seller.avatar] : [],
+      title: `فروشگاه ${seller.name}`,
+      description: seller.description || `محصولات ${seller.name} در شیک‌پوشان`,
+      images: seller.avatar ? [{ url: seller.avatar, alt: seller.name }] : [],
+      type: 'profile',
+      url: `/seller/${id}`,
+      siteName: 'شیک‌پوشان',
     },
   };
 }
@@ -65,10 +73,5 @@ export default async function SellerPage({ params }: SellerPageProps) {
     notFound();
   }
 
-  return (
-    <SellerClient
-      initialSeller={seller}
-      initialProducts={products || []}
-    />
-  );
+  return <SellerClient initialSeller={seller} initialProducts={products || []} />;
 }

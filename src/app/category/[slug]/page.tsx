@@ -1,74 +1,70 @@
-import React from 'react';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
 import { serverFetch } from '@/shared/services/server-fetch';
 import type { ProductEntity, CategoryEntity } from '@/app/products/_api/entities';
-import { ProductGrid } from '@/app/products/_components';
 
-export const revalidate = 3600; // ISR: revalidate every hour
+const ProductGrid = dynamic(() => import('@/app/products/_components').then((m) => m.ProductGrid));
 
-interface CategoryPageProps {
-  params: Promise<{
-    slug: string;
-  }>;
-}
+export const revalidate = 3600;
+export const dynamicParams = true;
 
-// Generate static params for all categories
+type Props = {
+  params: Promise<{ slug: string }>;
+};
+
 export async function generateStaticParams() {
   const categories = await serverFetch<CategoryEntity[]>('/api/v1/public/categories', {
     revalidate: 3600,
   });
 
-  if (!categories) return [];
-
-  return categories.map((category) => ({
-    slug: category.slug,
-  }));
+  return (categories || []).map((c) => ({ slug: c.slug }));
 }
 
-export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const category = await serverFetch<CategoryEntity>(`/api/v1/public/categories/${slug}`, {
     tags: ['categories', `category-${slug}`],
   });
 
-  const categoryName = category?.name || slug;
+  const name = category?.name || slug;
 
   return {
-    title: `${categoryName} | شیک‌پوشان`,
-    description: `محصولات دسته‌بندی ${categoryName} در فروشگاه شیک‌پوشان`,
+    title: `خرید ${name} | بهترین مدل‌ها با قیمت مناسب`,
+    description: `خرید آنلاین ${name} از شیک‌پوشان. مشاهده جدیدترین مدل‌ها، مقایسه قیمت‌ها و انتخاب از بین صدها محصول با کیفیت. ارسال سریع و ضمانت بازگشت.`,
+    keywords: [`خرید ${name}`, `${name} زنانه`, `${name} با تخفیف`, 'شیک‌پوشان'],
+    alternates: { canonical: `/category/${slug}` },
+    openGraph: {
+      title: `${name} | فروشگاه شیک‌پوشان`,
+      description: `بهترین محصولات ${name} با قیمت مناسب و کیفیت عالی`,
+      url: `/category/${slug}`,
+      siteName: 'شیک‌پوشان',
+      type: 'website',
+    },
   };
 }
 
-// Helper to map ProductEntity to grid format
-function mapToGridProduct(products: ProductEntity[]) {
-  return products.map((product) => {
-    let firstImage = product.thumbnail;
-    if (product.images && Object.keys(product.images).length > 0) {
-      const firstColorId = Object.keys(product.images)[0];
-      const firstColorImages = product.images[firstColorId];
-      if (firstColorImages?.length > 0) {
-        firstImage = firstColorImages[0];
-      }
-    }
+const mapToGrid = (products: ProductEntity[]) =>
+  products.map((p) => {
+    const firstColorId = p.images ? Object.keys(p.images)[0] : null;
+    const image = firstColorId ? p.images?.[firstColorId]?.[0] : p.thumbnail;
 
     return {
-      id: String(product.id),
-      slug: product.slug,
-      name: product.title,
-      image: firstImage,
-      price: product.price || 0,
-      origin_price: product.origin_price,
-      discount: product.discount || 0,
-      rating: product.rating || 0,
+      id: String(p.id),
+      slug: p.slug,
+      name: p.title,
+      image,
+      price: p.price || 0,
+      origin_price: p.origin_price,
+      discount: p.discount || 0,
+      rating: p.rating || 0,
       reviewCount: 0,
-      isNew: product.is_new || false,
-      isFeatured: product.is_featured || false,
+      isNew: p.is_new || false,
+      isFeatured: p.is_featured || false,
     };
   });
-}
 
-export default async function CategoryPage({ params }: CategoryPageProps) {
+export default async function CategoryPage({ params }: Props) {
   const { slug } = await params;
 
   // Fetch category and products server-side
@@ -85,7 +81,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
-  const gridProducts = mapToGridProduct(products || []);
+  const gridProducts = mapToGrid(products || []);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-4 sm:py-6">

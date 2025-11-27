@@ -411,7 +411,7 @@ export default function ProductsClient({
                   tooltip={{
                     formatter: (value) => `${formatIranianPrice(value || 0)} تومان`,
                   }}
-                  className="!mb-0"
+                  className="mb-0"
                 />
               </div>
 

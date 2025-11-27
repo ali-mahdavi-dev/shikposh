@@ -1,10 +1,13 @@
-import React from 'react';
-import { Metadata } from 'next';
-import NotificationClient from './notification-client';
+import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
+
+const NotificationClient = dynamic(() => import('./notification-client'));
 
 export const metadata: Metadata = {
-  title: 'اعلان‌ها | شیک‌پوشان',
-  description: 'اعلان‌های شما در فروشگاه شیک‌پوشان',
+  title: 'اعلان‌ها و پیام‌ها | مرکز اطلاع‌رسانی',
+  description: 'مشاهده اعلان‌ها، پیام‌های سیستم، وضعیت سفارشات و اطلاعیه‌های تخفیف در شیک‌پوشان.',
+  robots: { index: false, follow: false },
+  alternates: { canonical: '/notification' },
 };
 
 export default function NotificationPage() {

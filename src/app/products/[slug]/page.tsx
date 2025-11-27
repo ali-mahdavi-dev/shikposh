@@ -1,18 +1,21 @@
-import React from 'react';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
 import { serverFetch } from '@/shared/services/server-fetch';
 import type { ProductEntity, CategoryEntity, ProductSummary } from '../_api/entities';
-import FeaturesList from './_components/features-list';
-import ShippingInfo from './_components/shipping-info';
-import ProductActions from './_components/product-actions';
-import SellerInfo from './_components/seller-info';
-import ProductTabs from './_components/product-tabs';
-import ProductTags from './_components/product-tags';
-import ProductImageGalleryWrapper from './_components/product-image-gallery-wrapper';
-import ProductHeader from './_components/product-header';
 import ProductCardWrapper, { ProductDivider } from './_components/product-card-wrapper';
-import RelatedProducts from '../_components/related-products';
+
+const FeaturesList = dynamic(() => import('./_components/features-list'));
+const ShippingInfo = dynamic(() => import('./_components/shipping-info'));
+const ProductActions = dynamic(() => import('./_components/product-actions'));
+const SellerInfo = dynamic(() => import('./_components/seller-info'));
+const ProductTabs = dynamic(() => import('./_components/product-tabs'));
+const ProductTags = dynamic(() => import('./_components/product-tags'));
+const ProductImageGalleryWrapper = dynamic(
+  () => import('./_components/product-image-gallery-wrapper'),
+);
+const ProductHeader = dynamic(() => import('./_components/product-header'));
+const RelatedProducts = dynamic(() => import('../_components/related-products'));
 
 export const revalidate = 3600;
 
@@ -37,15 +40,39 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
   });
 
   if (!product) {
-    return { title: 'محصول یافت نشد | شیک‌پوشان' };
+    return {
+      title: 'محصول یافت نشد | شیک‌پوشان',
+      description:
+        'متاسفانه محصول مورد نظر یافت نشد. از صفحه محصولات برای یافتن محصولات مشابه استفاده کنید.',
+    };
   }
 
+  const priceText = product.price ? `قیمت: ${product.price.toLocaleString('fa-IR')} تومان` : '';
+  const discountText = product.discount ? `${product.discount}% تخفیف` : '';
+  const categoryText = product.categories?.[0]?.name || '';
+
   return {
-    title: `${product.title} | شیک‌پوشان`,
-    description: product.description || 'جزئیات محصول در فروشگاه شیک‌پوشان',
+    title: `خرید ${product.title} | ${discountText || categoryText || 'شیک‌پوشان'}`,
+    description:
+      product.description ||
+      `خرید آنلاین ${product.title} از شیک‌پوشان. ${priceText}. ارسال سریع، ضمانت اصالت و بازگشت کالا.`,
+    keywords: [product.title, product.brand || '', categoryText, 'خرید آنلاین', 'شیک‌پوشان'].filter(
+      Boolean,
+    ),
+    alternates: { canonical: `/products/${slug}` },
     openGraph: {
+      title: `${product.title} | شیک‌پوشان`,
+      description:
+        product.description || `خرید ${product.title} با بهترین قیمت و کیفیت از شیک‌پوشان`,
+      images: product.thumbnail ? [{ url: product.thumbnail, alt: product.title }] : [],
+      type: 'website',
+      url: `/products/${slug}`,
+      siteName: 'شیک‌پوشان',
+    },
+    twitter: {
+      card: 'summary_large_image',
       title: product.title,
-      description: product.description,
+      description: product.description || `خرید ${product.title} از شیک‌پوشان`,
       images: product.thumbnail ? [product.thumbnail] : [],
     },
   };

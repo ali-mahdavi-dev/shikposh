@@ -15,9 +15,11 @@ export default function ProductTags({ tags }: ProductTagsProps) {
         <Link
           key={`${tag}-${index}`}
           href={`/products?tags=${encodeURIComponent(tag)}`}
-          className="inline-flex h-[22px] items-center rounded border border-[#f759ab] !bg-[#fec9e4f5] !px-[7px] text-xs font-medium !text-[#9e1068] transition-all hover:border-[#c41d7f] hover:text-[#c41d7f]"
+          // className="inline-flex h-[22px] items-center rounded border border-[#f759ab] !bg-[#fec9e4f5] !px-[7px] text-xs font-medium !text-[#9e1068] transition-all hover:border-[#c41d7f] hover:text-[#c41d7f]"
         >
-          {tag}
+          <span className="rounded border border-[#f759ab] bg-pink-100 px-2 py-0.5 text-xs text-pink-600">
+            {tag}
+          </span>
         </Link>
       ))}
     </div>

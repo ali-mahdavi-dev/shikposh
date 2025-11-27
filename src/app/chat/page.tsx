@@ -1,7 +1,17 @@
-import { Avatar } from 'antd';
-import Title from 'antd/es/typography/Title';
-import React from 'react';
+import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 import { DEFAULT_IMAGES, getValidImageSrc } from '@/shared/utils/image';
+
+const Avatar = dynamic(() => import('antd').then((m) => m.Avatar));
+const Title = dynamic(() => import('antd/es/typography/Title'));
+
+export const metadata: Metadata = {
+  title: 'گفتگو با فروشندگان | پشتیبانی آنلاین',
+  description:
+    'چت مستقیم با فروشندگان شیک‌پوشان. سوال درباره محصولات، هماهنگی ارسال و دریافت مشاوره خرید.',
+  robots: { index: false, follow: false },
+  alternates: { canonical: '/chat' },
+};
 
 export default function Page() {
   return (
