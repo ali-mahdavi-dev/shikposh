@@ -75,7 +75,6 @@ export default function AuthClient() {
         otp,
       });
 
-      console.log('verifyResult', verifyResult);
       // Check if user exists
       if (verifyResult.user_exists === false) {
         // User doesn't exist, go to register form
@@ -84,6 +83,31 @@ export default function AuthClient() {
       } else if (verifyResult.user && verifyResult.token) {
         // User exists, login successful - save tokens
         const backendUser = verifyResult.user;
+
+        // Handle is_admin - it should be boolean, but handle edge cases
+        // Sometimes backend might send it as string or number, so we handle all cases
+        let isAdminValue = false;
+        const isAdmin: any = backendUser.is_admin;
+        if (isAdmin === true || isAdmin === 'true' || isAdmin === 1 || isAdmin === '1') {
+          isAdminValue = true;
+        } else if (typeof isAdmin === 'string' && isAdmin.toLowerCase() === 'true') {
+          isAdminValue = true;
+        }
+
+        // Handle is_superuser
+        let isSuperuserValue = false;
+        const isSuperuser: any = backendUser.is_superuser;
+        if (
+          isSuperuser === true ||
+          isSuperuser === 'true' ||
+          isSuperuser === 1 ||
+          isSuperuser === '1'
+        ) {
+          isSuperuserValue = true;
+        } else if (typeof isSuperuser === 'string' && isSuperuser.toLowerCase() === 'true') {
+          isSuperuserValue = true;
+        }
+
         const normalizedUser = {
           id: String(backendUser.id),
           first_name: backendUser.first_name || '',
@@ -91,6 +115,8 @@ export default function AuthClient() {
           email: backendUser.email || '',
           phone: backendUser.phone || phone,
           avatar: backendUser.avatar,
+          is_admin: isAdminValue,
+          is_superuser: isSuperuserValue,
         };
 
         dispatch(
@@ -139,6 +165,30 @@ export default function AuthClient() {
       // If registration returns token, log user in automatically
       if (result.token && result.user) {
         const backendUser = result.user;
+
+        // Handle is_admin
+        let isAdminValue = false;
+        const isAdmin: any = backendUser.is_admin;
+        if (isAdmin === true || isAdmin === 'true' || isAdmin === 1 || isAdmin === '1') {
+          isAdminValue = true;
+        } else if (typeof isAdmin === 'string' && isAdmin.toLowerCase() === 'true') {
+          isAdminValue = true;
+        }
+
+        // Handle is_superuser
+        let isSuperuserValue = false;
+        const isSuperuser: any = backendUser.is_superuser;
+        if (
+          isSuperuser === true ||
+          isSuperuser === 'true' ||
+          isSuperuser === 1 ||
+          isSuperuser === '1'
+        ) {
+          isSuperuserValue = true;
+        } else if (typeof isSuperuser === 'string' && isSuperuser.toLowerCase() === 'true') {
+          isSuperuserValue = true;
+        }
+
         const normalizedUser = {
           id: String(backendUser.id),
           first_name: backendUser.first_name || '',
@@ -146,6 +196,8 @@ export default function AuthClient() {
           email: backendUser.email || '',
           phone: backendUser.phone || phone,
           avatar: backendUser.avatar,
+          is_admin: isAdminValue,
+          is_superuser: isSuperuserValue,
         };
 
         dispatch(

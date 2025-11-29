@@ -58,6 +58,8 @@ export interface UserBackend {
   email: string;
   phone?: string;
   avatar?: string;
+  is_admin?: boolean;
+  is_superuser?: boolean;
 }
 
 export interface AuthTokenResponseBackend {
@@ -103,6 +105,8 @@ export interface User {
   email: string;
   phone?: string;
   avatar?: string;
+  is_admin?: boolean;
+  is_superuser?: boolean;
 }
 
 export interface AuthTokenResponse {

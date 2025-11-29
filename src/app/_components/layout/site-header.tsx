@@ -9,10 +9,12 @@ import {
   InfoCircleOutlined,
   PhoneOutlined,
   FireOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/stores/hooks';
+import { isAdmin } from '@/shared/utils/permissions';
 import { useLogout } from '@/app/auth/_api';
 import { useCategories } from '@/app/products/_api';
 import { MobileHeader } from './mobile-header';
@@ -91,8 +93,8 @@ const Header: React.FC<HeaderProps> = ({ wishlistCount = 5 }) => {
   }, []);
 
   // Memoize menu items to prevent recreating on every render
-  const userMenuItems: MenuProps['items'] = useMemo(
-    () => [
+  const userMenuItems: MenuProps['items'] = useMemo(() => {
+    const items: MenuProps['items'] = [
       {
         key: 'profile',
         label: (
@@ -120,24 +122,42 @@ const Header: React.FC<HeaderProps> = ({ wishlistCount = 5 }) => {
           </Link>
         ),
       },
-      {
+    ];
+
+    // Add admin menu item if user is admin or superuser
+    if (isAdmin(user)) {
+      items.push({
         type: 'divider' as const,
-      },
-      {
-        key: 'logout',
+      });
+      items.push({
+        key: 'admin',
         label: (
-          <span
-            className="block cursor-pointer px-2 py-1 text-red-500"
-            onClick={() => logoutMutation.mutate()}
-          >
-            خروج از حساب
-          </span>
+          <Link href="/admin" className="flex items-center gap-2 px-2 py-1">
+            <SettingOutlined className="text-purple-500" />
+            <span>پنل مدیریت</span>
+          </Link>
         ),
-        danger: true,
-      },
-    ],
-    [logoutMutation],
-  );
+      });
+    }
+
+    items.push({
+      type: 'divider' as const,
+    });
+    items.push({
+      key: 'logout',
+      label: (
+        <span
+          className="block cursor-pointer px-2 py-1 text-red-500"
+          onClick={() => logoutMutation.mutate()}
+        >
+          خروج از حساب
+        </span>
+      ),
+      danger: true,
+    });
+
+    return items;
+  }, [logoutMutation, user]);
 
   const categoryMenuItems: MenuProps['items'] = useMemo(
     () =>

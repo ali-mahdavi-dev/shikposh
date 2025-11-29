@@ -7,6 +7,8 @@ export interface User {
   email: string;
   phone?: string;
   avatar?: string;
+  is_admin?: boolean;
+  is_superuser?: boolean;
 }
 
 interface AuthState {

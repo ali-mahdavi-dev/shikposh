@@ -42,7 +42,17 @@ export class HttpAuthRepository implements AuthRepository {
       '/api/v1/public/auth/verify-otp',
       request,
     );
-    console.log('backendResponse', backendResponse);
+    // Debug: Log the full response to see what backend returns
+    console.log('🔍 VerifyOtp Backend Response:', JSON.stringify(backendResponse, null, 2));
+    if (backendResponse.user) {
+      console.log('🔍 User object:', JSON.stringify(backendResponse.user, null, 2));
+      console.log(
+        '🔍 is_admin value:',
+        backendResponse.user.is_admin,
+        'type:',
+        typeof backendResponse.user.is_admin,
+      );
+    }
     return {
       success: backendResponse.success,
       token: backendResponse.token,
@@ -75,6 +85,9 @@ export class HttpAuthRepository implements AuthRepository {
     return {
       success: backendResponse.success,
       message: backendResponse.message,
+      token: backendResponse.token,
+      refresh_token: backendResponse.refresh_token,
+      user: backendResponse.user as User | undefined,
     };
   }
 

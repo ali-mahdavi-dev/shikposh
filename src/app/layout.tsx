@@ -2,17 +2,14 @@ import '@ant-design/v5-patch-for-react-19';
 import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
-import { Content } from 'antd/lib/layout/layout';
 import { ConfigProvider, App } from 'antd';
 import { ReactQueryProvider } from '@/providers/react-query-provider';
 import { ReduxProvider } from '@/providers/redux-provider';
 import { ErrorBoundary, ApiMonitor } from '@/shared';
+import { ConditionalLayout } from './_components/layout/conditional-layout';
 import './globals.css';
 
 // Lazy load components for better performance
-const Header = React.lazy(() => import('@/app/_components/layout/site-header'));
-const Footer = React.lazy(() => import('@/app/_components/layout/footer'));
-const Breadcrumbs = React.lazy(() => import('@/app/_components/breadcrumbs'));
 const WishlistInitializer = React.lazy(() => import('@/app/_components/wishlist-initializer'));
 
 const theme = {
@@ -86,13 +83,6 @@ export const metadata: Metadata = {
   },
 };
 
-// Loading component for Suspense
-const LayoutLoading = () => (
-  <div className="flex min-h-screen items-center justify-center">
-    <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-pink-500"></div>
-  </div>
-);
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -144,33 +134,8 @@ export default function RootLayout({
                         </div>
                       )}
 
-                      {/* Header with Suspense */}
-                      <Suspense fallback={<LayoutLoading />}>
-                        <Header />
-                      </Suspense>
-
-                      {/* Breadcrumbs with Suspense */}
-                      <Suspense fallback={<div className="h-8" />}>
-                        <Breadcrumbs />
-                      </Suspense>
-
-                      {/* Content */}
-                      <Content>
-                        <div
-                          className="min-h-lvh bg-gray-50 px-2"
-                          style={{
-                            marginTop: 46,
-                            padding: 24,
-                          }}
-                        >
-                          <main className="">{children}</main>
-                        </div>
-                      </Content>
-
-                      {/* Footer with Suspense */}
-                      <Suspense fallback={<div className="h-32" />}>
-                        <Footer />
-                      </Suspense>
+                      {/* Conditional Layout - Hides Header/Footer for admin routes */}
+                      <ConditionalLayout>{children}</ConditionalLayout>
                     </ErrorBoundary>
                   </App>
                 </ConfigProvider>
