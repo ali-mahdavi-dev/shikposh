@@ -1,5 +1,2 @@
-export * from './profile-card';
-export * from './access-post';
-export * from './chat';
-export * from './post-card';
-export * from './playlist-card';
+export { default as ProfileCard } from './profile-card';
+export type { ProfileCardProps } from './profile-card';

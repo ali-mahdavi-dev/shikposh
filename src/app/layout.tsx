@@ -13,6 +13,7 @@ import './globals.css';
 const Header = React.lazy(() => import('@/app/_components/layout/site-header'));
 const Footer = React.lazy(() => import('@/app/_components/layout/footer'));
 const Breadcrumbs = React.lazy(() => import('@/app/_components/breadcrumbs'));
+const WishlistInitializer = React.lazy(() => import('@/app/_components/wishlist-initializer'));
 
 const theme = {
   token: {
@@ -131,6 +132,11 @@ export default function RootLayout({
                 <ConfigProvider theme={theme} direction="rtl">
                   <App>
                     <ErrorBoundary>
+                      {/* Wishlist Initializer - Loads wishlist from API on mount */}
+                      <Suspense fallback={null}>
+                        <WishlistInitializer />
+                      </Suspense>
+
                       {/* API Monitor - Only in development */}
                       {process.env.NODE_ENV === 'development' && (
                         <div className="fixed top-4 left-4 z-50">

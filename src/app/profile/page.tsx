@@ -4,10 +4,10 @@ import dynamic from 'next/dynamic';
 const ProfileClient = dynamic(() => import('./profile-client'));
 
 export const metadata: Metadata = {
-  title: 'پروفایل کاربری | مدیریت حساب و سفارشات',
+  title: 'پروفایل کاربری | حساب من',
   description:
-    'مدیریت حساب کاربری، مشاهده سفارشات، ویرایش اطلاعات شخصی و آدرس‌ها در پنل کاربری شیک‌پوشان.',
-  robots: { index: false, follow: false },
+    'مدیریت اطلاعات حساب کاربری، مشاهده سفارش‌ها و دسترسی سریع به علاقه‌مندی‌ها در پروفایل شیک‌پوشان.',
+  robots: { index: false, follow: true },
   alternates: { canonical: '/profile' },
 };
 

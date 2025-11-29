@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout, Button, Badge, Dropdown, Avatar, Typography, Popover } from 'antd';
 import {
   ShoppingCartOutlined,
@@ -38,6 +38,15 @@ export const DesktopHeader: React.FC<HeaderSharedProps> = ({
 }) => {
   const [searchDropdownVisible, setSearchDropdownVisible] = useState<boolean>(false);
   const [megaMenuVisible, setMegaMenuVisible] = useState<boolean>(false);
+
+  // Fix hydration error: only use authentication state after client-side mount
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Use isAuthenticated only after mount to prevent hydration mismatch
+  const displayIsAuthenticated = mounted ? isAuthenticated : false;
 
   const handleSearch = (value: string) => {
     onSearch(value);
@@ -230,7 +239,7 @@ export const DesktopHeader: React.FC<HeaderSharedProps> = ({
             <div className="mx-2 sm:mx-3 lg:mx-4" />
 
             {/* User Menu - Show if authenticated, otherwise show login/register buttons */}
-            {isAuthenticated ? (
+            {displayIsAuthenticated ? (
               <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button

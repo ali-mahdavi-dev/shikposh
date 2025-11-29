@@ -1,154 +1,169 @@
 'use client';
 
-import { Avatar, Card, Rate, Tag, Badge } from 'antd';
-import { CheckCircleOutlined, CalendarOutlined, ShopOutlined, StarFilled } from '@ant-design/icons';
-import { Typography } from 'antd';
 import React from 'react';
+import { Button, Card, Rate, Tag, Typography } from 'antd';
+import {
+  CheckOutlined,
+  ShopOutlined,
+  CalendarOutlined,
+  ArrowLeftOutlined,
+} from '@ant-design/icons';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { DEFAULT_IMAGES, getValidImageSrc } from '@/shared/utils/image';
+import { getValidImageSrc, DEFAULT_IMAGES } from '@/shared/utils/image';
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 export interface ProfileCardProps {
-  name?: string;
+  name: string;
   avatar?: string;
   description?: string;
   rating?: number;
   totalProducts?: number;
   joinDate?: string;
   verified?: boolean;
-  className?: string;
-  sellerId?: string;
+  sellerId?: string | number;
   reviewCount?: number;
 }
 
-const ProfileCard: React.FC<ProfileCardProps> = ({
-  name = 'فروشنده تست',
-  avatar = '/images/suit-Top.jpg',
-  description = 'فروشنده معتبر با بیش از 5 سال تجربه در زمینه پوشاک و فشن. ارائه محصولات با کیفیت و قیمت مناسب.',
-  rating = 4.8,
-  totalProducts = 127,
-  joinDate = '1398',
-  verified = true,
-  className = '',
+export default function ProfileCard({
+  name,
+  avatar,
+  description,
+  rating = 0,
+  totalProducts = 0,
+  joinDate,
+  verified = false,
   sellerId,
   reviewCount,
-}) => {
-  const formatDate = (date: string) => {
-    return date;
-  };
+}: ProfileCardProps) {
+  const avatarSrc = getValidImageSrc(avatar, DEFAULT_IMAGES.seller);
 
-  const displayedReviewCount = reviewCount || Math.floor(totalProducts * 0.8);
-
-  const cardContent = (
+  return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       <Card
-        className={`overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md transition-all duration-300 ${sellerId ? 'cursor-pointer hover:border-pink-300 hover:shadow-xl' : ''} ${className}`}
-        hoverable={!!sellerId}
+        className="rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md"
+        styles={{ body: { padding: '20px' } }}
       >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-          {/* Avatar Section */}
-          <div className="relative flex flex-shrink-0 justify-center sm:justify-start">
+        <div className="flex items-start gap-4">
+          {/* Avatar Section - Right side */}
+          <div className="order-1 shrink-0">
             <div className="relative">
-              <div className="rounded-full bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 p-1">
-                <Avatar
-                  size={140}
-                  src={getValidImageSrc(avatar, DEFAULT_IMAGES.avatar)}
-                  alt={name}
-                  className="border-4 border-white"
-                  onError={() => {
-                    // Avatar component handles error internally, but we can set a fallback
-                    return true; // Prevent default error behavior
-                  }}
-                />
+              <div className="relative h-16 w-16">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 p-[2px]">
+                  <div className="relative h-full w-full rounded-full bg-white p-0.5">
+                    <div className="absolute inset-0.5 overflow-hidden rounded-full">
+                      <Image
+                        src={avatarSrc}
+                        alt={name}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = DEFAULT_IMAGES.seller;
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
               {verified && (
-                <div className="absolute -right-1 -bottom-1 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg">
-                  <CheckCircleOutlined className="rounded-full !bg-blue-500 !text-xl !text-white" />
+                <div className="absolute -right-0.5 -bottom-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-green-500">
+                  <CheckOutlined className="text-[8px] text-white" />
                 </div>
               )}
             </div>
           </div>
 
-          {/* Content Section */}
-          <div className="min-w-0 flex-1 text-center sm:flex sm:flex-col sm:justify-start sm:text-right">
+          {/* Info Section - Left side (text content) */}
+          <div className="order-2 min-w-0 flex-1 text-right">
             {/* Name and Verified Badge */}
-            <div className="mb-3 flex flex-col items-center gap-2 sm:flex-row sm:justify-end">
-              <Title
-                level={3}
-                className="!mb-0 text-gray-800"
-                style={{ fontSize: '1.5rem', fontWeight: 700 }}
-              >
+            <div className="mb-2 flex items-center justify-start gap-2">
+              <Title level={4} className="!mb-0 !text-base !text-gray-900">
                 {name}
               </Title>
               {verified && (
-                <Tag
-                  icon={<CheckCircleOutlined />}
-                  color="success"
-                  className="m-0 border-green-500 bg-green-50 px-3 py-1 text-green-700 shadow-sm"
-                  style={{ fontSize: '0.875rem', fontWeight: 600 }}
-                >
+                <Tag icon={<CheckOutlined />} color="success" className="text-xs">
                   تایید شده
                 </Tag>
               )}
             </div>
 
             {/* Rating */}
-            <div className="mb-3 flex items-center justify-center gap-2 sm:justify-end">
-              <Rate
-                disabled
-                allowHalf
-                defaultValue={rating}
-                character={<StarFilled />}
-                className="text-base text-yellow-400"
-              />
-              <Text className="text-base font-bold text-gray-800">{rating.toFixed(1)}</Text>
-            </div>
+            {rating > 0 && (
+              <div className="mb-2 flex items-center justify-start gap-2">
+                <Text className="text-sm font-medium text-gray-700">{rating.toFixed(1)}</Text>
+                <div dir="ltr" className="inline-block">
+                  <Rate disabled allowHalf defaultValue={rating} className="text-sm" />
+                </div>
+                {reviewCount !== undefined && reviewCount > 0 && (
+                  <Text className="text-xs text-gray-400">
+                    ({reviewCount.toLocaleString('fa-IR')} نظر)
+                  </Text>
+                )}
+              </div>
+            )}
 
-            {/* Description */}
-            <div>
-              {description && (
-                <Text className="mb-4 line-clamp-2 block text-sm leading-relaxed text-gray-600">
-                  {description}
-                </Text>
+            {/* Stats */}
+            <div className="mb-2 flex flex-wrap items-center justify-start gap-3 text-sm">
+              {totalProducts > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <ShopOutlined className="text-pink-500" />
+                  <Text className="text-gray-600">
+                    <span dir="ltr" className="inline-block font-medium text-gray-900">
+                      {totalProducts.toLocaleString('fa-IR')}
+                    </span>{' '}
+                    محصول
+                  </Text>
+                </div>
+              )}
+              {joinDate && (
+                <div className="flex items-center gap-1.5">
+                  <CalendarOutlined className="text-gray-400" />
+                  <Text className="text-gray-600">
+                    عضویت از <strong className="font-medium text-gray-900">{joinDate}</strong>
+                  </Text>
+                </div>
               )}
             </div>
 
-            {/* Stats */}
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-4 border-t border-gray-100 pt-4 sm:justify-end">
-              <div className="flex items-center gap-2 rounded-xl bg-pink-50 px-4 py-2">
-                <ShopOutlined className="text-lg text-pink-500" />
-                <Text className="text-sm font-semibold text-gray-800">
-                  {totalProducts} <span className="font-normal text-gray-600">محصول</span>
-                </Text>
+            {/* Description */}
+            {description && (
+              <div className="mb-3">
+                <Paragraph
+                  className="!mb-0 text-sm !leading-6 text-gray-600"
+                  ellipsis={{ rows: 2, expandable: true, symbol: 'بیشتر' }}
+                >
+                  {description}
+                </Paragraph>
               </div>
-              <div className="flex items-center gap-2 rounded-xl bg-purple-50 px-4 py-2">
-                <CalendarOutlined className="text-lg text-purple-500" />
-                <Text className="text-sm font-semibold text-gray-800">
-                  عضویت از <span className="font-normal text-gray-600">{formatDate(joinDate)}</span>
-                </Text>
+            )}
+
+            {/* Action Button */}
+            {sellerId && (
+              <div className="mt-3 flex justify-end">
+                <Link href={`/seller/${sellerId}`}>
+                  <Button
+                    type="default"
+                    icon={<ArrowLeftOutlined />}
+                    size="small"
+                    className="rounded-lg"
+                    style={{ direction: 'rtl' }}
+                  >
+                    مشاهده پروفایل
+                  </Button>
+                </Link>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </Card>
     </motion.div>
   );
-
-  if (sellerId) {
-    return (
-      <Link href={`/seller/${sellerId}`} className="block">
-        {cardContent}
-      </Link>
-    );
-  }
-
-  return cardContent;
-};
-
-export default ProfileCard;
+}

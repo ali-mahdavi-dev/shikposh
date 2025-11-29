@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout, Button, Badge, Drawer, Typography, Divider, Dropdown, Avatar } from 'antd';
 import {
   ShoppingCartOutlined,
@@ -8,9 +8,7 @@ import {
   MenuOutlined,
   BellOutlined,
   CloseOutlined,
-  AppstoreOutlined,
   SearchOutlined,
-  DownOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -48,6 +46,15 @@ export const TabletHeader: React.FC<TabletHeaderProps> = ({
 }) => {
   const [searchDropdownVisible, setSearchDropdownVisible] = useState<boolean>(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState<boolean>(false);
+
+  // Fix hydration error: only use authentication state after client-side mount
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Use isAuthenticated only after mount to prevent hydration mismatch
+  const displayIsAuthenticated = mounted ? isAuthenticated : false;
 
   const handleSearch = (value: string) => {
     onSearch(value);
@@ -163,7 +170,7 @@ export const TabletHeader: React.FC<TabletHeaderProps> = ({
               <div className="mx-2 sm:mx-3" />
 
               {/* User Menu or Login Button */}
-              {isAuthenticated ? (
+              {displayIsAuthenticated ? (
                 <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Button
@@ -287,7 +294,7 @@ export const TabletHeader: React.FC<TabletHeaderProps> = ({
         <Divider />
 
         {/* Tablet Auth Section */}
-        {isAuthenticated ? (
+        {displayIsAuthenticated ? (
           <div className="flex flex-col gap-2">
             <Link
               href="/profile"

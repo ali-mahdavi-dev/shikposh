@@ -37,13 +37,44 @@ export const DEFAULT_IMAGES = {
 } as const;
 
 /**
+ * List of allowed hostnames for external images (must match next.config.ts remotePatterns)
+ * This prevents Next.js Image errors for unconfigured hostnames
+ */
+const ALLOWED_HOSTNAMES = [
+  'localhost',
+  'images.unsplash.com',
+  'images.pexels.com',
+  'picsum.photos',
+  'via.placeholder.com',
+];
+
+/**
+ * Checks if a hostname is allowed for Next.js Image component
+ */
+function isAllowedHostname(url: string): boolean {
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname.replace(/^www\./, ''); // Remove www. prefix
+
+    // Check if hostname matches any allowed hostname
+    return ALLOWED_HOSTNAMES.some((allowed) => {
+      // Exact match or subdomain match (e.g., localhost matches localhost:8000)
+      return hostname === allowed || hostname.startsWith(`${allowed}:`);
+    });
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Validates and normalizes image URLs for Next.js Image component
  * Next.js Image requires either:
  * - A relative path starting with "/"
- * - An absolute URL starting with "http://" or "https://"
+ * - An absolute URL starting with "http://" or "https://" with allowed hostname
+ * - A data URI (data:image/...)
  *
  * @param src - The image source URL to validate
- * @param defaultSrc - The default image path to use if src is invalid (default: '/images/dress-main.jpg')
+ * @param defaultSrc - The default image path to use if src is invalid (default: DEFAULT_IMAGES.general)
  * @returns A valid image URL
  */
 export function getValidImageSrc(
@@ -54,14 +85,23 @@ export function getValidImageSrc(
     return defaultSrc;
   }
 
-  // Check if it's already a valid absolute URL
-  if (src.startsWith('http://') || src.startsWith('https://')) {
+  // Data URIs are always valid (e.g., data:image/svg+xml,...)
+  if (src.startsWith('data:')) {
     return src;
   }
 
   // Check if it's a valid relative path (starts with /)
   if (src.startsWith('/')) {
     return src;
+  }
+
+  // Check if it's an absolute URL with allowed hostname
+  if (src.startsWith('http://') || src.startsWith('https://')) {
+    if (isAllowedHostname(src)) {
+      return src;
+    }
+    // If hostname is not allowed, return placeholder to avoid Next.js Image error
+    return defaultSrc;
   }
 
   // If it doesn't match any valid format, return default

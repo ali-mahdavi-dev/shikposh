@@ -2,9 +2,10 @@
 import React, { useMemo } from 'react';
 import { Typography, App as AntApp } from 'antd';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
-import { removeFromWishlist } from '@/stores/slices/wishlistSlice';
+import { removeFromWishlist, addToWishlist } from '@/stores/slices/wishlistSlice';
 import { addToCart } from '@/stores/slices/cartSlice';
 import { useProducts } from '@/app/products/_api';
+import { useToggleWishlistMutation } from '@/app/wishlist/_api/hooks';
 import { WishlistGrid, WishlistEmptyState } from './_components';
 import type { WishlistProduct } from './_types';
 import { WishlistSkeleton } from '@/app/_components/skeleton';
@@ -16,6 +17,7 @@ export default function WishlistClient() {
   const { message } = AntApp.useApp();
   const wishlistIds = useAppSelector((s) => s.wishlist.productIds);
   const { data: allProducts = [], isLoading, error } = useProducts();
+  const toggleWishlistMutation = useToggleWishlistMutation();
 
   const items = useMemo(() => {
     const byId = new Set(wishlistIds.map(String));
@@ -89,8 +91,20 @@ export default function WishlistClient() {
   };
 
   const handleRemove = (id: string) => {
+    // Update local state immediately for optimistic UI
     dispatch(removeFromWishlist(id));
-    message.success('از علاقه‌مندی‌ها حذف شد');
+
+    // Call API to persist in database
+    toggleWishlistMutation.mutate(Number(id), {
+      onSuccess: () => {
+        message.success('از علاقه‌مندی‌ها حذف شد');
+      },
+      onError: () => {
+        // Revert on error - add it back
+        dispatch(addToWishlist(id));
+        message.error('خطا در حذف از علاقه‌مندی‌ها');
+      },
+    });
   };
 
   if (isLoading) {

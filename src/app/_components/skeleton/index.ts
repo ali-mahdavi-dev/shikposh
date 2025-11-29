@@ -5,3 +5,4 @@ export * from './cart-skeleton';
 export * from './profile-skeleton';
 export * from './seller-skeleton';
 export * from './home-skeleton';
+export * from './orders-skeleton';

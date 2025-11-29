@@ -1,528 +1,443 @@
 'use client';
-import React, { useState } from 'react';
-import { Button, Tabs, TabsProps, Typography } from 'antd';
+
+import React, { useMemo } from 'react';
 import {
-  BellOutlined,
-  CalendarOutlined,
-  EyeOutlined,
-  LikeOutlined,
-  MessageOutlined,
-  CheckOutlined,
-  UnorderedListOutlined,
+  Avatar,
+  Button,
+  Card,
+  Col,
+  Divider,
+  Progress,
+  Row,
+  Space,
+  Statistic,
+  Tabs,
+  Tag,
+  Typography,
+} from 'antd';
+import {
+  EditOutlined,
+  HeartOutlined,
+  HistoryOutlined,
+  LogoutOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  ShoppingCartOutlined,
+  StarOutlined,
+  TrophyOutlined,
+  UserOutlined,
+  WalletOutlined,
 } from '@ant-design/icons';
-import { motion } from 'framer-motion';
-import Image from 'next/image';
-import Link from 'next/link';
-import type { Post } from './_api';
-import { Badge } from '@/app/_components';
-import { CategoriesGrid } from '@/app/_components/business';
-import { usePosts, usePlaylists } from './_api';
-import { PostCard, PlaylistCard } from './_components';
-import { ProductGridSkeleton } from '@/app/_components/skeleton';
-import type { Playlist } from './_types';
-import { Badge as AntBadge } from 'antd';
-import { DEFAULT_IMAGES, getValidImageSrc } from '@/shared/utils/image';
+import { useAppDispatch, useAppSelector } from '@/stores/hooks';
+import { logout as logoutAction } from '@/stores/slices/authSlice';
+import { useRouter } from 'next/navigation';
+import { ProfileSkeleton } from '@/app/_components/skeleton';
 
-const { Title, Text, Paragraph } = Typography;
-
-// Format number (e.g., 15230 -> "15.2K")
-const formatNumber = (num: number): string => {
-  if (num >= 1000000) {
-    return (num / 1000000).toFixed(1) + 'M';
-  }
-  if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'K';
-  }
-  return num.toString();
-};
-
-// Format date (simple format for now)
-const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffTime = Math.abs(now.getTime() - date.getTime());
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) return 'امروز';
-  if (diffDays === 1) return 'دیروز';
-  if (diffDays < 7) return `${diffDays} روز پیش`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} هفته پیش`;
-  if (diffDays < 365) return `${Math.floor(diffDays / 30)} ماه پیش`;
-  return `${Math.floor(diffDays / 365)} سال پیش`;
-};
+const { Title, Text } = Typography;
 
 export default function ProfileClient() {
-  const [activeTab, setActiveTab] = useState<string>('home');
-  const [subscribed, setSubscribed] = useState<boolean>(false);
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading } = useAppSelector((s) => s.auth);
+  const wishlistCount = useAppSelector((s) => s.wishlist.productIds.length);
+  const cartItemsCount = useAppSelector((s) =>
+    s.cart.items.reduce((sum, item) => sum + item.quantity, 0),
+  );
 
-  // Fetch data from API
-  const { data: posts = [], isLoading: postsLoading, error: postsError } = usePosts();
-  const {
-    data: playlists = [],
-    isLoading: playlistsLoading,
-    error: playlistsError,
-  } = usePlaylists();
+  const handleLogout = () => {
+    dispatch(logoutAction());
+    router.push('/');
+  };
 
-  const bannerImage = '/images/carousel-homepage-one.jpg';
+  if (isLoading) {
+    return <ProfileSkeleton />;
+  }
 
-  const featuredPost = posts[0];
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="mx-auto flex min-h-[60vh] max-w-3xl flex-col items-center justify-center rounded-2xl bg-gradient-to-l from-pink-50 via-white to-purple-50 px-6 py-12 shadow-lg">
+        <div className="mb-6 rounded-full bg-pink-100 p-6">
+          <UserOutlined className="text-6xl text-pink-500" />
+        </div>
+        <Title level={3} className="mb-2 text-gray-900">
+          برای مشاهده پروفایل وارد حساب کاربری شوید
+        </Title>
+        <Text type="secondary" className="mb-6 text-center text-base">
+          برای دسترسی به اطلاعات شخصی، سفارش‌ها و علاقه‌مندی‌ها ابتدا باید وارد یا ثبت‌نام کنید.
+        </Text>
+        <Space size="middle" direction="vertical" className="w-full sm:w-auto">
+          <Button
+            type="primary"
+            size="large"
+            block
+            className="sm:w-auto"
+            onClick={() => router.push('/auth')}
+          >
+            ورود / ثبت‌نام
+          </Button>
+          <Button size="large" block className="sm:w-auto" onClick={() => router.push('/')}>
+            بازگشت به صفحه اصلی
+          </Button>
+        </Space>
+      </div>
+    );
+  }
 
-  const categoryCounts = posts.reduce<Record<string, number>>((acc, p) => {
-    const key = p.category ?? 'متفرقه';
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
+  const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'کاربر شیک‌پوشان';
 
-  const profileCategories = Object.entries(categoryCounts).map(([name, count], idx) => ({
-    id: `profile-cat-${idx}`,
-    name,
-    count,
-  }));
+  // Calculate loyalty level based on orders (placeholder - would come from API)
+  const orderCount = 0; // This would come from orders API
+  const loyaltyLevel = useMemo(() => {
+    if (orderCount >= 50) return { name: 'VIP', color: 'gold', progress: 100, level: 5 };
+    if (orderCount >= 30) return { name: 'طلایی', color: 'orange', progress: 80, level: 4 };
+    if (orderCount >= 15) return { name: 'نقره‌ای', color: 'default', progress: 60, level: 3 };
+    if (orderCount >= 5) return { name: 'برنزی', color: 'cyan', progress: 40, level: 2 };
+    return { name: 'عضو جدید', color: 'magenta', progress: 20, level: 1 };
+  }, [orderCount]);
 
-  const tabsItems: TabsProps['items'] = [
+  const items = [
     {
-      key: 'home',
-      label: (
-        <span className="flex items-center gap-2 px-4 py-2">
-          <span>صفحه اصلی</span>
-        </span>
+      key: 'overview',
+      label: 'نمای کلی',
+      children: (
+        <div className="space-y-6">
+          {/* Statistics Cards */}
+          <Row gutter={[16, 16]}>
+            <Col xs={12} sm={6}>
+              <Card className="rounded-xl border-0 bg-gradient-to-br from-pink-50 to-pink-100 shadow-sm transition-all hover:shadow-md">
+                <Statistic
+                  title={<span className="text-gray-600">سفارش‌ها</span>}
+                  value={orderCount}
+                  prefix={<ShoppingCartOutlined className="text-pink-500" />}
+                  valueStyle={{ color: '#ec4899' }}
+                />
+              </Card>
+            </Col>
+            <Col xs={12} sm={6}>
+              <Card className="rounded-xl border-0 bg-gradient-to-br from-purple-50 to-purple-100 shadow-sm transition-all hover:shadow-md">
+                <Statistic
+                  title={<span className="text-gray-600">علاقه‌مندی‌ها</span>}
+                  value={wishlistCount}
+                  prefix={<HeartOutlined className="text-purple-500" />}
+                  valueStyle={{ color: '#a855f7' }}
+                />
+              </Card>
+            </Col>
+            <Col xs={12} sm={6}>
+              <Card className="rounded-xl border-0 bg-gradient-to-br from-blue-50 to-blue-100 shadow-sm transition-all hover:shadow-md">
+                <Statistic
+                  title={<span className="text-gray-600">سبد خرید</span>}
+                  value={cartItemsCount}
+                  prefix={<ShoppingCartOutlined className="text-blue-500" />}
+                  valueStyle={{ color: '#3b82f6' }}
+                />
+              </Card>
+            </Col>
+            <Col xs={12} sm={6}>
+              <Card className="rounded-xl border-0 bg-gradient-to-br from-amber-50 to-amber-100 shadow-sm transition-all hover:shadow-md">
+                <Statistic
+                  title={<span className="text-gray-600">امتیاز</span>}
+                  value={0}
+                  prefix={<StarOutlined className="text-amber-500" />}
+                  valueStyle={{ color: '#f59e0b' }}
+                />
+              </Card>
+            </Col>
+          </Row>
+
+          {/* Main Info Cards */}
+          <Row gutter={[24, 24]}>
+            <Col xs={24} lg={14}>
+              <Card
+                title={
+                  <span className="flex items-center gap-2">
+                    <UserOutlined className="text-pink-500" />
+                    اطلاعات تماس
+                  </span>
+                }
+                className="rounded-2xl shadow-sm transition-all hover:shadow-md"
+                extra={
+                  <Button type="link" icon={<EditOutlined />} className="px-0 text-pink-500">
+                    ویرایش
+                  </Button>
+                }
+              >
+                <Space direction="vertical" size="large" className="w-full">
+                  <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pink-100">
+                      <UserOutlined className="text-pink-500" />
+                    </div>
+                    <div>
+                      <Text type="secondary" className="text-xs">
+                        نام و نام خانوادگی
+                      </Text>
+                      <div className="font-medium text-gray-900">{fullName}</div>
+                    </div>
+                  </div>
+                  {user.phone && (
+                    <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+                        <PhoneOutlined className="text-green-500" />
+                      </div>
+                      <div>
+                        <Text type="secondary" className="text-xs">
+                          شماره تلفن
+                        </Text>
+                        <div className="font-medium text-gray-900">{user.phone}</div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                      <MailOutlined className="text-blue-500" />
+                    </div>
+                    <div>
+                      <Text type="secondary" className="text-xs">
+                        ایمیل
+                      </Text>
+                      <div className="font-medium text-gray-900">{user.email || 'ثبت نشده'}</div>
+                    </div>
+                  </div>
+                </Space>
+              </Card>
+            </Col>
+            <Col xs={24} lg={10}>
+              <Card
+                title={
+                  <span className="flex items-center gap-2">
+                    <TrophyOutlined className="text-amber-500" />
+                    وضعیت حساب
+                  </span>
+                }
+                className="rounded-2xl shadow-sm transition-all hover:shadow-md"
+              >
+                <Space direction="vertical" size="large" className="w-full">
+                  <div>
+                    <div className="mb-2 flex items-center justify-between">
+                      <Text className="text-sm text-gray-600">سطح وفاداری</Text>
+                      <Tag color={loyaltyLevel.color} className="font-medium">
+                        {loyaltyLevel.name}
+                      </Tag>
+                    </div>
+                    <Progress
+                      percent={loyaltyLevel.progress}
+                      strokeColor={{
+                        '0%': '#ec4899',
+                        '100%': '#a855f7',
+                      }}
+                      showInfo={false}
+                      className="mb-1"
+                    />
+                    <Text type="secondary" className="text-xs">
+                      {orderCount} سفارش از 50 سفارش برای سطح بعدی
+                    </Text>
+                  </div>
+                  <Divider className="my-2" />
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between rounded-lg bg-gray-50 p-2">
+                      <Text className="text-sm">تعداد سفارش‌ها</Text>
+                      <Text strong className="text-pink-500">
+                        {orderCount.toLocaleString('fa-IR')}
+                      </Text>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg bg-gray-50 p-2">
+                      <Text className="text-sm">محصولات مورد علاقه</Text>
+                      <Text strong className="text-purple-500">
+                        {wishlistCount.toLocaleString('fa-IR')}
+                      </Text>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg bg-gray-50 p-2">
+                      <Text className="text-sm">وضعیت حساب</Text>
+                      <Tag color="success" className="font-medium">
+                        فعال
+                      </Tag>
+                    </div>
+                  </div>
+                </Space>
+              </Card>
+            </Col>
+          </Row>
+        </div>
       ),
     },
     {
-      key: 'playlists',
+      key: 'orders',
       label: (
-        <span className="flex items-center gap-2 px-4 py-2">
-          <UnorderedListOutlined />
-          <span>فهرست‌ها</span>
-          <AntBadge count={playlists.length} showZero />
+        <span>
+          <HistoryOutlined className="ml-1 align-middle" />
+          سفارش‌ها
         </span>
+      ),
+      children: (
+        <div className="flex min-h-[300px] flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 p-8 text-center">
+          <div className="mb-4 rounded-full bg-pink-100 p-6">
+            <ShoppingCartOutlined className="text-5xl text-pink-500" />
+          </div>
+          <Title level={4} className="mb-2 text-gray-900">
+            هنوز سفارشی ثبت نکرده‌اید
+          </Title>
+          <Text type="secondary" className="mb-6 max-w-md text-base">
+            اولین خرید خود را انجام دهید تا اینجا تاریخچه سفارش‌هایتان نمایش داده شود.
+          </Text>
+          <Button
+            type="primary"
+            size="large"
+            icon={<ShoppingCartOutlined />}
+            onClick={() => router.push('/products')}
+          >
+            شروع خرید
+          </Button>
+        </div>
       ),
     },
     {
-      key: 'posts',
+      key: 'wishlist',
       label: (
-        <span className="flex items-center gap-2 px-4 py-2">
-          <span>پست‌ها</span>
-          <AntBadge count={posts.length} showZero />
+        <span>
+          <HeartOutlined className="ml-1 align-middle" />
+          علاقه‌مندی‌ها
         </span>
+      ),
+      children: (
+        <div className="flex min-h-[300px] flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 p-8 text-center">
+          <div className="mb-4 rounded-full bg-purple-100 p-6">
+            <HeartOutlined className="text-5xl text-purple-500" />
+          </div>
+          <Title level={4} className="mb-2 text-gray-900">
+            {wishlistCount > 0
+              ? 'لیست علاقه‌مندی‌هایتان اینجاست'
+              : 'هنوز محصولی به علاقه‌مندی‌ها اضافه نکرده‌اید'}
+          </Title>
+          <Text type="secondary" className="mb-6 max-w-md text-base">
+            {wishlistCount > 0
+              ? 'برای مشاهده و مدیریت علاقه‌مندی‌ها به صفحه اختصاصی آن بروید.'
+              : 'محصولات مورد علاقه خود را ذخیره کنید تا بعداً راحت‌تر پیدا کنید.'}
+          </Text>
+          <Button
+            type={wishlistCount > 0 ? 'default' : 'primary'}
+            size="large"
+            icon={<HeartOutlined />}
+            onClick={() => router.push('/wishlist')}
+          >
+            {wishlistCount > 0 ? 'مشاهده علاقه‌مندی‌ها' : 'مشاهده محصولات'}
+          </Button>
+        </div>
       ),
     },
     {
-      key: 'categories',
+      key: 'addresses',
       label: (
-        <span className="flex items-center gap-2 px-4 py-2">
-          <span>دسته‌بندی‌ها</span>
-          <AntBadge count={profileCategories.length} showZero />
+        <span>
+          <WalletOutlined className="ml-1 align-middle" />
+          آدرس‌ها
         </span>
+      ),
+      children: (
+        <div className="flex min-h-[300px] flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 p-8 text-center">
+          <div className="mb-4 rounded-full bg-blue-100 p-6">
+            <WalletOutlined className="text-5xl text-blue-500" />
+          </div>
+          <Title level={4} className="mb-2 text-gray-900">
+            هنوز آدرسی ثبت نکرده‌اید
+          </Title>
+          <Text type="secondary" className="mb-6 max-w-md text-base">
+            آدرس خود را اضافه کنید تا در زمان خرید سریع‌تر بتوانید سفارش دهید.
+          </Text>
+          <Button type="primary" size="large" icon={<EditOutlined />}>
+            افزودن آدرس جدید
+          </Button>
+        </div>
       ),
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Banner Section - YouTube Style */}
-      <div className="relative h-48 w-full overflow-hidden bg-gradient-to-r from-pink-500 via-purple-500 to-pink-600 sm:h-56 md:h-64 lg:h-72">
-        {bannerImage ? (
-          <div className="relative h-full w-full">
-            <Image
-              src={bannerImage}
-              alt="Profile Banner"
-              fill
-              className="object-cover"
-              priority
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = DEFAULT_IMAGES.banner;
-              }}
-            />
-          </div>
-        ) : (
-          <div className="relative h-full w-full">
-            <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-purple-500 to-pink-600"></div>
-          </div>
-        )}
-      </div>
-
-      {/* Profile Header - YouTube Style */}
-      <div className="relative z-10 -mt-16 border-b border-gray-200 bg-white sm:-mt-20 md:-mt-24 lg:-mt-28">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 md:py-8 lg:px-8">
-          <div className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:gap-8">
-            {/* Avatar - Right Side (RTL) */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-              className="flex w-full flex-shrink-0 justify-center pt-16 sm:pt-20 md:pt-24 lg:w-auto lg:justify-start lg:pt-28"
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Profile Header */}
+      <Card className="mb-6 overflow-hidden rounded-2xl border-0 bg-gradient-to-l from-pink-50 via-white to-purple-50 shadow-lg transition-all hover:shadow-xl">
+        <Row gutter={[24, 24]} align="middle">
+          <Col xs={24} md={8} className="flex justify-center md:justify-start">
+            <Space
+              align="center"
+              size="large"
+              direction="vertical"
+              className="w-full md:w-auto md:flex-row"
             >
               <div className="relative">
-                <div className="relative h-28 w-28 sm:h-32 sm:w-32 lg:h-36 lg:w-36">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 p-[3px]">
-                    <div className="relative h-full w-full rounded-full bg-white p-1">
-                      <div className="absolute inset-1 overflow-hidden rounded-full">
-                        <Image
-                          src={getValidImageSrc('/images/suit-Top.jpg', DEFAULT_IMAGES.avatar)}
-                          alt="فروشنده تست"
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 640px) 112px, (max-width: 1024px) 128px, 144px"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = DEFAULT_IMAGES.avatar;
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                <Avatar
+                  size={120}
+                  src={user.avatar}
+                  icon={!user.avatar && <UserOutlined />}
+                  className="border-4 border-white shadow-lg ring-4 ring-pink-100 transition-all hover:ring-pink-200"
+                />
+                <div className="absolute right-0 bottom-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-green-500 shadow-md">
+                  <div className="h-3 w-3 rounded-full bg-white"></div>
                 </div>
               </div>
-            </motion.div>
-
-            {/* Profile Info - Left Side (RTL) */}
-            <div className="w-full min-w-0 flex-1 pt-16 sm:pt-20 md:pt-24 lg:w-auto lg:pt-28">
-              <div className="flex w-full flex-col items-start gap-4 lg:flex-row lg:items-center lg:gap-6">
-                {/* Profile Text Content */}
-                <div className="min-w-0 flex-1">
-                  <div className="mb-2 flex flex-wrap items-center gap-2">
-                    <Title level={2} className="!mb-0 !text-2xl !text-gray-800 lg:!text-3xl">
-                      فروشنده تست
-                    </Title>
-                    {subscribed && (
-                      <AntBadge
-                        status="success"
-                        text={
-                          <span className="flex items-center gap-1 text-xs text-green-600">
-                            <CheckOutlined /> تأیید شده
-                          </span>
-                        }
-                      />
-                    )}
-                  </div>
-
-                  <div className="mb-3 flex flex-wrap items-center gap-4">
-                    <Text className="text-sm text-gray-600 lg:text-base">
-                      <strong className="font-semibold text-gray-800">1.2K</strong> دنبال‌کننده
-                    </Text>
-                    <Text className="text-sm text-gray-600 lg:text-base">
-                      <strong className="font-semibold text-gray-800">{posts.length}</strong> پست
-                    </Text>
-                    <Text className="text-sm text-gray-600 lg:text-base">
-                      <strong className="font-semibold text-gray-800">
-                        {formatNumber(posts.reduce((acc: number, p: Post) => acc + p.views, 0))}
-                      </strong>{' '}
-                      بازدید کل
-                    </Text>
-                  </div>
-
-                  <Paragraph
-                    className="!mb-0 text-sm !leading-6 text-gray-600 lg:text-base"
-                    ellipsis={{ rows: 2, expandable: true, symbol: 'بیشتر' }}
-                  >
-                    خوش آمدید به پروفایل من! اینجا می‌تونید جدیدترین پست‌های مربوط به مد، فشن و
-                    استایل رو ببینید. با من همراه باشید تا از جدیدترین ترندها و نکات مهم در زمینه مد
-                    و پوشش با خبر بشید.
-                  </Paragraph>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex w-full flex-wrap items-center gap-2 sm:gap-3 lg:w-auto">
-                  <Button
-                    type={subscribed ? 'default' : 'primary'}
-                    size="large"
-                    icon={subscribed ? <CheckOutlined /> : <BellOutlined />}
-                    onClick={() => setSubscribed(!subscribed)}
-                    className={
-                      subscribed
-                        ? ''
-                        : 'border-0 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700'
-                    }
-                  >
-                    {subscribed ? 'دنبال می‌کنم' : 'دنبال کردن'}
-                  </Button>
-                  <Button
-                    type="default"
-                    size="large"
-                    icon={<BellOutlined />}
-                    className="border-gray-300 hover:border-pink-300 hover:text-pink-600"
-                  >
-                    <span className="hidden sm:inline">اعلان‌ها</span>
-                    <span className="sm:hidden">اعلان</span>
-                  </Button>
-                </div>
+              <div className="space-y-2 text-center md:text-right">
+                <Title level={2} className="mb-1 text-gray-900">
+                  {fullName}
+                </Title>
+                <Text type="secondary" className="block text-base">
+                  خوش آمدید به دنیای شیک‌پوشان ✨
+                </Text>
+                <Space wrap className="justify-center md:justify-start">
+                  <Tag color={loyaltyLevel.color} className="font-medium">
+                    <TrophyOutlined className="ml-1" />
+                    {loyaltyLevel.name}
+                  </Tag>
+                  <Tag color="success" className="font-medium">
+                    حساب فعال
+                  </Tag>
+                </Space>
               </div>
+            </Space>
+          </Col>
+          <Col xs={24} md={16}>
+            <div className="flex flex-col items-center justify-end gap-3 md:flex-row">
+              <Space wrap className="w-full justify-center md:w-auto md:justify-end">
+                <Button
+                  icon={<EditOutlined />}
+                  size="large"
+                  className="transition-all hover:scale-105"
+                >
+                  ویرایش پروفایل
+                </Button>
+                <Button
+                  icon={<HistoryOutlined />}
+                  size="large"
+                  onClick={() => router.push('/orders')}
+                  className="transition-all hover:scale-105"
+                >
+                  تاریخچه سفارش‌ها
+                </Button>
+              </Space>
+              <Divider type="vertical" className="hidden h-10 md:block" />
+              <Button
+                type="primary"
+                danger
+                icon={<LogoutOutlined />}
+                size="large"
+                onClick={handleLogout}
+                className="w-full transition-all hover:scale-105 md:w-auto"
+              >
+                خروج از حساب
+              </Button>
             </div>
-          </div>
-        </div>
-      </div>
+          </Col>
+        </Row>
+      </Card>
 
-      {/* Tabs Navigation */}
-      <div className="sticky top-[72px] z-40 border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-end">
-            <div className="max-w-full flex-1 overflow-x-auto">
-              <Tabs
-                activeKey={activeTab}
-                onChange={setActiveTab}
-                items={tabsItems}
-                className="custom-profile-tabs !border-0"
-                moreIcon={null}
-                tabBarStyle={{ marginBottom: 0 }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Content Area based on Active Tab */}
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 md:py-8 lg:px-8">
-        {activeTab === 'home' && (
-          <div className="space-y-6">
-            {postsLoading ? (
-              <ProductGridSkeleton count={6} cols={3} />
-            ) : postsError ? (
-              <div className="py-12 text-center">
-                <Text className="text-lg text-red-500">خطا در بارگذاری پست‌ها</Text>
-              </div>
-            ) : posts.length > 0 ? (
-              <>
-                {/* Featured Post - Large Display */}
-                <div className="overflow-hidden rounded-xl bg-white shadow-lg">
-                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    {/* Thumbnail */}
-                    <div className="relative aspect-video min-h-[300px] w-full lg:aspect-auto lg:h-full">
-                      <Link href={`/products/${featuredPost.id}`}>
-                        <Image
-                          src={getValidImageSrc(
-                            featuredPost.thumbnail || featuredPost.image,
-                            DEFAULT_IMAGES.post,
-                          )}
-                          alt={featuredPost.title}
-                          fill
-                          className="object-cover transition-transform duration-300 hover:scale-105"
-                          sizes="(max-width: 1024px) 100vw, 50vw"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = DEFAULT_IMAGES.post;
-                          }}
-                        />
-
-                        {/* Post Badges - Top Left */}
-                        {featuredPost.badges && featuredPost.badges.length > 0 && (
-                          <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-                            {featuredPost.badges.map((badge: string, index: number) => (
-                              <Badge key={index} text={badge} />
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Category Badge - Bottom Left (Larger for featured) */}
-                        <div className="absolute bottom-4 left-4 rounded bg-black/80 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm">
-                          {featuredPost.category}
-                        </div>
-                      </Link>
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex flex-col justify-between p-6 lg:p-8">
-                      <div>
-                        <Link href={`/products/${featuredPost.id}`}>
-                          <Title
-                            level={2}
-                            className="!mb-4 !text-2xl !text-gray-800 transition-colors hover:text-pink-600 lg:!text-3xl"
-                          >
-                            {featuredPost.title}
-                          </Title>
-                        </Link>
-
-                        <div className="mb-4 flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                          <span className="flex items-center gap-2">
-                            <EyeOutlined />
-                            {formatNumber(featuredPost.views)} بازدید
-                          </span>
-                          <span className="flex items-center gap-2">
-                            <CalendarOutlined />
-                            {formatDate(featuredPost.publishedAt || '')}
-                          </span>
-                        </div>
-
-                        {featuredPost.likes && featuredPost.comments && (
-                          <div className="mb-6 flex items-center gap-4">
-                            <span className="flex items-center gap-2 text-gray-600">
-                              <LikeOutlined className="text-lg text-pink-500" />
-                              <strong>{formatNumber(featuredPost.likes)}</strong>
-                            </span>
-                            <span className="flex items-center gap-2 text-gray-600">
-                              <MessageOutlined className="text-lg text-purple-500" />
-                              <strong>{formatNumber(featuredPost.comments)}</strong>
-                            </span>
-                          </div>
-                        )}
-
-                        <Paragraph className="line-clamp-3 !text-base !leading-7 !text-gray-700">
-                          {featuredPost.description ||
-                            'این پست یکی از محبوب‌ترین پست‌های این کانال است. برای مشاهده جزئیات بیشتر روی لینک زیر کلیک کنید.'}
-                        </Paragraph>
-                      </div>
-
-                      <div className="mt-6">
-                        <Link href={`/products/${featuredPost.id}`}>
-                          <Button
-                            type="primary"
-                            size="large"
-                            className="border-0 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
-                          >
-                            مشاهده پست
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recent Posts Grid */}
-                <div>
-                  <Title level={3} className="!mb-6 !text-xl">
-                    پست‌های اخیر
-                  </Title>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-                    {posts.slice(1, 5).map((post) => (
-                      <PostCard
-                        key={post.id}
-                        post={{
-                          ...post,
-                          thumbnail: post.thumbnail || post.image,
-                          publishedAt: post.publishedAt || post.createdAt,
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="py-16 text-center">
-                <Text className="text-lg text-gray-500">پستی یافت نشد</Text>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'playlists' && (
-          <div>
-            {playlistsLoading ? (
-              <ProductGridSkeleton count={6} cols={3} />
-            ) : playlistsError ? (
-              <div className="py-12 text-center">
-                <Text className="text-lg text-red-500">خطا در بارگذاری فهرست‌ها</Text>
-              </div>
-            ) : playlists.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-                {playlists.map((playlist) => (
-                  <PlaylistCard key={playlist.id} playlist={playlist as Playlist} />
-                ))}
-              </div>
-            ) : (
-              <div className="py-16 text-center">
-                <Text className="text-lg text-gray-500">فهرستی یافت نشد</Text>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'posts' && (
-          <div>
-            {postsLoading ? (
-              <ProductGridSkeleton count={6} cols={3} />
-            ) : postsError ? (
-              <div className="py-12 text-center">
-                <Text className="text-lg text-red-500">خطا در بارگذاری پست‌ها</Text>
-              </div>
-            ) : posts.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-                {posts.map((post) => (
-                  <PostCard
-                    key={post.id}
-                    post={{
-                      ...post,
-                      thumbnail: post.thumbnail || post.image,
-                      publishedAt: post.publishedAt || post.createdAt,
-                    }}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="py-16 text-center">
-                <Text className="text-lg text-gray-500">پستی یافت نشد</Text>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'categories' && (
-          <div>
-            {postsLoading ? (
-              <ProductGridSkeleton count={8} cols={4} />
-            ) : postsError ? (
-              <div className="py-12 text-center">
-                <Text className="text-lg text-red-500">خطا در بارگذاری پست‌ها</Text>
-              </div>
-            ) : (
-              <CategoriesGrid categories={profileCategories} />
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Chat Fixed - Keep the existing chat component */}
-      <div className="fixed bottom-0 left-0 z-50 mb-4 ml-4 w-80">
-        {/* Chat component can be added here if needed */}
-      </div>
-
-      <style jsx global>{`
-        .custom-profile-tabs .ant-tabs-nav {
-          margin-bottom: 0 !important;
-          margin-right: 0 !important;
-          margin-left: auto !important;
-        }
-        .custom-profile-tabs .ant-tabs-nav-list {
-          justify-content: flex-end !important;
-        }
-        .custom-profile-tabs .ant-tabs-tab {
-          border-radius: 12px !important;
-          margin: 0 2px !important;
-          padding: 8px 12px !important;
-          transition: all 0.3s ease !important;
-          white-space: nowrap !important;
-        }
-        @media (min-width: 640px) {
-          .custom-profile-tabs .ant-tabs-tab {
-            padding: 8px 16px !important;
-            margin: 0 4px !important;
-          }
-        }
-        .custom-profile-tabs .ant-tabs-tab:hover {
-          background: rgba(236, 72, 153, 0.1) !important;
-          color: #ec4899 !important;
-        }
-        .custom-profile-tabs .ant-tabs-tab-active {
-          background: linear-gradient(135deg, #ec4899, #8b5cf6) !important;
-          color: white !important;
-        }
-        .custom-profile-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-          color: white !important;
-        }
-        .custom-profile-tabs .ant-tabs-tab-active .ant-badge-count {
-          background: rgba(255, 255, 255, 0.3) !important;
-          border-color: rgba(255, 255, 255, 0.3) !important;
-        }
-        .custom-profile-tabs .ant-tabs-ink-bar {
-          display: none !important;
-        }
-        /* Responsive improvements */
-        @media (max-width: 640px) {
-          .custom-profile-tabs .ant-tabs-tab-btn {
-            font-size: 12px !important;
-          }
-        }
-      `}</style>
+      {/* Tabs */}
+      <Card className="rounded-2xl border-0 bg-white shadow-lg">
+        <Tabs
+          defaultActiveKey="overview"
+          items={items}
+          tabBarGutter={32}
+          size="large"
+          className="profile-tabs"
+        />
+      </Card>
     </div>
   );
 }

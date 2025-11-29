@@ -22,7 +22,8 @@ export async function generateStaticParams() {
   if (!sellers) return [];
 
   return sellers.map((seller) => ({
-    id: seller.id,
+    // Next.js requires route params to be strings
+    id: String(seller.id),
   }));
 }
 
