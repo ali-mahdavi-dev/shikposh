@@ -13,6 +13,7 @@ export interface OrderFiltersProps {
 const statusOptions: Array<OrderStatus | 'all'> = [
   'all',
   'pending',
+  'payment_confirmed',
   'processing',
   'confirmed',
   'shipped',
@@ -52,4 +53,3 @@ export function OrderFilters({ selectedStatus = 'all', onStatusChange }: OrderFi
 }
 
 export default OrderFilters;
-

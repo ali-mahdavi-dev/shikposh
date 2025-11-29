@@ -1,6 +1,6 @@
 'use client';
 import React, { useMemo, useEffect, useState } from 'react';
-import { Card, Button, Typography, InputNumber, Empty, Divider, Tag } from 'antd';
+import { Card, Button, Typography, InputNumber, Empty, Divider, Tag, message } from 'antd';
 import { GiftOutlined, DollarOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -14,6 +14,8 @@ import {
 import { useProductsForCart } from '@/app/products/_api';
 import { formatIranianPrice } from '@/shared/utils';
 import { getValidImageSrc, DEFAULT_IMAGES } from '@/shared/utils/image';
+import { PaymentMethodSelector, type PaymentMethod } from './_components/payment-method-selector';
+import { paymentService } from '@/app/orders/_api/payment.service';
 
 const { Title, Text } = Typography;
 
@@ -21,6 +23,8 @@ export default function CartClient() {
   const dispatch = useAppDispatch();
   const items = useAppSelector((state) => state.cart.items);
   const [isMounted, setIsMounted] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('zarinpal');
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
 
   // Ensure consistent initial render between server and client
   useEffect(() => {
@@ -73,6 +77,57 @@ export default function CartClient() {
     const total = subtotal + tax + shipping;
     return { subtotal, shipping, total, totalDiscount, tax, realSavings };
   }, [items]);
+
+  const handleContinuePurchase = async () => {
+    if (items.length === 0) {
+      message.warning('سبد خرید شما خالی است');
+      return;
+    }
+
+    setIsCreatingOrder(true);
+    try {
+      // Prepare order items
+      const orderItems = items.map((item) => ({
+        product_id: Number(item.productId),
+        product_name: item.name || 'محصول',
+        product_slug: item.slug,
+        product_image: item.image,
+        quantity: item.quantity,
+        price: item.price || 0,
+        discount: item.discount || 0,
+        color: item.color,
+        size: item.size,
+      }));
+
+      // Create order request
+      const orderRequest = {
+        items: orderItems,
+        payment_method: selectedPaymentMethod,
+        total_amount: totals.subtotal,
+        discount_amount: totals.totalDiscount,
+        shipping_cost: totals.shipping,
+        final_amount: totals.total,
+      };
+
+      // Create order and get payment URL
+      const response = await paymentService.createOrderAndGetPaymentUrl(orderRequest);
+
+      // Store order ID for callback verification
+      localStorage.setItem('pending_order_id', response.order_id.toString());
+
+      // Redirect to payment gateway
+      if (response.payment_url) {
+        window.location.href = response.payment_url;
+      } else {
+        message.error('خطا در ایجاد درخواست پرداخت');
+        setIsCreatingOrder(false);
+      }
+    } catch (error: any) {
+      console.error('Failed to create order:', error);
+      message.error(error?.message || 'خطا در ایجاد سفارش. لطفاً دوباره تلاش کنید.');
+      setIsCreatingOrder(false);
+    }
+  };
 
   // During SSR and initial client render, show empty state to prevent hydration mismatch
   // After mount, show actual cart state
@@ -299,11 +354,18 @@ export default function CartClient() {
                     {formatIranianPrice(totals.total)} تومان
                   </Text>
                 </div>
+                <PaymentMethodSelector
+                  selectedMethod={selectedPaymentMethod}
+                  onMethodChange={setSelectedPaymentMethod}
+                />
                 <div className="flex flex-col gap-2">
                   <Button
                     type="primary"
                     size="large"
                     className="h-12 rounded-xl border-0 bg-gradient-to-r from-pink-500 to-purple-600"
+                    onClick={handleContinuePurchase}
+                    loading={isCreatingOrder}
+                    disabled={isCreatingOrder || items.length === 0}
                   >
                     ادامه فرآیند خرید
                   </Button>

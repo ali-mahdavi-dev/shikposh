@@ -38,7 +38,7 @@ export function OrderCard({ order, onViewDetails, onCancel }: OrderCardProps) {
     }).format(date);
   };
 
-  const canCancel = order.status === 'pending' || order.status === 'processing';
+  const canCancel = order.status === 'payment_confirmed' || order.status === 'processing';
 
   return (
     <motion.div

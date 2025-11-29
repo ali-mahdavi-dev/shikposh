@@ -1,5 +1,6 @@
 export type OrderStatus =
   | 'pending'
+  | 'payment_confirmed'
   | 'processing'
   | 'confirmed'
   | 'shipped'
@@ -57,4 +58,3 @@ export interface OrdersResponse {
   page?: number;
   pages?: number;
 }
-

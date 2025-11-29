@@ -39,9 +39,11 @@ const Header: React.FC<HeaderProps> = ({ wishlistCount = 5 }) => {
 
   // Use cartCountFromStore only after mount to prevent hydration mismatch
   const displayCartCount = mounted ? cartCountFromStore : 0;
-  const notificationUnreadCount = useAppSelector(
+  const notificationUnreadCountFromStore = useAppSelector(
     (state) => state.notifications.items.filter((n) => !n.read).length,
   );
+  // Use notificationCount only after mount to prevent hydration mismatch
+  const displayNotificationCount = mounted ? notificationUnreadCountFromStore : 0;
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const user = useAppSelector((state) => state.auth.user);
   const logoutMutation = useLogout();
@@ -171,11 +173,14 @@ const Header: React.FC<HeaderProps> = ({ wishlistCount = 5 }) => {
     [],
   );
 
+  // Use wishlistCount only after mount to prevent hydration mismatch
+  const displayWishlistCount = mounted ? (wishlistCountFromStore ?? wishlistCount) : 0;
+
   // Shared props for all header components
   const sharedProps = {
     cartCount: displayCartCount,
-    wishlistCount: wishlistCountFromStore ?? wishlistCount,
-    notificationCount: notificationUnreadCount,
+    wishlistCount: displayWishlistCount,
+    notificationCount: displayNotificationCount,
     isAuthenticated,
     user,
     searchValue,

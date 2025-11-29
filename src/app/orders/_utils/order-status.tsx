@@ -38,6 +38,11 @@ export function getStatusConfig(status: OrderStatus): StatusConfig {
       color: 'warning',
       icon: <ClockCircleOutlined />,
     },
+    payment_confirmed: {
+      label: 'پرداخت تایید شده',
+      color: 'success',
+      icon: <CheckCircleOutlined />,
+    },
     processing: {
       label: 'در حال پردازش',
       color: 'processing',
