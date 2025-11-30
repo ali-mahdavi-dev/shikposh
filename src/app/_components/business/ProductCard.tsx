@@ -44,6 +44,25 @@ const ProductCard: React.FC<ProductCardProps> = memo(({ product, index, onAddToC
     setImageSrc(DEFAULT_IMAGES.product);
   };
 
+  // Calculate badge positions to prevent overlapping
+  // Each badge is spaced 32px apart, starting from 12px from top
+  const BADGE_SPACING = 32;
+  const INITIAL_TOP = 12;
+
+  // Calculate how many badges come before each one
+  const badgesBeforeNew = 0;
+  const badgesBeforeFeatured = product.isNew ? 1 : 0;
+  const badgesBeforeDiscount = (product.isNew ? 1 : 0) + (product.isFeatured ? 1 : 0);
+
+  const newBadgeTop = product.isNew ? INITIAL_TOP + badgesBeforeNew * BADGE_SPACING : 0;
+  const featuredBadgeTop = product.isFeatured
+    ? INITIAL_TOP + badgesBeforeFeatured * BADGE_SPACING
+    : 0;
+  const discountBadgeTop =
+    product.discount && product.discount > 0
+      ? INITIAL_TOP + badgesBeforeDiscount * BADGE_SPACING
+      : 0;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -56,10 +75,14 @@ const ProductCard: React.FC<ProductCardProps> = memo(({ product, index, onAddToC
         style={{ padding: 0 }}
       >
         {/* Badges */}
-        <div className="absolute top-3 right-0 z-10 flex flex-col gap-4">
-          {/* Badges */}
+        <div className="absolute top-0 right-0 z-10">
           {product.isNew && (
-            <Badge.Ribbon text="جدید" color="#10b981" placement="start">
+            <Badge.Ribbon
+              text="جدید"
+              color="#10b981"
+              placement="start"
+              style={{ top: `${newBadgeTop}px` }}
+            >
               <div />
             </Badge.Ribbon>
           )}
@@ -68,27 +91,21 @@ const ProductCard: React.FC<ProductCardProps> = memo(({ product, index, onAddToC
               text="ویژه"
               color="#ec4899"
               placement="start"
-              className={product.isNew ? '!top-5' : ''}
+              style={{ top: `${featuredBadgeTop}px` }}
             >
               <div />
             </Badge.Ribbon>
           )}
-          {product.discount && product.discount > 0 && (
+          {(product.discount && product.discount > 0 ) ? (
             <Badge.Ribbon
               text={`${product.discount}% تخفیف`}
               color="#ef4444"
               placement="start"
-              className={
-                product.isNew && product.isFeatured
-                  ? '!top-[11px]'
-                  : product.isNew || product.isFeatured
-                    ? '!top-5'
-                    : ''
-              }
+              style={{ top: `${discountBadgeTop}px` }}
             >
               <div />
             </Badge.Ribbon>
-          )}
+          ) : <></>}
         </div>
         <Link href={`/products/${product.slug}`} className="block">
           <div className="relative overflow-hidden">

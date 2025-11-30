@@ -68,8 +68,22 @@ export const useSearchProducts = (query: string) => {
 };
 
 export const useFilteredProducts = (filters: ProductFilters, options?: { enabled?: boolean }) => {
+  // Normalize filters to ensure consistent query key serialization
+  const normalizedFilters = filters
+    ? {
+        q: filters.q || undefined,
+        category: filters.category || undefined,
+        min: filters.min || undefined,
+        max: filters.max || undefined,
+        rating: filters.rating || undefined,
+        featured: filters.featured || undefined,
+        tags: filters.tags && filters.tags.length > 0 ? filters.tags : undefined,
+        sort: filters.sort || undefined,
+      }
+    : undefined;
+
   return useQuery<ProductSummary[]>({
-    queryKey: ['products', 'filtered', filters],
+    queryKey: ['products', 'filtered', normalizedFilters],
     queryFn: () => productService.getFilteredProducts(filters),
     staleTime: 2 * 60 * 1000, // 2 minutes
     enabled: options?.enabled ?? true,

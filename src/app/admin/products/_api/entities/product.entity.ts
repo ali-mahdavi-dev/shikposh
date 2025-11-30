@@ -10,7 +10,7 @@ export interface CreateProductRequest {
   thumbnail: string;
   categories: number[]; // Category IDs
   discount: number;
-  stock: number;
+  stock?: number; // Optional - use variants instead
   origin_price?: number;
   price: number;
   is_new: boolean;
@@ -66,4 +66,3 @@ export interface Tag {
   name: string;
   slug: string;
 }
-
