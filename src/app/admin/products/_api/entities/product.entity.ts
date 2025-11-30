@@ -66,3 +66,31 @@ export interface Tag {
   name: string;
   slug: string;
 }
+
+// Product entity for admin (matches backend ToMap structure)
+export interface AdminProduct {
+  id: number | string;
+  seller_id: number;
+  brand: string;
+  title: string;
+  slug: string;
+  description?: string;
+  short_description?: string;
+  thumbnail: string;
+  categories: Array<{ id: number; name: string; slug: string }>;
+  discount: number;
+  stock: number;
+  price: number;
+  orgin_price?: number; // Note: backend uses "orgin_price" (typo)
+  rating: number;
+  is_featured: boolean;
+  is_new: boolean;
+  created_at: string;
+  colors: Array<{ id: number; name: string; hex: string }>;
+  sizes: Array<{ id: number; name: string }>;
+  variant: Record<string, Record<string, { stock: number }>>;
+  tags: string[];
+  features: string[];
+  specs: Array<{ key: string; value: string; order?: number }>;
+  images: Record<string, string[]>; // color_id -> urls[]
+}

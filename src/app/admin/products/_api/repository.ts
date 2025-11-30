@@ -1,8 +1,19 @@
 import { apiService } from '@/shared/services/api.service';
-import type { CreateProductRequest, Category, Color, Size, Tag } from './entities/product.entity';
+import type {
+  CreateProductRequest,
+  Category,
+  Color,
+  Size,
+  Tag,
+  AdminProduct,
+} from './entities/product.entity';
 
 export interface AdminProductRepository {
+  getProducts(): Promise<AdminProduct[]>;
+  getProductById(id: number | string): Promise<AdminProduct>;
   createProduct(data: CreateProductRequest): Promise<void>;
+  updateProduct(id: number | string, data: Partial<CreateProductRequest>): Promise<void>;
+  deleteProduct(id: number | string, softDelete?: boolean): Promise<void>;
   getCategories(): Promise<Category[]>;
   getColors(): Promise<Color[]>;
   getSizes(): Promise<Size[]>;
@@ -11,8 +22,24 @@ export interface AdminProductRepository {
 }
 
 export class HttpAdminProductRepository implements AdminProductRepository {
+  async getProducts(): Promise<AdminProduct[]> {
+    return apiService.get<AdminProduct[]>('/api/v1/admin/products');
+  }
+
+  async getProductById(id: number | string): Promise<AdminProduct> {
+    return apiService.get<AdminProduct>(`/api/v1/public/products/${id}`);
+  }
+
   async createProduct(data: CreateProductRequest): Promise<void> {
     await apiService.post('/api/v1/admin/products', data);
+  }
+
+  async updateProduct(id: number | string, data: Partial<CreateProductRequest>): Promise<void> {
+    await apiService.put(`/api/v1/admin/products/${id}`, data);
+  }
+
+  async deleteProduct(id: number | string, softDelete: boolean = true): Promise<void> {
+    await apiService.delete(`/api/v1/admin/products/${id}?soft_delete=${softDelete}`);
   }
 
   async getCategories(): Promise<Category[]> {
