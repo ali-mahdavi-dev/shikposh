@@ -156,15 +156,14 @@ export default function EditProductPage() {
     }
   }, [product, form]);
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const title = e.target.value;
-    const slug = generateSlug(title);
-    setTimeout(() => {
-      form.setFieldValue('slug', slug);
-    }, 0);
-  };
+  // Remove handleTitleChange - we'll use Form.Item dependencies instead
 
   const handleSubmit = async (values: CreateProductRequest) => {
+    if (!product) {
+      message.error('محصول یافت نشد');
+      return;
+    }
+
     try {
       const categories = (values.categories || []).map((cat) =>
         typeof cat === 'string' ? parseInt(cat, 10) : cat,
@@ -322,7 +321,7 @@ export default function EditProductPage() {
                         { min: 3, message: 'عنوان باید حداقل ۳ کاراکتر باشد' },
                       ]}
                     >
-                      <Input placeholder="عنوان محصول" onChange={handleTitleChange} />
+                      <Input placeholder="عنوان محصول" />
                     </Form.Item>
                   </Col>
 
@@ -330,12 +329,38 @@ export default function EditProductPage() {
                     <Form.Item
                       name="slug"
                       label="Slug (خودکار از عنوان تولید می‌شود)"
+                      dependencies={['title']}
                       rules={[
                         { required: true, message: 'Slug الزامی است' },
                         { min: 3, message: 'Slug باید حداقل ۳ کاراکتر باشد' },
                       ]}
                     >
-                      <Input placeholder="slug-product" readOnly className="bg-gray-50" />
+                      <Form.Item
+                        noStyle
+                        shouldUpdate={(prevValues, currentValues) =>
+                          prevValues.title !== currentValues.title
+                        }
+                      >
+                        {({ getFieldValue }) => {
+                          const title = getFieldValue('title');
+                          const slug = title ? generateSlug(title) : '';
+                          // Update slug when title changes
+                          if (slug && slug !== getFieldValue('slug')) {
+                            // Use setTimeout to avoid circular reference warning
+                            setTimeout(() => {
+                              form.setFieldValue('slug', slug);
+                            }, 0);
+                          }
+                          return (
+                            <Input
+                              placeholder="slug-product"
+                              readOnly
+                              className="bg-gray-50"
+                              value={slug}
+                            />
+                          );
+                        }}
+                      </Form.Item>
                     </Form.Item>
                   </Col>
 

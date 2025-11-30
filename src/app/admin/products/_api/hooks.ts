@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminProductService } from './service';
+import { revalidateProductPages, generateSlug } from './revalidation';
 import type {
   CreateProductRequest,
   Category,
@@ -13,7 +14,9 @@ export const useProducts = () => {
   return useQuery<AdminProduct[]>({
     queryKey: ['admin', 'products'],
     queryFn: () => adminProductService.getProducts(),
-    staleTime: 1 * 60 * 1000, // 1 minute
+    staleTime: 0, // Always consider data stale, refetch on mount
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchOnWindowFocus: false, // Don't refetch on window focus to avoid unnecessary requests
   });
 };
 
@@ -30,8 +33,14 @@ export const useCreateProduct = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateProductRequest) => adminProductService.createProduct(data),
-    onSuccess: () => {
+    onSuccess: async (_, variables) => {
+      // Invalidate and refetch React Query cache
       queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
+      await queryClient.refetchQueries({ queryKey: ['admin', 'products'] });
+
+      // Revalidate SSG pages
+      const slug = variables.slug || generateSlug(variables.title);
+      await revalidateProductPages({ slug });
     },
   });
 };
@@ -41,9 +50,20 @@ export const useUpdateProduct = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: number | string; data: Partial<CreateProductRequest> }) =>
       adminProductService.updateProduct(id, data),
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
+      // Invalidate and refetch React Query cache
       queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
       queryClient.invalidateQueries({ queryKey: ['admin', 'products', variables.id] });
+      await queryClient.refetchQueries({ queryKey: ['admin', 'products'] });
+
+      // Revalidate SSG pages
+      try {
+        const product = await adminProductService.getProductById(variables.id);
+        await revalidateProductPages({ slug: product?.slug });
+      } catch (error) {
+        // If we can't get product, still revalidate all products
+        await revalidateProductPages();
+      }
     },
   });
 };
@@ -51,12 +71,30 @@ export const useUpdateProduct = () => {
 export const useDeleteProduct = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, softDelete }: { id: number | string; softDelete?: boolean }) =>
-      adminProductService.deleteProduct(id, softDelete),
-    onSuccess: () => {
+    mutationFn: async ({ id, softDelete }: { id: number | string; softDelete?: boolean }) => {
+      // Get product before deletion to get slug for revalidation
+      let slug: string | undefined;
+      try {
+        const product = await adminProductService.getProductById(id);
+        slug = product?.slug;
+      } catch (error) {
+        // If we can't get product, continue with deletion
+        console.warn('Failed to get product for revalidation:', error);
+      }
+
+      // Delete the product
+      await adminProductService.deleteProduct(id, softDelete);
+
+      // Return slug for use in onSuccess
+      return { id, slug };
+    },
+    onSuccess: async (result) => {
       // Invalidate and refetch products list
       queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
-      queryClient.refetchQueries({ queryKey: ['admin', 'products'] });
+      await queryClient.refetchQueries({ queryKey: ['admin', 'products'] });
+
+      // Revalidate SSG pages
+      await revalidateProductPages({ slug: result.slug });
     },
   });
 };
