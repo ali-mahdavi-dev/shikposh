@@ -1,4 +1,6 @@
 import '@ant-design/v5-patch-for-react-19';
+// Initialize dependency injection (must be before any tsyringe decorators)
+import '@/lib/di/init';
 import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
@@ -6,11 +8,11 @@ import { ConfigProvider, App } from 'antd';
 import { ReactQueryProvider } from '@/providers/react-query-provider';
 import { ReduxProvider } from '@/providers/redux-provider';
 import { ErrorBoundary, ApiMonitor } from '@/shared';
-import { ConditionalLayout } from './_components/layout/conditional-layout';
+import { ConditionalLayout } from '@/components/layout';
 import './globals.css';
 
 // Lazy load components for better performance
-const WishlistInitializer = React.lazy(() => import('@/app/_components/wishlist-initializer'));
+const WishlistInitializer = React.lazy(() => import('@/shared/components/WishlistInitializer'));
 
 const theme = {
   token: {

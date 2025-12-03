@@ -13,7 +13,6 @@ import type {
   LoginResponse,
   LoginResponseBackend,
   User,
-  UserBackend,
 } from './entities';
 
 export interface AuthRepository {
@@ -43,15 +42,11 @@ export class HttpAuthRepository implements AuthRepository {
       request,
     );
     // Debug: Log the full response to see what backend returns
-    console.log('🔍 VerifyOtp Backend Response:', JSON.stringify(backendResponse, null, 2));
-    if (backendResponse.user) {
-      console.log('🔍 User object:', JSON.stringify(backendResponse.user, null, 2));
-      console.log(
-        '🔍 is_admin value:',
-        backendResponse.user.is_admin,
-        'type:',
-        typeof backendResponse.user.is_admin,
-      );
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 VerifyOtp Backend Response:', JSON.stringify(backendResponse, null, 2));
+      if (backendResponse.user) {
+        console.log('🔍 User object:', JSON.stringify(backendResponse.user, null, 2));
+      }
     }
     return {
       success: backendResponse.success,
@@ -105,6 +100,6 @@ export class HttpAuthRepository implements AuthRepository {
   }
 
   async logout(): Promise<void> {
-    return apiService.post<void>('/api/v1/public/logout');
+    return await apiService.post<void>('/api/v1/public/logout');
   }
 }

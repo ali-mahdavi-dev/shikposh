@@ -1,3 +1,5 @@
+import '@/lib/di/init'; // Ensure reflect-metadata is loaded before decorators
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { NotificationContainer } from './container';
 import type { NotificationEntity } from './entities';
@@ -8,7 +10,7 @@ const notificationService = NotificationContainer.getNotificationService();
 export const useNotifications = () => {
   return useQuery<NotificationEntity[]>({
     queryKey: ['notifications'],
-    queryFn: () => notificationService.getAllNotifications(),
+    queryFn: () => notificationService.findAll(),
     staleTime: 1 * 60 * 1000, // 1 minute
     refetchInterval: 30 * 1000, // Refetch every 30 seconds for real-time updates
   });
@@ -18,7 +20,13 @@ export const useNotifications = () => {
 export const useNotification = (id: string) => {
   return useQuery<NotificationEntity>({
     queryKey: ['notifications', id],
-    queryFn: () => notificationService.getNotificationById(id),
+    queryFn: async (): Promise<NotificationEntity> => {
+      const notification = await notificationService.findById(id);
+      if (!notification) {
+        throw new Error(`Notification with id ${id} not found`);
+      }
+      return notification;
+    },
     enabled: !!id,
     staleTime: 1 * 60 * 1000,
   });
@@ -54,34 +62,4 @@ export const useMarkAllNotificationsAsRead = () => {
   });
 };
 
-// Create notification
-export const useCreateNotification = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (notification: Omit<NotificationEntity, 'id' | 'createdAt' | 'read'>) =>
-      notificationService.createNotification(notification),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    },
-    onError: (error) => {
-      console.error('Failed to create notification:', error);
-    },
-  });
-};
-
-// Delete notification
-export const useDeleteNotification = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => notificationService.deleteNotification(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    },
-    onError: (error) => {
-      console.error('Failed to delete notification:', error);
-    },
-  });
-};
-
+// Note: create/delete notification mutations have been removed as they are not used.

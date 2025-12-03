@@ -35,6 +35,8 @@
     "allowJs": true,
     "incremental": true,
     "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "plugins": [
       {
         "name": "next"

@@ -1,0 +1,2 @@
+export { ProductsSort } from './ProductsSort';
+

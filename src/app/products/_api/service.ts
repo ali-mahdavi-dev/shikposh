@@ -1,7 +1,16 @@
+import { z } from 'zod';
+import { AppError } from '@/lib/errors/base/app.error';
+import { productFilterSchema } from '@/lib/validation/schemas/product.schema';
+import { ValidatorFactory } from '@/lib/validation/validators/validator.factory';
 import type { ProductRepository, ProductFilters } from './repository';
 import type { ProductEntity, ProductSummary, CategoryEntity } from './entities';
 import type { CartProduct } from './repository';
 
+/**
+ * Product Service
+ * Service layer for product data operations
+ * Follows enterprise architecture pattern with validation and error handling
+ */
 export class ProductService {
   constructor(private productRepository: ProductRepository) {}
 
@@ -11,9 +20,9 @@ export class ProductService {
 
   async getProductById(id: string): Promise<ProductEntity> {
     if (!id) {
-      throw new Error('Product ID is required');
+      throw AppError.validation('Product ID is required');
     }
-    return this.productRepository.getProductById(id);
+    return await this.productRepository.getProductById(id);
   }
 
   async getFeaturedProducts(): Promise<ProductSummary[]> {
@@ -32,7 +41,20 @@ export class ProductService {
   }
 
   async getFilteredProducts(filters: ProductFilters): Promise<ProductSummary[]> {
-    return this.productRepository.getFilteredProducts(filters);
+    // Use enterprise validation
+    const validator = ValidatorFactory.createSafeValidator(productFilterSchema);
+    const validationResult = validator(filters);
+
+    if (!validationResult.success) {
+      // validationResult.error is already a ZodError from createSafeValidator
+      const errorMessages = (validationResult.error as z.ZodError).issues.map((err) => {
+        const path = err.path.join('.');
+        return path ? `${path}: ${err.message}` : err.message;
+      });
+      throw AppError.validation(`Invalid filter parameters: ${errorMessages.join('; ')}`);
+    }
+
+    return await this.productRepository.getFilteredProducts(validationResult.data);
   }
 
   async getAllCategories(): Promise<CategoryEntity[]> {
@@ -41,9 +63,9 @@ export class ProductService {
 
   async getCategoryBySlug(slug: string): Promise<CategoryEntity> {
     if (!slug) {
-      throw new Error('Category slug is required');
+      throw AppError.validation('Category slug is required');
     }
-    return this.productRepository.getCategoryBySlug(slug);
+    return await this.productRepository.getCategoryBySlug(slug);
   }
 
   async getProductsForCart(productIds: string[]): Promise<CartProduct[]> {
@@ -63,51 +85,5 @@ export class ProductService {
 
   async getNewArrivals(limit?: number): Promise<ProductSummary[]> {
     return this.productRepository.getNewArrivals(limit);
-  }
-
-  private mapToProductSummary(products: ProductEntity[]): ProductSummary[] {
-    return products.map((product) => {
-      // Build colors map from colors array
-      const colorsMap: Record<string, { name: string; stock?: number; discount?: number }> = {};
-      if (product.colors) {
-        product.colors.forEach((color) => {
-          colorsMap[color.id.toString()] = {
-            name: color.name,
-          };
-        });
-      }
-
-      // Get first category name or default
-      const categoryName = product.categories?.[0]?.name || 'همه';
-
-      // Get first image from images object (first color's images) or use thumbnail
-      let firstImage = product.thumbnail;
-      if (product.images && Object.keys(product.images).length > 0) {
-        const firstColorId = Object.keys(product.images)[0];
-        const firstColorImages = product.images[firstColorId];
-        if (firstColorImages && firstColorImages.length > 0) {
-          firstImage = firstColorImages[0];
-        }
-      }
-
-      return {
-        id: product.id,
-        slug: product.slug,
-        name: product.title,
-        price: product.price || 0,
-        discount: product.discount || 0,
-        rating: product.rating || 0,
-        reviewCount: 0, // Not available in new API structure
-        image: firstImage,
-        category: categoryName,
-        isNew: product.is_new || false,
-        isFeatured: product.is_featured || false,
-        colors: colorsMap,
-        sizes: product.sizes?.map((s) => s.name) || [],
-        brand: product.brand || '',
-        description: product.description || '',
-        tags: product.tags || [],
-      };
-    });
   }
 }

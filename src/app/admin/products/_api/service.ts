@@ -1,54 +1,84 @@
-import { HttpAdminProductRepository } from './repository';
-import type { AdminProductRepository } from './repository';
+import { AppError } from '@/lib/errors/base/app.error';
+import {
+  HttpAdminProductRepository,
+  HttpAdminCategoryRepository,
+  HttpAdminColorRepository,
+  HttpAdminSizeRepository,
+  HttpAdminTagRepository,
+} from './repository';
+import type {
+  AdminProductRepository,
+  AdminCategoryRepository,
+  AdminColorRepository,
+  AdminSizeRepository,
+  AdminTagRepository,
+} from './repository';
+import type { AdminProduct } from './entities/product.entity';
+import { BaseService } from '@/lib/api';
+import { inject, injectable } from 'tsyringe';
 
-class AdminProductService {
-  private repository: AdminProductRepository;
-
-  constructor(repository: AdminProductRepository) {
-    this.repository = repository;
+@injectable()
+export class AdminProductService extends BaseService<AdminProduct, number | string> {
+  constructor(
+    @inject(HttpAdminProductRepository) private adminRepository: AdminProductRepository,
+    @inject(HttpAdminCategoryRepository) private categoryRepository: AdminCategoryRepository,
+    @inject(HttpAdminColorRepository) private colorRepository: AdminColorRepository,
+    @inject(HttpAdminSizeRepository) private sizeRepository: AdminSizeRepository,
+    @inject(HttpAdminTagRepository) private tagRepository: AdminTagRepository,
+  ) {
+    super(adminRepository);
   }
 
+  // Override getAll to match interface
+  // Note: If you don't override, it will automatically use repository.getAll()
   getProducts() {
-    return this.repository.getProducts();
+    return this.findAll();
   }
 
+  // Override getById to match interface
+  // Note: If you don't override, it will automatically use repository.getById()
   getProductById(id: number | string) {
-    return this.repository.getProductById(id);
+    return this.findById(id);
   }
 
-  createProduct(data: Parameters<AdminProductRepository['createProduct']>[0]) {
-    return this.repository.createProduct(data);
+  // Custom create with CreateProductRequest
+  async createProduct(data: Parameters<AdminProductRepository['createProduct']>[0]) {
+    return await this.adminRepository.createProduct(data);
   }
 
-  updateProduct(id: number | string, data: Parameters<AdminProductRepository['updateProduct']>[1]) {
-    return this.repository.updateProduct(id, data);
+  // Custom update with Partial<CreateProductRequest>
+  async updateProduct(
+    id: number | string,
+    data: Parameters<AdminProductRepository['updateProduct']>[1],
+  ) {
+    return await this.adminRepository.updateProduct(id, data);
   }
 
-  deleteProduct(id: number | string, softDelete: boolean = true) {
-    return this.repository.deleteProduct(id, softDelete);
+  // Custom delete with softDelete option
+  async deleteProduct(id: number | string, softDelete: boolean = true) {
+    if (!id) {
+      throw AppError.validation('Product ID is required');
+    }
+    return await this.adminRepository.deleteProduct(id, softDelete);
   }
 
   getCategories() {
-    return this.repository.getCategories();
+    return this.categoryRepository.getCategories();
   }
 
   getColors() {
-    return this.repository.getColors();
+    return this.colorRepository.getColors();
   }
 
   getSizes() {
-    return this.repository.getSizes();
+    return this.sizeRepository.getSizes();
   }
 
   getTags() {
-    return this.repository.getTags();
+    return this.tagRepository.getTags();
   }
 
   createTag(name: string) {
-    return this.repository.createTag(name);
+    return this.tagRepository.createTag(name);
   }
 }
-
-// Create singleton instance
-const adminProductRepository = new HttpAdminProductRepository();
-export const adminProductService = new AdminProductService(adminProductRepository);

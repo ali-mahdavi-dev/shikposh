@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect } from 'react';
 import { useAppDispatch } from '@/stores/hooks';
-import { setNotifications, markRead as markReadSlice, markAllRead as markAllReadSlice } from '@/stores/slices/notificationSlice';
+import { setNotifications, markRead as markReadSlice, markAllRead as markAllReadSlice } from '@/stores/features/notifications';
 import { useNotifications, useMarkNotificationAsRead, useMarkAllNotificationsAsRead } from './_api';
 import { NotificationList } from './_components';
 

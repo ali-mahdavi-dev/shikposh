@@ -1,4 +1,3 @@
-export * from './errors';
 export * from './utils';
 export * from './services/api.service';
 export * from './services/cache.service';
@@ -7,3 +6,5 @@ export * from './interceptors/request.interceptor';
 export * from './components/error-boundary';
 export * from './components/loading';
 export * from './components/api-monitor';
+export * from './components/WishlistInitializer';
+export * from './components/safe-image';

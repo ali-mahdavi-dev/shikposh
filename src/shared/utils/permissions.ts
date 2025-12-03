@@ -1,4 +1,4 @@
-import type { User } from '@/stores/slices/authSlice';
+import type { User } from '@/stores/features/auth';
 
 /**
  * Permission types

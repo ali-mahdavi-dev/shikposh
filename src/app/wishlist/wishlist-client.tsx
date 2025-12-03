@@ -2,13 +2,14 @@
 import React, { useMemo } from 'react';
 import { Typography, App as AntApp } from 'antd';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
-import { removeFromWishlist, addToWishlist } from '@/stores/slices/wishlistSlice';
-import { addToCart } from '@/stores/slices/cartSlice';
+import { removeFromWishlist, addToWishlist } from '@/stores/features/wishlist';
+import { addToCart } from '@/stores/features/cart';
 import { useProducts } from '@/app/products/_api';
-import { useToggleWishlistMutation } from '@/app/wishlist/_api/hooks';
+import { useToggleWishlistMutation } from '@/app/wishlist/_api';
 import { WishlistGrid, WishlistEmptyState } from './_components';
 import type { WishlistProduct } from './_types';
-import { WishlistSkeleton } from '@/app/_components/skeleton';
+import { WishlistSkeleton } from '@/components/ui/feedback/Skeleton';
+import { ErrorState } from '@/shared';
 
 const { Title } = Typography;
 
@@ -112,9 +113,11 @@ export default function WishlistClient() {
   }
   if (error) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center text-red-500">
-        خطا در بارگذاری علاقه‌مندی‌ها
-      </div>
+      <ErrorState
+        message="خطا در بارگذاری علاقه‌مندی‌ها"
+        description="لطفاً اتصال اینترنت خود را بررسی کنید و دوباره تلاش کنید."
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
@@ -123,8 +126,8 @@ export default function WishlistClient() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <Title level={2} className="mb-6 text-gray-800">
+    <div className="mx-auto max-w-7xl px-2 py-4 sm:px-4 sm:py-6 md:py-8">
+      <Title level={2} className="mb-4 text-lg text-gray-800 sm:mb-6 sm:text-xl md:text-2xl">
         علاقه‌مندی‌ها
       </Title>
 

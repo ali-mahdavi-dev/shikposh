@@ -1,42 +1,41 @@
-import { apiService } from '@/shared/services/api.service';
+import type { IHttpAdapter } from '@/lib/api/adapters/http.adapter';
+import { BaseRepository } from '@/lib/api/repositories/base.repository';
+import type { IRepository } from '@/lib/api/repositories/interfaces/repository.interface';
 import type { NotificationEntity } from './entities';
+import { inject, injectable } from 'tsyringe';
+import { HTTP_ADAPTER_TOKEN } from '@/lib/di/tokens';
 
-export interface NotificationRepository {
-  getAllNotifications(): Promise<NotificationEntity[]>;
-  getNotificationById(id: string): Promise<NotificationEntity>;
+export interface NotificationRepository extends IRepository<NotificationEntity, string> {
   markAsRead(id: string): Promise<NotificationEntity>;
   markAllAsRead(): Promise<void>;
-  createNotification(notification: Omit<NotificationEntity, 'id' | 'createdAt' | 'read'>): Promise<NotificationEntity>;
+  create(
+    notification: Omit<NotificationEntity, 'id' | 'createdAt' | 'read'>,
+  ): Promise<NotificationEntity>;
   deleteNotification(id: string): Promise<void>;
 }
 
-export class HttpNotificationRepository implements NotificationRepository {
-  async getAllNotifications(): Promise<NotificationEntity[]> {
-    return apiService.get<NotificationEntity[]>('/notifications');
+@injectable()
+export class HttpNotificationRepository
+  extends BaseRepository<NotificationEntity, string>
+  implements NotificationRepository
+{
+  constructor(@inject(HTTP_ADAPTER_TOKEN) httpAdapter: IHttpAdapter) {
+    super(httpAdapter, '/notifications');
   }
 
-  async getNotificationById(id: string): Promise<NotificationEntity> {
-    return apiService.get<NotificationEntity>(`/notifications/${id}`);
-  }
-
+  // Custom operations
   async markAsRead(id: string): Promise<NotificationEntity> {
-    return apiService.patch<NotificationEntity>(`/notifications/${id}`, { read: true });
-  }
-
-  async markAllAsRead(): Promise<void> {
-    return apiService.patch<void>('/notifications/mark-all-read', {});
-  }
-
-  async createNotification(notification: Omit<NotificationEntity, 'id' | 'createdAt' | 'read'>): Promise<NotificationEntity> {
-    return apiService.post<NotificationEntity>('/notifications', {
-      ...notification,
-      read: false,
-      createdAt: new Date().toISOString(),
+    return await this.httpAdapter.patch<NotificationEntity>(`${this.basePath}/${id}`, {
+      read: true,
     });
   }
 
+  async markAllAsRead(): Promise<void> {
+    await this.httpAdapter.patch<void>('/notifications/mark-all-read', {});
+  }
+
+  // Override delete to match interface
   async deleteNotification(id: string): Promise<void> {
-    return apiService.delete<void>(`/notifications/${id}`);
+    await this.delete(id);
   }
 }
-

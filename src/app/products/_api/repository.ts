@@ -1,4 +1,9 @@
-import { apiService, PaginatedResponse } from '@/shared/services/api.service';
+import { ServerBaseRepository } from '@/lib/api/repositories/server-base.repository';
+import {
+  ServerFetchAdapter,
+  type ServerRequestConfig,
+} from '@/lib/api/adapters/server-fetch.adapter';
+import type { IHttpAdapter } from '@/lib/api/adapters/http.adapter';
 import type { ProductEntity, ProductSummary, CategoryEntity } from './entities';
 
 export interface ProductFilters {
@@ -37,24 +42,53 @@ export interface ProductRepository {
   getNewArrivals(limit?: number): Promise<ProductSummary[]>;
 }
 
-export class HttpProductRepository implements ProductRepository {
+export class HttpProductRepository
+  extends ServerBaseRepository<ProductEntity, string>
+  implements ProductRepository
+{
+  constructor(httpAdapter?: IHttpAdapter) {
+    // Initialize base repository with adapter and base path
+    super(httpAdapter, '/api/v1/public/products');
+  }
+
   async getAllProducts(): Promise<ProductEntity[]> {
-    return apiService.get<ProductEntity[]>('/api/v1/public/products');
+    const config: ServerRequestConfig = {
+      tags: ['products'],
+      revalidate: 3600, // 1 hour
+    };
+    return await this.findAll(config);
   }
 
   async getProductById(id: string): Promise<ProductEntity> {
     // id is actually slug in our system
-    return apiService.get<ProductEntity>(`/api/v1/public/products/${id}`);
+    const config: ServerRequestConfig = {
+      tags: ['products', id],
+      revalidate: 3600, // 1 hour
+    };
+    const product = await this.findById(id, config);
+    if (!product) {
+      throw new Error(`Product with id ${id} not found`);
+    }
+    return product;
   }
 
   async getFeaturedProducts(): Promise<ProductSummary[]> {
-    const products = await apiService.get<ProductEntity[]>('/api/v1/public/products/featured');
+    const config: ServerRequestConfig = {
+      tags: ['products', 'featured'],
+      revalidate: 3600, // 1 hour
+    };
+    const products = await this.getFromEndpoint<ProductEntity[]>('featured', config);
     return this.mapToProductSummary(products);
   }
 
   async getProductsByCategory(category: string): Promise<ProductSummary[]> {
-    const products = await apiService.get<ProductEntity[]>(
-      `/api/v1/public/products/category/${category}`,
+    const config: ServerRequestConfig = {
+      tags: ['products', 'category', category],
+      revalidate: 3600, // 1 hour
+    };
+    const products = await (this.httpAdapter as ServerFetchAdapter).get<ProductEntity[]>(
+      `${this.basePath}/category/${category}`,
+      config,
     );
     return this.mapToProductSummary(products);
   }
@@ -63,35 +97,47 @@ export class HttpProductRepository implements ProductRepository {
     if (!query.trim()) {
       return [];
     }
-    const params = new URLSearchParams();
-    params.set('q', query.trim());
-    const products = await apiService.get<ProductEntity[]>(
-      `/api/v1/public/products?${params.toString()}`,
-    );
+    const config: ServerRequestConfig = {
+      params: {
+        q: query.trim(),
+      },
+      tags: ['products', 'search'],
+      revalidate: 300, // 5 minutes for search results
+    };
+    const products = await this.findAll(config);
     return this.mapToProductSummary(products);
   }
 
   async getFilteredProducts(filters: ProductFilters): Promise<ProductSummary[]> {
-    const params = new URLSearchParams();
-    if (filters.q) params.set('q', filters.q);
-    if (filters.category && filters.category !== 'all') params.set('category', filters.category);
-    if (filters.min !== undefined && filters.min > 0) params.set('min', String(filters.min));
-    if (filters.max !== undefined && filters.max < 10_000_000)
-      params.set('max', String(filters.max));
-    if (filters.rating !== undefined && filters.rating > 0)
-      params.set('rating', String(filters.rating));
-    if (filters.featured) params.set('featured', 'true');
-    if (filters.tags && filters.tags.length > 0) params.set('tags', filters.tags.join(','));
-    if (filters.sort && filters.sort !== 'relevance') params.set('sort', filters.sort);
+    const params: Record<string, string> = {};
+    if (filters.q) params.q = filters.q;
+    if (filters.category && filters.category !== 'all') params.category = filters.category;
+    if (filters.min !== undefined && filters.min > 0) params.min = String(filters.min);
+    if (filters.max !== undefined && filters.max < 10_000_000) params.max = String(filters.max);
+    if (filters.rating !== undefined && filters.rating > 0) params.rating = String(filters.rating);
+    if (filters.featured) params.featured = 'true';
+    if (filters.tags && filters.tags.length > 0) params.tags = filters.tags.join(',');
+    if (filters.sort && filters.sort !== 'relevance') params.sort = filters.sort;
 
-    const queryString = params.toString();
-    const endpoint = `/api/v1/public/products${queryString ? `?${queryString}` : ''}`;
-    const products = await apiService.get<ProductEntity[]>(endpoint);
+    const config: ServerRequestConfig = {
+      params,
+      tags: ['products', 'filtered'],
+      revalidate: 300, // 5 minutes for filtered results
+    };
+
+    const products = await this.findAll(config);
     return this.mapToProductSummary(products);
   }
 
   async getAllCategories(): Promise<CategoryEntity[]> {
-    const categories = await apiService.get<CategoryEntity[]>('/api/v1/public/categories');
+    const config: ServerRequestConfig = {
+      tags: ['categories'],
+      revalidate: 3600 * 24, // 24 hours - categories don't change often
+    };
+    const categories = await (this.httpAdapter as ServerFetchAdapter).get<CategoryEntity[]>(
+      '/api/v1/public/categories',
+      config,
+    );
     // Ensure all IDs are strings and map parent_id correctly
     return categories.map((category) => ({
       ...category,
@@ -101,7 +147,14 @@ export class HttpProductRepository implements ProductRepository {
   }
 
   async getCategoryBySlug(slug: string): Promise<CategoryEntity> {
-    const category = await apiService.get<CategoryEntity>(`/api/v1/public/categories/${slug}`);
+    const config: ServerRequestConfig = {
+      tags: ['categories', slug],
+      revalidate: 3600 * 24, // 24 hours
+    };
+    const category = await (this.httpAdapter as ServerFetchAdapter).get<CategoryEntity>(
+      `/api/v1/public/categories/${slug}`,
+      config,
+    );
     // Ensure ID is string and map parent_id correctly
     return {
       ...category,
@@ -114,36 +167,53 @@ export class HttpProductRepository implements ProductRepository {
     if (productIds.length === 0) {
       return [];
     }
-    return apiService.post<CartProduct[]>('/api/v1/public/products/cart', productIds);
+    const config: ServerRequestConfig = {
+      tags: ['products', 'cart'],
+      revalidate: 60, // 1 minute - cart data changes frequently
+    };
+    return await (this.httpAdapter as ServerFetchAdapter).post<CartProduct[]>(
+      `${this.basePath}/cart`,
+      productIds,
+      config,
+    );
   }
 
   async getMostDiscountedProducts(limit: number = 12): Promise<ProductSummary[]> {
-    const params = new URLSearchParams();
-    params.set('sort', 'discount_desc');
-    params.set('limit', String(limit));
-    const products = await apiService.get<ProductEntity[]>(
-      `/api/v1/public/products?${params.toString()}`,
-    );
+    const config: ServerRequestConfig = {
+      params: {
+        sort: 'discount_desc',
+        limit: String(limit),
+      },
+      tags: ['products', 'discounted'],
+      revalidate: 3600, // 1 hour
+    };
+    const products = await this.findAll(config);
     return this.mapToProductSummary(products);
   }
 
   async getBestSellingProducts(limit: number = 12): Promise<ProductSummary[]> {
-    const params = new URLSearchParams();
-    params.set('sort', 'rating');
-    params.set('limit', String(limit));
-    const products = await apiService.get<ProductEntity[]>(
-      `/api/v1/public/products?${params.toString()}`,
-    );
+    const config: ServerRequestConfig = {
+      params: {
+        sort: 'rating',
+        limit: String(limit),
+      },
+      tags: ['products', 'bestselling'],
+      revalidate: 3600, // 1 hour
+    };
+    const products = await this.findAll(config);
     return this.mapToProductSummary(products);
   }
 
   async getNewArrivals(limit: number = 12): Promise<ProductSummary[]> {
-    const params = new URLSearchParams();
-    params.set('sort', 'newest');
-    params.set('limit', String(limit));
-    const products = await apiService.get<ProductEntity[]>(
-      `/api/v1/public/products?${params.toString()}`,
-    );
+    const config: ServerRequestConfig = {
+      params: {
+        sort: 'newest',
+        limit: String(limit),
+      },
+      tags: ['products', 'new-arrivals'],
+      revalidate: 3600, // 1 hour
+    };
+    const products = await this.findAll(config);
     return this.mapToProductSummary(products);
   }
 

@@ -1,3 +1,3 @@
-export * from './wishlist-item';
-export * from './empty-state';
-export * from './wishlist-grid';
+export * from './WishlistItem';
+export * from './EmptyState';
+export * from './WishlistGrid';

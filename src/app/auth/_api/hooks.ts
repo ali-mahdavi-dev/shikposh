@@ -1,13 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { AuthContainer } from './container';
+import { authContainer } from './container';
+import { authKeys } from '@/lib/react-query/query-keys';
+import { handleError } from '@/lib/errors';
 import type { SendOtpRequest, VerifyOtpRequest, RegisterRequest, LoginRequest } from './entities';
 import { useAppDispatch } from '@/stores/hooks';
-import { logout } from '@/stores/slices/authSlice';
+import { logout } from '@/stores/features/auth';
 import { App } from 'antd';
-import { getErrorMessage } from '@/shared/utils/error-handler';
 import { clearTokens } from '@/shared/services/api.service';
 
-const authService = AuthContainer.getAuthService();
+const authService = authContainer.getService();
 
 export const useSendOtp = () => {
   return useMutation({
@@ -24,21 +25,18 @@ export const useVerifyOtp = () => {
     onSuccess: () => {
       // Don't automatically set credentials here
       // Let the component handle it based on userExists flag
-      queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+      queryClient.invalidateQueries({ queryKey: authKeys.user() });
     },
     onError: (error: any) => {
+      // Use enterprise error handling
+      const appError = handleError(error);
+      
       // Log error for debugging
-      console.error('Verify OTP Error:', {
-        error: error,
-        errorMessage: error?.message,
-        errorType: error?.constructor?.name,
-        errorString: String(error),
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Verify OTP Error:', appError.toJSON());
+      }
 
-      // Use the error handler utility to get the message
-      const errorMessage = getErrorMessage(error) || 'خطا در تایید کد OTP';
-
-      message.error(errorMessage);
+      message.error(appError.message || 'خطا در تایید کد OTP');
     },
   });
 };
@@ -56,10 +54,12 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: (request: LoginRequest) => authService.login(request),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+      queryClient.invalidateQueries({ queryKey: authKeys.user() });
     },
     onError: (error: any) => {
-      message.error(error?.message || 'خطا در ورود');
+      // Use enterprise error handling
+      const appError = handleError(error);
+      message.error(appError.message || 'خطا در ورود');
     },
   });
 };

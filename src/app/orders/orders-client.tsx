@@ -6,7 +6,9 @@ import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useOrders, useCancelOrderMutation } from './_api/hooks';
 import { OrderCard, OrdersEmptyState, OrderFilters } from './_components';
-import { OrdersSkeleton } from '@/app/_components/skeleton';
+import { OrdersSkeleton } from '@/components/ui/feedback/Skeleton';
+import { ErrorState } from '@/shared';
+import { handleError } from '@/lib/errors';
 import type { OrderStatus } from './_api/entities';
 
 const { Title } = Typography;
@@ -38,7 +40,9 @@ export default function OrdersClient() {
           await cancelOrderMutation.mutateAsync(orderId);
           message.success('سفارش با موفقیت لغو شد');
         } catch (error) {
-          message.error('خطا در لغو سفارش. لطفاً دوباره تلاش کنید.');
+          // Use enterprise error handling
+          const appError = handleError(error);
+          message.error(appError.message || 'خطا در لغو سفارش. لطفاً دوباره تلاش کنید.');
         }
       },
     });
@@ -59,27 +63,23 @@ export default function OrdersClient() {
         <Title level={2} className="mb-6 text-gray-800">
           سفارش‌های من
         </Title>
-        <div className="flex min-h-[50vh] flex-col items-center justify-center rounded-2xl bg-red-50 p-8 text-center">
-          <ExclamationCircleOutlined className="mb-4 text-5xl text-red-500" />
-          <Title level={4} className="mb-2 text-red-700">
-            خطا در بارگذاری سفارش‌ها
-          </Title>
-          <p className="text-red-600">
-            متأسفانه خطایی در دریافت اطلاعات سفارش‌ها رخ داده است. لطفاً دوباره تلاش کنید.
-          </p>
-        </div>
+        <ErrorState
+          message="خطا در بارگذاری سفارش‌ها"
+          description="متأسفانه خطایی در دریافت اطلاعات سفارش‌ها رخ داده است. لطفاً دوباره تلاش کنید."
+          onRetry={() => window.location.reload()}
+        />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <Title level={2} className="mb-6 text-gray-800">
+    <div className="mx-auto max-w-7xl px-2 py-4 sm:px-4 sm:py-6 md:py-8">
+      <Title level={2} className="mb-4 text-lg text-gray-800 sm:mb-6 sm:text-xl md:text-2xl">
         سفارش‌های من
       </Title>
 
       {/* Filters - Always show, even when no orders */}
-      <div className="relative mb-6">
+      <div className="relative mb-4 sm:mb-6">
         {isFetching && !isLoading && (
           <div className="absolute -top-2 right-0 z-10">
             <div className="h-1 w-24 animate-pulse rounded-full bg-pink-500" />
@@ -92,7 +92,7 @@ export default function OrdersClient() {
       {orders.length === 0 ? (
         <OrdersEmptyState />
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {orders.map((order) => (
             <OrderCard
               key={order.id}

@@ -1,109 +1,51 @@
-interface CacheItem<T> {
-  data: T;
-  timestamp: number;
-  ttl: number; // Time to live in milliseconds
-}
+/**
+ * Legacy CacheService - now uses MemoryCacheStrategy
+ * @deprecated Use cacheManager from @/lib/cache directly
+ */
+import { MemoryCacheStrategy } from '@/lib/cache/strategies/memory.strategy';
 
 export class CacheService {
-  private cache = new Map<string, CacheItem<any>>();
-  private maxSize = 100; // Maximum number of items in cache
+  private strategy: MemoryCacheStrategy;
+
+  constructor() {
+    this.strategy = new MemoryCacheStrategy(100);
+    // Auto cleanup every 5 minutes
+    setInterval(
+      () => {
+        this.strategy.cleanup();
+      },
+      5 * 60 * 1000,
+    );
+  }
 
   set<T>(key: string, data: T, ttl: number = 5 * 60 * 1000): void {
-    // Default 5 minutes
-    // Remove oldest items if cache is full
-    if (this.cache.size >= this.maxSize) {
-      const oldestKey = this.cache.keys().next().value;
-      this.cache.delete(oldestKey);
-    }
-
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now(),
-      ttl,
-    });
+    this.strategy.set(key, data, ttl);
   }
 
   get<T>(key: string): T | null {
-    const item = this.cache.get(key);
-
-    if (!item) {
-      return null;
-    }
-
-    // Check if item has expired
-    if (Date.now() - item.timestamp > item.ttl) {
-      this.cache.delete(key);
-      return null;
-    }
-
-    return item.data as T;
+    return this.strategy.get<T>(key);
   }
 
   has(key: string): boolean {
-    const item = this.cache.get(key);
-
-    if (!item) {
-      return false;
-    }
-
-    // Check if item has expired
-    if (Date.now() - item.timestamp > item.ttl) {
-      this.cache.delete(key);
-      return false;
-    }
-
-    return true;
+    return this.strategy.has(key);
   }
 
   delete(key: string): boolean {
-    return this.cache.delete(key);
+    return this.strategy.delete(key);
   }
 
   clear(): void {
-    this.cache.clear();
+    this.strategy.clear();
   }
 
-  // Get cache statistics
   getStats() {
-    const now = Date.now();
-    let expiredCount = 0;
-    let validCount = 0;
-
-    for (const [key, item] of this.cache.entries()) {
-      if (now - item.timestamp > item.ttl) {
-        expiredCount++;
-        this.cache.delete(key);
-      } else {
-        validCount++;
-      }
-    }
-
-    return {
-      total: this.cache.size,
-      valid: validCount,
-      expired: expiredCount,
-    };
+    return this.strategy.getStats();
   }
 
-  // Clean expired items
   cleanup(): void {
-    const now = Date.now();
-
-    for (const [key, item] of this.cache.entries()) {
-      if (now - item.timestamp > item.ttl) {
-        this.cache.delete(key);
-      }
-    }
+    this.strategy.cleanup();
   }
 }
 
-// Singleton instance
+// Singleton instance for backward compatibility
 export const cacheService = new CacheService();
-
-// Auto cleanup every 5 minutes
-setInterval(
-  () => {
-    cacheService.cleanup();
-  },
-  5 * 60 * 1000,
-);

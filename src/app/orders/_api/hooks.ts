@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { OrderContainer } from './container';
-import type { OrderEntity, OrdersResponse, OrderStatus } from './entities';
+import { orderContainer } from './container';
+import { orderKeys } from '@/lib/react-query/query-keys';
+import { handleError } from '@/lib/errors';
+import type { OrdersResponse } from './entities';
 import type { OrderFilters } from './repository';
 
-const orderService = OrderContainer.getOrderService();
-
-export const ORDERS_QUERY_KEY = ['orders'];
+const orderService = orderContainer.getService();
 
 export const useOrders = (filters?: OrderFilters) => {
   // Normalize filters to ensure consistent query key
@@ -18,21 +18,12 @@ export const useOrders = (filters?: OrderFilters) => {
     : undefined;
 
   return useQuery<OrdersResponse>({
-    queryKey: [...ORDERS_QUERY_KEY, normalizedFilters],
+    queryKey: orderKeys.list(normalizedFilters),
     queryFn: () => orderService.getOrders(normalizedFilters),
     staleTime: 2 * 60 * 1000, // 2 minutes
     placeholderData: keepPreviousData, // Keep previous data while fetching new data
     retry: 1, // Only retry once on failure
     refetchOnWindowFocus: false, // Don't refetch on window focus to prevent issues
-  });
-};
-
-export const useOrder = (orderId: string | number | null) => {
-  return useQuery<OrderEntity>({
-    queryKey: [...ORDERS_QUERY_KEY, orderId],
-    queryFn: () => orderService.getOrderById(orderId!),
-    enabled: !!orderId,
-    staleTime: 2 * 60 * 1000,
   });
 };
 
@@ -42,7 +33,14 @@ export const useCancelOrderMutation = () => {
   return useMutation({
     mutationFn: (orderId: string | number) => orderService.cancelOrder(orderId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: orderKeys.all });
+    },
+    onError: (error) => {
+      // Use enterprise error handling
+      const appError = handleError(error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Cancel order error:', appError.toJSON());
+      }
     },
   });
 };

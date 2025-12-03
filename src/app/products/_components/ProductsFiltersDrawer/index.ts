@@ -1,0 +1,2 @@
+export { ProductsFiltersDrawer } from './ProductsFiltersDrawer';
+

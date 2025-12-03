@@ -1,2 +1,4 @@
-export { default as ProfileCard } from './profile-card';
-export type { ProfileCardProps } from './profile-card';
+export * from './ProfileNotAuthenticated';
+export * from './ProfileHeader';
+export * from './ProfileTabs';
+export * from './ProfileCard';

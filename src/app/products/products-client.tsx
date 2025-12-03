@@ -2,18 +2,21 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { useFilteredProducts, useDebounced, type ProductFilters } from './_api';
-import { ProductGrid } from './_components';
-import { ProductGridSkeleton } from '@/app/_components/skeleton';
-import { Input, Select, Rate, Button, Drawer, Typography, Tag, Slider } from 'antd';
-import { FilterOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
+import { ProductGrid } from './_components/ProductGrid/ProductGrid';
+import {
+  ActiveFilters,
+  ProductsHeader,
+  ProductsSort,
+  ProductsResults,
+  ProductsFilters,
+  ProductsFiltersDrawer,
+} from './_components';
+import { ProductGridSkeleton } from '@/components/ui/feedback/Skeleton';
+import { Button } from 'antd';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAppDispatch } from '@/stores/hooks';
-import { addToCart } from '@/stores/slices/cartSlice';
-import { formatIranianPrice } from '@/shared/utils';
+import { addToCart } from '@/stores/features/cart';
 import type { ProductEntity, CategoryEntity } from './_api/entities';
-
-const { Text } = Typography;
-const { Option } = Select;
 
 interface ProductsClientProps {
   initialProducts?: ProductEntity[];
@@ -262,87 +265,36 @@ export default function ProductsClient({
     setSelectedTags([]);
   };
 
-  const ActiveFilters = () => {
-    const getSortLabel = (sortValue: string): string => {
-      const sortLabels: Record<string, string> = {
-        relevance: 'مرتبط‌ترین',
-        price_asc: 'قیمت: کم به زیاد',
-        price_desc: 'قیمت: زیاد به کم',
-        rating_desc: 'بالاترین امتیاز',
-        newest: 'جدیدترین',
-      };
-      return sortLabels[sortValue] || sortValue;
-    };
-
-    const active: string[] = [];
-    if (debouncedSearchQuery) active.push(`جستجو: ${debouncedSearchQuery}`);
-    if (category !== 'all') active.push(`دسته: ${category}`);
-    if (selectedTags.length > 0) active.push(`تگ‌ها: ${selectedTags.join(', ')}`);
-    if (onlyFeatured) active.push('ویژه');
-    if (minPriceNum > 0 || maxPriceNum < 10_000_000) {
-      active.push(
-        `قیمت: ${formatIranianPrice(minPriceNum)} - ${formatIranianPrice(maxPriceNum)} تومان`,
-      );
-    }
-    if (minRating > 0) active.push(`حداقل امتیاز: ${minRating}`);
-    if (sortBy !== 'relevance') {
-      const sortLabel = getSortLabel(sortBy);
-      active.push(`مرتب‌سازی: ${sortLabel}`);
-    }
-
-    return (
-      <div className="mt-1 flex min-h-[32px] flex-wrap items-center gap-2">
-        {active.length > 0 && (
-          <>
-            {active.map((filter, idx) => (
-              <Tag key={idx} color="magenta" className="m-0 px-2 py-1">
-                {filter}
-              </Tag>
-            ))}
-            <Button type="link" onClick={resetFilters} icon={<ReloadOutlined />} size="small">
-              بازنشانی
-            </Button>
-          </>
-        )}
-      </div>
-    );
-  };
-
   return (
-    <div className="mx-auto max-w-7xl px-4 py-4 sm:py-6">
+    <div className="mx-auto max-w-7xl px-2 py-3 sm:px-4 sm:py-4 md:py-6">
       {/* Header */}
-      <div className="!sm:flex-row !sm:items-center !sm:justify-between flex flex-col gap-3">
+      <div className="flex flex-col gap-3 sm:gap-4">
+        {/* Search and Filter Row */}
+        <ProductsHeader
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onFilterClick={() => setDrawerOpen(true)}
+        />
+
+        {/* Active Filters */}
         <div>
-          {/* Active Filters */}
-          <ActiveFilters />
+          <ActiveFilters
+            searchQuery={debouncedSearchQuery}
+            category={category}
+            selectedTags={selectedTags}
+            onlyFeatured={onlyFeatured}
+            minPrice={minPriceNum}
+            maxPrice={maxPriceNum}
+            minRating={minRating}
+            sortBy={sortBy}
+            onReset={resetFilters}
+          />
         </div>
 
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="lg:hidden">
-              <Button icon={<FilterOutlined />} onClick={() => setDrawerOpen(true)}>
-                فیلترها
-              </Button>
-            </div>
-          </div>
-
-          {/* Results count */}
-          <div className="flex-1 text-xs text-gray-500">
-            {isLoading
-              ? 'در حال بارگذاری...'
-              : `تعداد نتایج: ${filteredProducts.length.toLocaleString('fa-IR')}`}
-          </div>
-
-          <div className="flex w-1/3 items-center justify-end gap-2 sm:w-auto">
-            <Text className="hidden text-sm text-gray-600 sm:block">مرتب‌سازی:</Text>
-            <Select value={sortBy} onChange={setSortBy} className="w-full sm:w-56">
-              <Option value="relevance">مرتبط‌ترین</Option>
-              <Option value="price_asc">قیمت: کم به زیاد</Option>
-              <Option value="price_desc">قیمت: زیاد به کم</Option>
-              <Option value="rating_desc">بالاترین امتیاز</Option>
-              <Option value="newest">جدیدترین</Option>
-            </Select>
-          </div>
+        {/* Sort and Results Row */}
+        <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <ProductsResults count={filteredProducts.length} isLoading={isLoading} />
+          <ProductsSort sortBy={sortBy} onSortChange={setSortBy} />
         </div>
       </div>
 
@@ -350,123 +302,23 @@ export default function ProductsClient({
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-12">
         {/* Sidebar - Desktop */}
         <aside className="hidden lg:col-span-3 lg:block">
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            {/* Filters Panel */}
-            <div className="space-y-4">
-              <Input
-                allowClear
-                prefix={<SearchOutlined />}
-                placeholder="جستجوی محصول، برند یا توضیحات..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-10 w-full sm:w-80"
-              />
-
-              <div className="flex flex-col gap-2">
-                <Text className="text-sm text-gray-600">دسته‌بندی</Text>
-                <Select
-                  value={category}
-                  onChange={setCategory}
-                  className="w-full"
-                  showSearch
-                  optionFilterProp="children"
-                  filterOption={(input, option) =>
-                    (option?.children as unknown as string)
-                      ?.toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
-                >
-                  <Option value="all">همه</Option>
-                  {categoryOptions.map((cat) => (
-                    <Option key={cat.slug} value={cat.slug}>
-                      {cat.name}
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
-                  <div className="flex flex-col gap-1">
-                    <Text className="text-xs text-gray-500">حداقل قیمت</Text>
-                    <Text className="text-base font-semibold text-gray-900">
-                      {formatIranianPrice(priceRange[0])} تومان
-                    </Text>
-                  </div>
-                  <div className="mx-2 text-gray-400">–</div>
-                  <div className="flex flex-col gap-1">
-                    <Text className="text-xs text-gray-500">حداکثر قیمت</Text>
-                    <Text className="text-base font-semibold text-gray-900">
-                      {formatIranianPrice(priceRange[1])} تومان
-                    </Text>
-                  </div>
-                </div>
-                <Slider
-                  range
-                  min={0}
-                  max={10_000_000}
-                  step={10000}
-                  value={priceRange}
-                  onChange={(value) => setPriceRange(value as [number, number])}
-                  tooltip={{
-                    formatter: (value) => `${formatIranianPrice(value || 0)} تومان`,
-                  }}
-                  className="mb-0"
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Text className="text-sm text-gray-600">حداقل امتیاز</Text>
-                <Rate value={minRating} onChange={(val) => setMinRating(val)} />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Text className="text-sm text-gray-600">فقط ویژه</Text>
-                <Select
-                  value={onlyFeatured ? 'yes' : 'no'}
-                  onChange={(v) => setOnlyFeatured(v === 'yes')}
-                  className="w-24"
-                >
-                  <Option value="no">خیر</Option>
-                  <Option value="yes">بله</Option>
-                </Select>
-              </div>
-
-              {allTags.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  <Text className="text-sm text-gray-600">تگ‌ها</Text>
-                  <Select
-                    mode="multiple"
-                    value={selectedTags}
-                    onChange={setSelectedTags}
-                    placeholder="تگ‌ها را انتخاب کنید"
-                    className="w-full"
-                    maxTagCount="responsive"
-                    showSearch
-                    filterOption={(input, option) => {
-                      const label =
-                        typeof option?.label === 'string'
-                          ? option.label
-                          : String(option?.label || '');
-                      return label.toLowerCase().includes(input.toLowerCase());
-                    }}
-                  >
-                    {allTags.map((tag) => (
-                      <Option key={tag} value={tag}>
-                        {tag}
-                      </Option>
-                    ))}
-                  </Select>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-4">
-              <Button onClick={resetFilters} icon={<ReloadOutlined />} block>
-                بازنشانی
-              </Button>
-            </div>
-          </div>
+          <ProductsFilters
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            category={category}
+            onCategoryChange={setCategory}
+            categoryOptions={categoryOptions}
+            priceRange={priceRange}
+            onPriceRangeChange={setPriceRange}
+            minRating={minRating}
+            onMinRatingChange={setMinRating}
+            onlyFeatured={onlyFeatured}
+            onOnlyFeaturedChange={setOnlyFeatured}
+            selectedTags={selectedTags}
+            onSelectedTagsChange={setSelectedTags}
+            allTags={allTags}
+            onReset={resetFilters}
+          />
         </aside>
 
         {/* Products Grid */}
@@ -479,7 +331,7 @@ export default function ProductsClient({
               loading={false}
               error={(error as any)?.message}
               cols={3}
-              gap="lg"
+              gap="md"
               emptyMessage="هیچ محصولی مطابق فیلترها یافت نشد"
               onAddToCart={handleAddToCart}
             />
@@ -495,105 +347,25 @@ export default function ProductsClient({
       </div>
 
       {/* Mobile Filters Drawer */}
-      <Drawer
-        title="فیلتر محصولات"
-        placement="right"
-        onClose={() => setDrawerOpen(false)}
+      <ProductsFiltersDrawer
         open={drawerOpen}
-        width={320}
-      >
-        <div className="space-y-4">
-          <div className="flex flex-col gap-2">
-            <Text className="text-sm text-gray-600">دسته‌بندی</Text>
-            <Select value={category} onChange={setCategory} className="w-full">
-              <Option value="all">همه</Option>
-              {categoryOptions.map((cat) => (
-                <Option key={cat.slug} value={cat.slug}>
-                  {cat.name}
-                </Option>
-              ))}
-            </Select>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
-              <div className="flex flex-col gap-1">
-                <Text className="text-xs text-gray-500">حداقل قیمت</Text>
-                <Text className="text-base font-semibold text-gray-900">
-                  {formatIranianPrice(priceRange[0])} تومان
-                </Text>
-              </div>
-              <div className="mx-2 text-gray-400">–</div>
-              <div className="flex flex-col gap-1">
-                <Text className="text-xs text-gray-500">حداکثر قیمت</Text>
-                <Text className="text-base font-semibold text-gray-900">
-                  {formatIranianPrice(priceRange[1])} تومان
-                </Text>
-              </div>
-            </div>
-            <Slider
-              range
-              min={0}
-              max={10_000_000}
-              step={10000}
-              value={priceRange}
-              onChange={(value) => setPriceRange(value as [number, number])}
-              tooltip={{
-                formatter: (value) => `${value?.toLocaleString('fa-IR')} تومان`,
-              }}
-              className="!mb-0"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Text className="text-sm text-gray-600">حداقل امتیاز</Text>
-            <Rate value={minRating} onChange={(val) => setMinRating(val)} />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Text className="text-sm text-gray-600">فقط ویژه</Text>
-            <Select
-              value={onlyFeatured ? 'yes' : 'no'}
-              onChange={(v) => setOnlyFeatured(v === 'yes')}
-              className="w-24"
-            >
-              <Option value="no">خیر</Option>
-              <Option value="yes">بله</Option>
-            </Select>
-          </div>
-
-          {allTags.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <Text className="text-sm text-gray-600">تگ‌ها</Text>
-              <Select
-                mode="multiple"
-                value={selectedTags}
-                onChange={setSelectedTags}
-                placeholder="تگ‌ها را انتخاب کنید"
-                className="w-full"
-                maxTagCount="responsive"
-                showSearch
-                filterOption={(input, option) => {
-                  const label =
-                    typeof option?.label === 'string' ? option.label : String(option?.label || '');
-                  return label.toLowerCase().includes(input.toLowerCase());
-                }}
-              >
-                {allTags.map((tag) => (
-                  <Option key={tag} value={tag}>
-                    {tag}
-                  </Option>
-                ))}
-              </Select>
-            </div>
-          )}
-        </div>
-        <div className="mt-6">
-          <Button onClick={resetFilters} icon={<ReloadOutlined />} block>
-            بازنشانی
-          </Button>
-        </div>
-      </Drawer>
+        onClose={() => setDrawerOpen(false)}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        category={category}
+        onCategoryChange={setCategory}
+        categoryOptions={categoryOptions}
+        priceRange={priceRange}
+        onPriceRangeChange={setPriceRange}
+        minRating={minRating}
+        onMinRatingChange={setMinRating}
+        onlyFeatured={onlyFeatured}
+        onOnlyFeaturedChange={setOnlyFeatured}
+        selectedTags={selectedTags}
+        onSelectedTagsChange={setSelectedTags}
+        allTags={allTags}
+        onReset={resetFilters}
+      />
 
       <style jsx global>{`
         .products-page .ant-card {

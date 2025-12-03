@@ -1,21 +1,17 @@
 import type { Metadata } from 'next';
-import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
-import { serverFetch } from '@/shared/services/server-fetch';
-import type { ProductEntity, CategoryEntity, ProductSummary } from '../_api/entities';
-import ProductCardWrapper, { ProductDivider } from './_components/product-card-wrapper';
-
-const FeaturesList = dynamic(() => import('./_components/features-list'));
-const ShippingInfo = dynamic(() => import('./_components/shipping-info'));
-const ProductActions = dynamic(() => import('./_components/product-actions'));
-const SellerInfo = dynamic(() => import('./_components/seller-info'));
-const ProductTabs = dynamic(() => import('./_components/product-tabs'));
-const ProductTags = dynamic(() => import('./_components/product-tags'));
-const ProductImageGalleryWrapper = dynamic(
-  () => import('./_components/product-image-gallery-wrapper'),
-);
-const ProductHeader = dynamic(() => import('./_components/product-header'));
-const RelatedProducts = dynamic(() => import('../_components/related-products'));
+import { productContainer } from '../_api/container';
+import type { ProductEntity, ProductSummary } from '../_api/entities';
+import ProductCardWrapper from './_components/ProductCardWrapper/ProductCardWrapper';
+import FeaturesList from './_components/FeaturesList/FeaturesList';
+import ShippingInfo from './_components/ShippingInfo/ShippingInfo';
+import ProductActions from './_components/ProductActions/ProductActions';
+import SellerInfo from './_components/SellerInfo/SellerInfo';
+import ProductTabs from './_components/ProductTabs/ProductTabs';
+import ProductTags from './_components/ProductTags/ProductTags';
+import ProductImageGalleryWrapper from './_components/ProductImageGalleryWrapper/ProductImageGalleryWrapper';
+import ProductHeader from './_components/ProductHeader/ProductHeader';
+import RelatedProducts from '../_components/RelatedProducts/RelatedProducts';
 
 export const revalidate = 3600;
 
@@ -24,10 +20,9 @@ interface ProductDetailPageProps {
 }
 
 export async function generateStaticParams() {
-  const products = await serverFetch<ProductEntity[]>('/api/v1/public/products', {
-    revalidate: 3600,
-  });
-  if (!products) return [];
+  const productService = productContainer.getService();
+  const products = await productService.getAllProducts();
+  if (!products || products.length === 0) return [];
   return products.map((product) => ({
     slug: product.slug || String(product.id),
   }));
@@ -35,9 +30,8 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: ProductDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = await serverFetch<ProductEntity>(`/api/v1/public/products/${slug}`, {
-    tags: ['products', `product-${slug}`],
-  });
+  const productService = productContainer.getService();
+  const product = await productService.getProductById(slug);
 
   if (!product) {
     return {
@@ -59,6 +53,7 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
     keywords: [product.title, product.brand || '', categoryText, 'خرید آنلاین', 'شیک‌پوشان'].filter(
       Boolean,
     ),
+    robots: { index: true, follow: true },
     alternates: { canonical: `/products/${slug}` },
     openGraph: {
       title: `${product.title} | شیک‌پوشان`,
@@ -78,45 +73,6 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
   };
 }
 
-// Helper to map ProductEntity to ProductSummary
-function mapToProductSummary(products: ProductEntity[]): ProductSummary[] {
-  return products.map((product) => {
-    const colorsMap: Record<string, { name: string }> = {};
-    product.colors?.forEach((color) => {
-      colorsMap[color.id.toString()] = { name: color.name };
-    });
-
-    let firstImage = product.thumbnail;
-    if (product.images && Object.keys(product.images).length > 0) {
-      const firstColorId = Object.keys(product.images)[0];
-      const firstColorImages = product.images[firstColorId];
-      if (firstColorImages?.length > 0) {
-        firstImage = firstColorImages[0];
-      }
-    }
-
-    return {
-      id: product.id,
-      slug: product.slug,
-      name: product.title,
-      price: product.price || 0,
-      origin_price: product.origin_price,
-      discount: product.discount || 0,
-      rating: product.rating || 0,
-      reviewCount: 0,
-      image: firstImage,
-      category: product.categories?.[0]?.name || 'همه',
-      isNew: product.is_new || false,
-      isFeatured: product.is_featured || false,
-      colors: colorsMap,
-      sizes: product.sizes?.map((s) => s.name) || [],
-      brand: product.brand || '',
-      description: product.description || '',
-      tags: product.tags || [],
-    };
-  });
-}
-
 // Get initial images for SSG
 function getInitialImages(product: ProductEntity): string[] {
   if (product.images && Object.keys(product.images).length > 0) {
@@ -128,14 +84,11 @@ function getInitialImages(product: ProductEntity): string[] {
 
 export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { slug } = await params;
+  const productService = productContainer.getService();
 
   const [product, categories] = await Promise.all([
-    serverFetch<ProductEntity>(`/api/v1/public/products/${slug}`, {
-      tags: ['products', `product-${slug}`],
-    }),
-    serverFetch<CategoryEntity[]>('/api/v1/public/categories', {
-      tags: ['categories'],
-    }),
+    productService.getProductById(slug),
+    productService.getAllCategories(),
   ]);
 
   if (!product) {
@@ -151,26 +104,17 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
   let relatedProducts: ProductSummary[] = [];
   if (categorySlug) {
-    const related = await serverFetch<ProductEntity[]>(
-      `/api/v1/public/products/category/${categorySlug}`,
-      { tags: ['products', `category-${categorySlug}`] },
-    );
+    const related = await productService.getProductsByCategory(categorySlug);
     if (related && related.length > 0) {
-      relatedProducts = mapToProductSummary(
-        related.filter((p) => String(p.id) !== String(product.id)),
-      );
+      relatedProducts = related.filter((p) => String(p.id) !== String(product.id));
     }
   }
 
   // Fallback: if no related products, fetch some products
   if (relatedProducts.length === 0) {
-    const allProducts = await serverFetch<ProductEntity[]>('/api/v1/public/products?limit=10', {
-      tags: ['products'],
-    });
-    if (allProducts) {
-      relatedProducts = mapToProductSummary(
-        allProducts.filter((p) => String(p.id) !== String(product.id)).slice(0, 10),
-      );
+    const newArrivals = await productService.getNewArrivals(10);
+    if (newArrivals) {
+      relatedProducts = newArrivals.filter((p) => String(p.id) !== String(product.id)).slice(0, 10);
     }
   }
 
@@ -178,10 +122,10 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
-      <div className="py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="py-4 sm:py-6 md:py-8">
+        <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-8">
           <ProductCardWrapper>
-            <div className="grid grid-cols-1 gap-8 p-6 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 p-3 sm:gap-6 sm:p-4 md:gap-8 md:p-6 lg:grid-cols-2">
               {/* Product Images */}
               <div className="space-y-4">
                 <ProductImageGalleryWrapper images={initialImages} productName={product.title} />
@@ -210,13 +154,13 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
               </div>
             </div>
 
-            <ProductDivider />
+            {/* Divider inside ProductCardWrapper layout */}
 
             <div className="px-6 pb-6">
               <ProductTabs product={product} />
             </div>
 
-            <ProductDivider />
+            {/* Divider inside ProductCardWrapper layout */}
 
             <div className="px-6 pb-6">
               <RelatedProducts products={relatedProducts} />

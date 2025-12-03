@@ -279,6 +279,103 @@ body {
   }
 }
 
+/* Mobile-first responsive utilities */
+@media (max-width: 768px) {
+  /* Reduce padding on mobile */
+  .mobile-padding {
+    padding: 12px !important;
+  }
+
+  /* Adjust font sizes for mobile */
+  .mobile-text-sm {
+    font-size: 0.875rem !important;
+  }
+
+  .mobile-text-xs {
+    font-size: 0.75rem !important;
+  }
+
+  /* Bottom navigation spacing */
+  .mobile-bottom-spacing {
+    padding-bottom: 80px !important;
+  }
+}
+
+/* Safe area insets for modern devices (notches, etc.) */
+@supports (padding: max(0px)) {
+  .safe-area-top {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+
+  .safe-area-left {
+    padding-left: max(env(safe-area-inset-left), 0px);
+  }
+
+  .safe-area-right {
+    padding-right: max(env(safe-area-inset-right), 0px);
+  }
+}
+
+/* Iframe-friendly viewport settings */
+html {
+  /* Prevent horizontal scroll in iframe */
+  overflow-x: hidden;
+  /* Ensure proper scaling in iframe */
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  /* Prevent horizontal scroll */
+  overflow-x: hidden;
+  /* Ensure proper width calculation in iframe */
+  width: 100%;
+  max-width: 100vw;
+  /* Smooth scrolling for better mobile experience */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  /* Prevent text selection on tap (improves mobile UX) */
+  button,
+  a {
+    -webkit-tap-highlight-color: rgba(236, 72, 153, 0.2);
+  }
+
+  /* Optimize touch targets */
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improve scrolling performance */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Bottom navigation safe area */
+.bottom-nav-safe {
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .bottom-nav-safe {
+    padding-bottom: 0;
+  }
+}
+
 /* Line clamp utility */
 .line-clamp-2 {
   display: -webkit-box;
@@ -395,4 +492,69 @@ body {
   text-align: center;
   padding: 0 10px;
   margin-left: 1px;
+}
+
+/* Mobile-first responsive utilities */
+@media (max-width: 640px) {
+  /* Touch-friendly targets */
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+
+  /* Better spacing on mobile */
+  .container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+
+/* Scrollbar hide utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Touch pan support */
+.touch-pan-x {
+  touch-action: pan-x;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better focus states for mobile */
+@media (max-width: 768px) {
+  *:focus-visible {
+    outline: 2px solid #ec4899;
+    outline-offset: 2px;
+  }
+}
+
+/* Profile tabs scrollable on mobile */
+@media (max-width: 768px) {
+  .profile-tabs .ant-tabs-nav {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .profile-tabs .ant-tabs-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .profile-tabs .ant-tabs-tab {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
 }

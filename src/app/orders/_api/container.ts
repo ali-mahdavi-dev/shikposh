@@ -1,14 +1,17 @@
+import { BaseContainer } from '@/lib/api/container-base';
 import { OrderService } from './service';
-import { orderRepository } from './repository';
+import { HttpOrderRepository, type OrderRepository } from './repository';
 
 // Dependency Injection Container
-export class OrderContainer {
-  private static orderService: OrderService;
+export class OrderContainer extends BaseContainer<OrderRepository, OrderService> {
+  protected createRepository(): OrderRepository {
+    return new HttpOrderRepository();
+  }
 
-  static getOrderService(): OrderService {
-    if (!this.orderService) {
-      this.orderService = new OrderService(orderRepository);
-    }
-    return this.orderService;
+  protected createService(repository: OrderRepository): OrderService {
+    return new OrderService(repository);
   }
 }
+
+// Export singleton instance
+export const orderContainer = new OrderContainer();

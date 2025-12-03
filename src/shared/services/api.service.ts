@@ -1,7 +1,16 @@
-import { ApiError } from '../errors';
 import { cacheService } from './cache.service';
 import { getApiBaseUrl } from '../config/env';
-import { handleApiError } from '../utils/error-handler';
+import {
+  handleError,
+  BadRequestError,
+  UnauthorizedError,
+  ForbiddenError,
+  NotFoundError,
+  InternalError,
+  NetworkError,
+  type AppError,
+} from '@/lib/errors';
+import { ExponentialBackoffStrategy } from '@/lib/api/retry/exponential-backoff.strategy';
 
 // HTTPError structure matching backend HTTPError
 export interface HTTPError {
@@ -125,9 +134,39 @@ async function refreshToken(): Promise<boolean> {
 
 export class ApiService {
   private baseURL: string;
+  private retryStrategy: ExponentialBackoffStrategy;
 
   constructor(baseURL: string = getApiBaseUrl()) {
     this.baseURL = baseURL;
+    // Use exponential backoff retry strategy for enterprise retry handling
+    this.retryStrategy = new ExponentialBackoffStrategy({
+      maxRetries: 3,
+      initialDelay: 1000,
+      retryableStatusCodes: [408, 429, 500, 502, 503, 504],
+    });
+  }
+
+  /**
+   * Create appropriate error class based on status code
+   */
+  private createErrorFromStatusCode(message: string, statusCode: number): AppError {
+    switch (statusCode) {
+      case 400:
+        return new BadRequestError(message, { statusCode });
+      case 401:
+        return new UnauthorizedError(message, { statusCode });
+      case 403:
+        return new ForbiddenError(message, { statusCode });
+      case 404:
+        return new NotFoundError(message, { statusCode });
+      case 0:
+        return new NetworkError(message, { statusCode });
+      default:
+        if (statusCode >= 500) {
+          return new InternalError(message, { statusCode });
+        }
+        return new BadRequestError(message, { statusCode });
+    }
   }
 
   private async request<T>(
@@ -188,7 +227,7 @@ export class ApiService {
               parseError: parseError,
             });
           }
-          throw new ApiError(errorMessage, response.status);
+          throw this.createErrorFromStatusCode(errorMessage, response.status);
         }
         // If response is ok but JSON parsing failed, rethrow
         throw parseError;
@@ -214,7 +253,7 @@ export class ApiService {
             });
           }
 
-          throw new ApiError(errorMessage, statusTextToCode(httpError.status));
+          throw this.createErrorFromStatusCode(errorMessage, statusTextToCode(httpError.status));
         }
 
         // If success is false but no error object, treat as error
@@ -227,7 +266,7 @@ export class ApiService {
               response: apiResponse,
             });
           }
-          throw new ApiError('درخواست با خطا مواجه شد', response.status);
+          throw this.createErrorFromStatusCode('درخواست با خطا مواجه شد', response.status);
         }
 
         // If response has pagination fields (total, page, pages), return full structure
@@ -276,12 +315,16 @@ export class ApiService {
           });
         }
 
-        throw new ApiError(errorMessage, response.status);
+        throw this.createErrorFromStatusCode(errorMessage, response.status);
       }
 
       return data as T;
     } catch (error) {
-      const normalized = handleApiError(error);
+      // Use enterprise error handling
+      const appError = handleError(error);
+
+      // Use the AppError directly (no need to convert)
+      const normalized = appError;
 
       // Log error in development mode for debugging
       if (process.env.NODE_ENV === 'development') {
@@ -292,6 +335,7 @@ export class ApiService {
           isOperational: normalized.isOperational,
           error: normalized,
           originalError: error,
+          appError: appError.toJSON(),
         });
       }
 
@@ -316,7 +360,7 @@ export class ApiService {
     }
   }
 
-  // GET request with caching
+  // GET request with caching and retry strategy
   async get<T>(
     endpoint: string,
     params?: Record<string, any>,
@@ -342,7 +386,10 @@ export class ApiService {
       }
     }
 
-    const data = await this.request<T>(url.pathname + url.search);
+    // Use retry strategy for GET requests
+    const data = await this.retryStrategy.execute(async () => {
+      return this.request<T>(url.pathname + url.search);
+    });
 
     // Cache the result
     if (useCache) {

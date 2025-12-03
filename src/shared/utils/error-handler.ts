@@ -1,35 +1,26 @@
-import { ApiError } from '../errors';
+import { handleError as enterpriseHandleError, type AppError } from '@/lib/errors';
 
-export const handleApiError = (error: unknown): ApiError => {
-  if (error instanceof ApiError) {
-    return error;
-  }
-
-  if (error instanceof Error) {
-    // Network errors
-    if (error.message.includes('fetch')) {
-      return ApiError.networkError('خطا در اتصال به سرور');
-    }
-
-    // JSON parsing errors
-    if (error.message.includes('JSON')) {
-      return ApiError.internal('خطا در پردازش داده‌ها');
-    }
-
-    // Generic error
-    return ApiError.internal(error.message);
-  }
-
-  return ApiError.internal('خطای ناشناخته');
+/**
+ * Legacy error handler - now uses enterprise error handling
+ * @deprecated Use handleError from @/lib/errors directly
+ */
+export const handleApiError = (error: unknown): AppError => {
+  // Use enterprise error handling
+  return enterpriseHandleError(error);
 };
 
+/**
+ * Get error message - uses enterprise error handling
+ */
 export const getErrorMessage = (error: unknown): string => {
-  const apiError = handleApiError(error);
-  // Ensure we get the message property correctly
-  return apiError?.message || String(apiError) || 'خطای ناشناخته';
+  const appError = enterpriseHandleError(error);
+  return appError.message;
 };
 
+/**
+ * Get error status code - uses enterprise error handling
+ */
 export const getErrorStatus = (error: unknown): number => {
-  const apiError = handleApiError(error);
-  return apiError.statusCode;
+  const appError = enterpriseHandleError(error);
+  return appError.statusCode;
 };

@@ -2,11 +2,11 @@
 import React, { useState, useMemo } from 'react';
 import { Tabs, TabsProps, Typography, Badge } from 'antd';
 import { ShopOutlined } from '@ant-design/icons';
-import { ProductGrid } from '@/app/_components';
-import { CategoryTile } from '@/app/_components/business';
-import { type ProductGridProps } from '@/app/_components/business';
+import { ProductGrid } from '@/components/business';
+import { CategoryTile } from '@/components/business';
+import { type ProductGridProps } from '@/components/business';
 import { useAppDispatch } from '@/stores/hooks';
-import { addToCart } from '@/stores/slices/cartSlice';
+import { addToCart } from '@/stores/features/cart';
 import { App as AntApp } from 'antd';
 import { SellerHeader, AboutSection } from './_components';
 import type { Seller } from './_types';

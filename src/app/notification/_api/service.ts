@@ -1,43 +1,28 @@
+import { AppError } from '@/lib/errors/base/app.error';
 import type { NotificationRepository } from './repository';
+import { HttpNotificationRepository } from './repository';
 import type { NotificationEntity } from './entities';
+import { BaseService } from '@/lib/api';
+import { inject, injectable } from 'tsyringe';
 
-export class NotificationService {
-  constructor(private notificationRepository: NotificationRepository) {}
+@injectable()
+export class NotificationService extends BaseService<NotificationEntity, string> {
+  private notificationRepo: NotificationRepository;
 
-  async getAllNotifications(): Promise<NotificationEntity[]> {
-    return this.notificationRepository.getAllNotifications();
+  constructor(@inject(HttpNotificationRepository) notificationRepository: NotificationRepository) {
+    super(notificationRepository);
+    this.notificationRepo = notificationRepository;
   }
 
-  async getNotificationById(id: string): Promise<NotificationEntity> {
-    if (!id) {
-      throw new Error('Notification ID is required');
-    }
-    return this.notificationRepository.getNotificationById(id);
-  }
-
+  // Custom operations
   async markAsRead(id: string): Promise<NotificationEntity> {
     if (!id) {
-      throw new Error('Notification ID is required');
+      throw AppError.validation('Notification ID is required');
     }
-    return this.notificationRepository.markAsRead(id);
+    return await this.notificationRepo.markAsRead(id);
   }
 
   async markAllAsRead(): Promise<void> {
-    return this.notificationRepository.markAllAsRead();
-  }
-
-  async createNotification(notification: Omit<NotificationEntity, 'id' | 'createdAt' | 'read'>): Promise<NotificationEntity> {
-    if (!notification.title || !notification.message) {
-      throw new Error('Title and message are required');
-    }
-    return this.notificationRepository.createNotification(notification);
-  }
-
-  async deleteNotification(id: string): Promise<void> {
-    if (!id) {
-      throw new Error('Notification ID is required');
-    }
-    return this.notificationRepository.deleteNotification(id);
+    return await this.notificationRepo.markAllAsRead();
   }
 }
-

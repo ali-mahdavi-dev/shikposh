@@ -1,17 +1,17 @@
 import { configureStore } from '@reduxjs/toolkit';
-import cartReducer from './slices/cartSlice';
-import wishlistReducer from './slices/wishlistSlice';
-import notificationReducer from './slices/notificationSlice';
-import authReducer from './slices/authSlice';
+import { rootReducer, type RootState } from './root-reducer';
 
 export const store = configureStore({
-  reducer: {
-    cart: cartReducer,
-    wishlist: wishlistReducer,
-    notifications: notificationReducer,
-    auth: authReducer,
-  },
+  reducer: rootReducer,
+  devTools: process.env.NODE_ENV !== 'production',
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        // Ignore these action types
+        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+      },
+    }),
 });
 
-export type RootState = ReturnType<typeof store.getState>;
+export type { RootState };
 export type AppDispatch = typeof store.dispatch;

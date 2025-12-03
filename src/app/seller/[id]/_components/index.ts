@@ -1,2 +1,2 @@
-export * from './seller-header';
-export * from './about-section';
+export * from './SellerHeader';
+export * from './AboutSection';

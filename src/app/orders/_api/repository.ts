@@ -28,9 +28,9 @@ export class HttpOrderRepository implements OrderRepository {
 
     const queryString = params.toString();
     const endpoint = `/api/v1/orders${queryString ? `?${queryString}` : ''}`;
-    
+
     const response = await apiService.get<OrdersResponse | OrderEntity[]>(endpoint);
-    
+
     // Handle both response formats
     if (Array.isArray(response)) {
       return {
@@ -38,18 +38,17 @@ export class HttpOrderRepository implements OrderRepository {
         total: response.length,
       };
     }
-    
+
     return response;
   }
 
   async getOrderById(orderId: string | number): Promise<OrderEntity> {
-    return apiService.get<OrderEntity>(`/api/v1/orders/${orderId}`);
+    return await apiService.get<OrderEntity>(`/api/v1/orders/${orderId}`);
   }
 
   async cancelOrder(orderId: string | number): Promise<{ success: boolean; message: string }> {
-    return apiService.post(`/api/v1/orders/${orderId}/cancel`, {});
+    return await apiService.post(`/api/v1/orders/${orderId}/cancel`, {});
   }
 }
 
 export const orderRepository = new HttpOrderRepository();
-

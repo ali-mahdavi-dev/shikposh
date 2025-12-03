@@ -1,0 +1,2 @@
+export { ProductsResults } from './ProductsResults';
+

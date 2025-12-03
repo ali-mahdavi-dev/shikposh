@@ -14,7 +14,7 @@ import {
   ArrowRightOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
-import DailySalesChart from './_components/daily-sales-chart';
+import DailySalesChart from './_components/DailySalesChart';
 
 const { Title, Paragraph } = Typography;
 

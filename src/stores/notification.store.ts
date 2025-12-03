@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { store, type RootState } from '@/stores/store';
-import { AppNotification, markAllRead, markRead, pushNotification, clearNotifications } from '@/stores/slices/notificationSlice';
+import { AppNotification, markAllRead, markRead, pushNotification, clearNotifications } from '@/stores/features/notifications';
 import { NotificationContainer } from '@/app/notification/_api';
 
 export type Notification = AppNotification;
@@ -12,7 +12,7 @@ const notificationService = NotificationContainer.getNotificationService();
 export async function showNotification(notification: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) {
   try {
     // Create in API
-    const created = await notificationService.createNotification({
+    const created = await notificationService.create({
       type: notification.type,
       title: notification.title,
       message: notification.message,

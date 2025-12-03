@@ -1,3 +1,10 @@
+import { AppError } from '@/lib/errors/base/app.error';
+import {
+  loginRequestSchema,
+  verifyOtpRequestSchema,
+  registerRequestSchema,
+} from '@/lib/validation/schemas/auth.schema';
+import { ValidatorFactory } from '@/lib/validation/validators/validator.factory';
 import type { AuthRepository } from './repository';
 import type {
   SendOtpRequest,
@@ -8,73 +15,75 @@ import type {
   RegisterResponse,
   LoginRequest,
   LoginResponse,
-  User,
 } from './entities';
 
 export class AuthService {
   constructor(private authRepository: AuthRepository) {}
 
   async sendOtp(request: SendOtpRequest): Promise<SendOtpResponse> {
-    if (!request.phone || !request.phone.trim()) {
-      throw new Error('شماره تلفن الزامی است');
+    // Use enterprise validation with Zod
+    const validator = ValidatorFactory.createValidatorWithMessages(loginRequestSchema);
+    const validationResult = validator({ phone: request.phone });
+
+    if (!validationResult.success) {
+      throw AppError.validation(validationResult.errors.join('; '));
     }
 
-    // Validate phone number format (Iranian phone numbers)
-    const phoneRegex = /^09\d{9}$/;
-    if (!phoneRegex.test(request.phone)) {
-      throw new Error('شماره تلفن معتبر نیست. فرمت صحیح: 09123456789');
-    }
-
-    return this.authRepository.sendOtp(request);
+    return await this.authRepository.sendOtp(request);
   }
 
   async verifyOtp(request: VerifyOtpRequest): Promise<VerifyOtpResponse> {
-    if (!request.phone || !request.phone.trim()) {
-      throw new Error('شماره تلفن الزامی است');
+    // Use enterprise validation with Zod
+    const validator = ValidatorFactory.createValidatorWithMessages(verifyOtpRequestSchema);
+    // Map request to schema format (otp -> code)
+    const validationResult = validator({
+      phone: request.phone,
+      code: request.otp,
+    });
+
+    if (!validationResult.success) {
+      throw AppError.validation(validationResult.errors.join('; '));
     }
 
-    if (!request.otp || !request.otp.trim()) {
-      throw new Error('کد OTP الزامی است');
-    }
-
-    // Validate OTP format (6 digits)
-    const otpRegex = /^\d{6}$/;
-    if (!otpRegex.test(request.otp)) {
-      throw new Error('کد OTP باید 6 رقم باشد');
-    }
-
-    return this.authRepository.verifyOtp(request);
+    // Map validated data back to entity format (code -> otp)
+    return await this.authRepository.verifyOtp({
+      phone: validationResult.data.phone,
+      otp: validationResult.data.code,
+    });
   }
 
   async register(request: RegisterRequest): Promise<RegisterResponse> {
-    if (!request.phone || !request.phone.trim()) {
-      throw new Error('شماره تلفن الزامی است');
+    // Use enterprise validation with Zod
+    const validator = ValidatorFactory.createValidatorWithMessages(registerRequestSchema);
+    // Convert RegisterRequest to match schema format
+    const validationResult = validator({
+      phone: request.phone,
+      code: '', // OTP is handled separately
+      firstName: request.firstName,
+      lastName: request.lastName,
+      email: request.email || '',
+    });
+
+    if (!validationResult.success) {
+      throw AppError.validation(validationResult.errors.join('; '));
     }
 
-    if (!request.firstName || !request.firstName.trim()) {
-      throw new Error('نام الزامی است');
-    }
-
-    if (!request.lastName || !request.lastName.trim()) {
-      throw new Error('نام خانوادگی الزامی است');
-    }
-
-    if (request.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(request.email)) {
-      throw new Error('ایمیل معتبر نیست');
-    }
-
-    return this.authRepository.register(request);
+    return await this.authRepository.register(request);
   }
 
   async login(request: LoginRequest): Promise<LoginResponse> {
-    if (!request.phone || !request.phone.trim()) {
-      throw new Error('شماره تلفن الزامی است');
+    // Use enterprise validation with Zod
+    const validator = ValidatorFactory.createValidatorWithMessages(loginRequestSchema);
+    const validationResult = validator(request);
+
+    if (!validationResult.success) {
+      throw AppError.validation(validationResult.errors.join('; '));
     }
 
-    return this.authRepository.login(request);
+    return await this.authRepository.login(validationResult.data);
   }
 
   async logout(): Promise<void> {
-    return this.authRepository.logout();
+    return await this.authRepository.logout();
   }
 }

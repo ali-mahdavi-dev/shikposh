@@ -1,5 +1,5 @@
-export { OrderCard } from './order-card';
-export { OrderItems } from './order-items';
-export { OrdersEmptyState } from './empty-state';
-export { OrderFilters } from './order-filters';
+export * from './OrderCard';
+export * from './OrderItems';
+export * from './EmptyState';
+export * from './OrderFilters';
 

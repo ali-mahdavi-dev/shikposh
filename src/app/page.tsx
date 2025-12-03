@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
-import { serverFetch } from '@/shared/services/server-fetch';
-import type { ProductEntity, ProductSummary } from './products/_api/entities';
+import { homeContainer } from './_api/container';
+import type { ProductEntity, ProductSummary } from './_api/entities';
 
-const HeroCarousel = dynamic(() => import('./_components/home/hero-carousel'));
-const FeaturesSection = dynamic(() => import('./_components/home/features-section'));
-const ProductSlider = dynamic(() => import('./_components/home/product-slider'));
-const CtaSection = dynamic(() => import('./_components/home/cta-section'));
-const LazySection = dynamic(() => import('./_components/common/lazy-section'));
+const HeroCarousel = dynamic(() => import('./_components/HeroCarousel'));
+const FeaturesSection = dynamic(() => import('./_components/FeaturesSection'));
+const ProductSlider = dynamic(() => import('./_components/ProductSlider'));
+const CtaSection = dynamic(() => import('./_components/CTASection'));
+const LazySection = dynamic(() => import('./_components/LazySection'));
 
 export const revalidate = 3600; // ISR: revalidate every hour
 
@@ -84,17 +84,12 @@ function mapToProductSummary(products: ProductEntity[]): ProductSummary[] {
 }
 
 export default async function Page() {
-  // Fetch data server-side for SSG/ISR
+  // Fetch data server-side for SSG/ISR using service layer
+  const homeService = homeContainer.getService();
   const [discountedProducts, bestSellingProducts, newArrivals] = await Promise.all([
-    serverFetch<ProductEntity[]>('/api/v1/public/products?sort=discount_desc&limit=12', {
-      tags: ['products', 'discounted'],
-    }),
-    serverFetch<ProductEntity[]>('/api/v1/public/products?sort=rating&limit=12', {
-      tags: ['products', 'bestselling'],
-    }),
-    serverFetch<ProductEntity[]>('/api/v1/public/products?sort=newest&limit=12', {
-      tags: ['products', 'new-arrivals'],
-    }),
+    homeService.getDiscountedProducts(12),
+    homeService.getBestSellingProducts(12),
+    homeService.getNewArrivals(12),
   ]);
 
   const mappedDiscounted = mapToProductSummary(discountedProducts || []);
@@ -102,7 +97,7 @@ export default async function Page() {
   const mappedNewArrivals = mapToProductSummary(newArrivals || []);
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-6 md:space-y-12">
       {/* Hero */}
       <HeroCarousel />
 

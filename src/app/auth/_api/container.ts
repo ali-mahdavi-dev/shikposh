@@ -1,23 +1,16 @@
+import { BaseContainer } from '@/lib/api/container-base';
 import { AuthService } from './service';
-import { HttpAuthRepository } from './repository';
+import { HttpAuthRepository, type AuthRepository } from './repository';
 
-class AuthContainerClass {
-  private authRepository: HttpAuthRepository | null = null;
-  private authService: AuthService | null = null;
-
-  getAuthRepository(): HttpAuthRepository {
-    if (!this.authRepository) {
-      this.authRepository = new HttpAuthRepository();
-    }
-    return this.authRepository;
+export class AuthContainer extends BaseContainer<AuthRepository, AuthService> {
+  protected createRepository(): AuthRepository {
+    return new HttpAuthRepository();
   }
 
-  getAuthService(): AuthService {
-    if (!this.authService) {
-      this.authService = new AuthService(this.getAuthRepository());
-    }
-    return this.authService;
+  protected createService(repository: AuthRepository): AuthService {
+    return new AuthService(repository);
   }
 }
 
-export const AuthContainer = new AuthContainerClass();
+// Export singleton instance
+export const authContainer = new AuthContainer();

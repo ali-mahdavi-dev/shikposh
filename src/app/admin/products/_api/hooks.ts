@@ -1,5 +1,8 @@
+import '@/lib/di/init'; // Ensure reflect-metadata is loaded before decorators
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { adminProductService } from './service';
+import { AdminProductService } from './service';
+import { appContainer } from '@/lib/di/container';
 import { revalidateProductPages, generateSlug } from './revalidation';
 import type {
   CreateProductRequest,
@@ -9,6 +12,8 @@ import type {
   Tag,
   AdminProduct,
 } from './entities/product.entity';
+
+const adminProductService = appContainer.resolve(AdminProductService);
 
 export const useProducts = () => {
   return useQuery<AdminProduct[]>({
