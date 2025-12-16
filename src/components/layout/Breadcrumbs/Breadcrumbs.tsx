@@ -218,7 +218,7 @@ export default function Breadcrumbs() {
   });
 
   return (
-    <nav className="sticky top-[64px] z-40 border-b border-gray-200 bg-white/95 backdrop-blur-sm md:top-[72px]">
+    <nav className="sticky top-[64px] z-40 border-b border-gray-200 bg-white/95 backdrop-blur-sm md:static md:z-auto">
       <div className="mx-auto max-w-7xl px-2 py-2 sm:px-4 md:py-3">
         <Breadcrumb
           items={breadcrumbItems}

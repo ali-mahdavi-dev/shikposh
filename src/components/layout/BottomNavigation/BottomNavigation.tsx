@@ -138,8 +138,8 @@ const BottomNavigation: React.FC = () => {
                 <div className="relative flex items-center justify-center">
                   <motion.div
                     animate={{
-                      scale: active ? 1.2 : 1,
-                      y: active ? -2 : 0,
+                      scale: active ? 1.1 : 1,
+                      y: active ? -1 : 0,
                     }}
                     transition={{
                       type: 'spring',
@@ -157,7 +157,7 @@ const BottomNavigation: React.FC = () => {
                         duration: 0.3,
                         ease: 'easeOut',
                       }}
-                      className="flex h-11 w-11 items-center justify-center rounded-full"
+                      className="flex h-10 w-10 items-center justify-center rounded-full"
                     >
                       <motion.div
                         animate={{

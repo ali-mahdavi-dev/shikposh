@@ -67,6 +67,51 @@ function isAllowedHostname(url: string): boolean {
 }
 
 /**
+ * Validates if a relative path looks like a valid image path
+ * Filters out obviously invalid paths like very short filenames or suspicious patterns
+ */
+function isValidRelativeImagePath(path: string): boolean {
+  // Remove leading slash for validation
+  const pathWithoutSlash = path.startsWith('/') ? path.slice(1) : path;
+
+  // Reject empty or very short paths
+  if (!pathWithoutSlash || pathWithoutSlash.length < 4) {
+    return false;
+  }
+
+  // Common image extensions
+  const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.avif', '.ico'];
+  const hasImageExtension = imageExtensions.some((ext) =>
+    pathWithoutSlash.toLowerCase().endsWith(ext),
+  );
+
+  // If it has an image extension, validate the filename
+  if (hasImageExtension) {
+    // Get the filename (last part after /)
+    const filename = pathWithoutSlash.split('/').pop() || pathWithoutSlash;
+    const nameWithoutExt = filename.replace(/\.[^.]+$/, '');
+
+    // Reject very short filenames (like "sss.png" - only 3 chars before extension)
+    // Allow at least 4 characters in the filename (before extension)
+    if (nameWithoutExt.length < 4) {
+      return false;
+    }
+    return true;
+  }
+
+  // If no extension, check if it looks like a directory path without proper filename (reject)
+  // Paths like "/addr/png" should be rejected (has slash but no proper extension)
+  if (pathWithoutSlash.includes('/')) {
+    // If it has slashes but no image extension, it's likely invalid
+    return false;
+  }
+
+  // For paths without clear extension but reasonable length and no slashes, allow them
+  // (might be API endpoints that serve images, but be conservative)
+  return pathWithoutSlash.length >= 8;
+}
+
+/**
  * Validates and normalizes image URLs for Next.js Image component
  * Next.js Image requires either:
  * - A relative path starting with "/"
@@ -92,7 +137,12 @@ export function getValidImageSrc(
 
   // Check if it's a valid relative path (starts with /)
   if (src.startsWith('/')) {
-    return src;
+    // Validate that the relative path looks reasonable
+    if (isValidRelativeImagePath(src)) {
+      return src;
+    }
+    // If path looks invalid, return default
+    return defaultSrc;
   }
 
   // Check if it's an absolute URL with allowed hostname
